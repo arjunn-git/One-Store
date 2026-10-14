@@ -54,6 +54,42 @@ export default async function AdminDashboardPage() {
     }
   }
 
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#080B10]">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-20 px-4">
+          <div className="max-w-md w-full p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] text-center space-y-6 shadow-2xl backdrop-blur-sm">
+            <div className="h-16 w-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-[#FFFFFF]">Restricted Access Area</h1>
+              <p className="text-xs text-[#9CAFC3] mt-2">
+                This operations portal requires System Administrator privileges. Only designated administrative accounts (such as <span className="text-[#7DD3FC] font-mono font-bold">arjuntaneja204@gmail.com</span>) can view financial data, inventory controls, and order dispatch workflows.
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col gap-3">
+              <Link
+                href="/login?next=/admin"
+                className="w-full py-3 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs transition-all shadow-lg shadow-[#7DD3FC]/10"
+              >
+                Sign In as Administrator
+              </Link>
+              <Link
+                href="/"
+                className="w-full py-2.5 rounded-xl bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold transition-all"
+              >
+                Return to Storefront
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // Demonstration admin data
   const stats = {
     grossRevenueInr: 1248900,
