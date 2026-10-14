@@ -1,217 +1,119 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
-import Link from "next/link";
-import {
-  User,
-  ShieldCheck,
-  Package,
-  MapPin,
-  Heart,
-  LogOut,
-  Sparkles,
-  CreditCard,
-  Mail,
-  CheckCircle2,
-  Lock,
-} from "lucide-react";
+import { UserProfileClient, ProfileData, OrderItem, AddressItem } from "@/components/account/UserProfileClient";
+import { cookies } from "next/headers";
 
 export default async function AccountPage() {
   const cookieStore = await cookies();
-  const demoEmail = cookieStore.get("one_store_user_email")?.value;
+  const fallbackEmail = cookieStore.get("one_store_user_email")?.value;
 
-  let user = null;
-  let profile = null;
+  let authUser = null;
+  let profile: ProfileData | null = null;
+  let orders: OrderItem[] = [];
+  let addresses: AddressItem[] = [];
 
   if (isLiveSupabaseConfigured()) {
     try {
       const supabase = await createClient();
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
-      if (user) {
+      const { data: authData } = await supabase.auth.getUser();
+      authUser = authData.user;
+
+      if (authUser) {
+        // Fetch canonical profile
         const { data: profileData } = await supabase
           .from("customer_profiles")
           .select("*")
-          .eq("auth_user_id", user.id)
-          .single();
-        profile = profileData;
+          .eq("auth_user_id", authUser.id)
+          .maybeSingle();
+
+        if (profileData) {
+          profile = profileData as ProfileData;
+        } else {
+          // Idempotently create canonical profile
+          const { data: newProfile } = await supabase
+            .from("customer_profiles")
+            .upsert(
+              {
+                auth_user_id: authUser.id,
+                email: authUser.email,
+                is_email_verified: !!authUser.email_confirmed_at,
+                full_name: authUser.user_metadata?.full_name || null,
+                role: isAdminEmail(authUser.email) ? "owner" : "customer",
+              },
+              { onConflict: "auth_user_id" }
+            )
+            .select()
+            .single();
+
+          profile = newProfile as ProfileData;
+        }
+
+        if (profile?.id) {
+          // Fetch orders
+          const { data: orderData } = await supabase
+            .from("orders")
+            .select("id, order_number, status, payment_status, currency, total_amount, created_at")
+            .eq("customer_id", profile.id)
+            .order("created_at", { ascending: false });
+
+          if (orderData) {
+            orders = orderData as OrderItem[];
+          }
+
+          // Fetch addresses
+          const { data: addressData } = await supabase
+            .from("addresses")
+            .select("*")
+            .eq("customer_id", profile.id)
+            .order("is_default", { ascending: false });
+
+          if (addressData) {
+            addresses = addressData as AddressItem[];
+          }
+        }
       }
     } catch {
-      user = null;
-      profile = null;
+      authUser = null;
     }
   }
 
-  const activeEmail = user?.email || demoEmail;
-
-  // If no session found in Supabase or dev cookies, redirect to login
-  if (!user && !demoEmail) {
+  // If unauthenticated, redirect to login
+  if (!authUser && !fallbackEmail) {
     redirect("/login?next=/account");
   }
 
+  const activeEmail = authUser?.email || fallbackEmail || "";
   const isAdmin = isAdminEmail(activeEmail);
-  const displayName =
-    profile?.full_name ||
-    user?.user_metadata?.full_name ||
-    (isAdmin ? "Arjun Taneja (Admin)" : "One Store Customer");
 
-  const email = activeEmail || "No email linked";
-  const isEmailVerified = true;
+  // Fallback profile object if needed
+  const userProfile: ProfileData = profile || {
+    id: authUser?.id || "usr_default",
+    auth_user_id: authUser?.id || "usr_default",
+    full_name: authUser?.user_metadata?.full_name || (isAdmin ? "Arjun Taneja" : null),
+    email: activeEmail,
+    is_email_verified: true,
+    phone: null,
+    country: "IN",
+    preferred_currency: "INR",
+    role: isAdmin ? "owner" : "customer",
+    marketing_consent: false,
+    created_at: new Date().toISOString(),
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
       <Header />
 
       <main className="flex-1 py-12 px-4 md:px-8">
-        <div className="max-w-6xl mx-auto space-y-10">
-          {/* Account Profile Header */}
-          <div className="p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-bold text-2xl shadow-inner">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl font-bold text-[#FFFFFF]">{displayName}</h1>
-                  {isAdmin ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold bg-[#7DD3FC] text-[#080B10] shadow-sm">
-                      <Sparkles className="h-3.5 w-3.5" /> System Owner / Administrator
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30">
-                      <Sparkles className="h-3 w-3" /> Canonical Member
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#9CAFC3] mt-1.5 flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Mail className="h-3.5 w-3.5" /> {email}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Email Verified
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="px-4 py-2 rounded-xl bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-[#7DD3FC]/10 transition-all"
-                >
-                  <Lock className="h-3.5 w-3.5" /> Admin Command Dashboard →
-                </Link>
-              )}
-              <form action="/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#080B10] text-[#9CAFC3] hover:text-[#FFFFFF] border border-[#243447] hover:border-red-500/50 text-xs font-semibold flex items-center gap-2 transition-all"
-                >
-                  <LogOut className="h-4 w-4" /> Sign Out
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Quick Action Navigation Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Orders Card */}
-            <div className="p-6 rounded-2xl bg-[#102A43]/20 border border-[#243447] space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
-                  <Package className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">1 Order Tracked</span>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#FFFFFF]">Order History &amp; Tracking</h3>
-                <p className="text-xs text-[#9CAFC3] mt-1">
-                  Track dual-market deliveries across India (+91) and the UK (+44).
-                </p>
-              </div>
-              <div className="pt-2">
-                <Link
-                  href="/orders"
-                  className="text-xs font-semibold text-[#7DD3FC] hover:underline"
-                >
-                  View Order Log →
-                </Link>
-              </div>
-            </div>
-
-            {/* Saved Addresses Card */}
-            <div className="p-6 rounded-2xl bg-[#102A43]/20 border border-[#243447] space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">2 Saved</span>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#FFFFFF]">Address Book</h3>
-                <p className="text-xs text-[#9CAFC3] mt-1">
-                  Configure default dispatch addresses for INR &amp; GBP checkouts.
-                </p>
-              </div>
-              <div className="pt-2">
-                <Link
-                  href="/account/addresses"
-                  className="text-xs font-semibold text-[#7DD3FC] hover:underline"
-                >
-                  Manage Addresses →
-                </Link>
-              </div>
-            </div>
-
-            {/* Wishlist Card */}
-            <div className="p-6 rounded-2xl bg-[#102A43]/20 border border-[#243447] space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
-                  <Heart className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">2 Items</span>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#FFFFFF]">Curated Wishlist</h3>
-                <p className="text-xs text-[#9CAFC3] mt-1">
-                  Saved flagship models and accessories for upcoming purchases.
-                </p>
-              </div>
-              <div className="pt-2">
-                <Link
-                  href="/wishlist"
-                  className="text-xs font-semibold text-[#7DD3FC] hover:underline"
-                >
-                  View Saved Models →
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Account Security & Canonical ID Details */}
-          <div className="p-8 rounded-2xl bg-[#080B10] border border-[#243447] space-y-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-[#FFFFFF]">
-              <ShieldCheck className="h-4 w-4 text-[#7DD3FC]" />
-              <span>Identity &amp; Security Metadata</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
-                <div className="text-[#9CAFC3]">Primary Administrator Email</div>
-                <div className="font-mono text-[#FFFFFF] mt-1 truncate">{email}</div>
-              </div>
-              <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
-                <div className="text-[#9CAFC3]">Canonical Customer Role</div>
-                <div className="font-mono text-[#7DD3FC] mt-1 truncate font-bold">
-                  {isAdmin ? "owner (Super Admin)" : "customer"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <UserProfileClient
+          initialProfile={userProfile}
+          initialOrders={orders}
+          initialAddresses={addresses}
+          isAdmin={isAdmin}
+        />
       </main>
 
       <Footer />

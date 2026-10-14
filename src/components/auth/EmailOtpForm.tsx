@@ -11,7 +11,7 @@ import {
 } from "@/lib/services/auth";
 import { OtpInput } from "./OtpInput";
 import { SocialAuthButtons } from "./SocialAuthButtons";
-import { Mail, ArrowRight, ShieldCheck, RefreshCw, Edit2, AlertCircle, Sparkles } from "lucide-react";
+import { Mail, ArrowRight, ShieldCheck, RefreshCw, Edit2, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 interface EmailOtpFormProps {
@@ -33,9 +33,9 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   const [step, setStep] = useState<"input" | "verify">("input");
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
-  const [isSandbox, setIsSandbox] = useState(false);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -78,7 +78,6 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       return;
     }
 
-    setIsSandbox(!!res.isDevDemo);
     setStep("verify");
     setCountdown(60);
     setOtpCode("");
@@ -102,12 +101,13 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       mode === "signup" ? "signup" : "email"
     );
 
-    setIsLoading(false);
-
     if (!res.success) {
+      setIsLoading(false);
       setErrorMessage(res.error || "Verification failed. The code may be invalid or expired.");
       return;
     }
+
+    setIsSuccess(true);
 
     // Success redirect: Hard navigation guarantees server components and cookies sync cleanly
     const target =
@@ -115,7 +115,9 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
         ? "/admin"
         : nextUrl;
 
-    window.location.href = target;
+    setTimeout(() => {
+      window.location.href = target;
+    }, 600);
   };
 
   // Handle Resend
@@ -311,27 +313,19 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
             </div>
           </div>
 
-          {isSandbox && (
-            <div className="p-3.5 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs text-[#7DD3FC] text-center space-y-1">
-              <div className="font-semibold flex items-center justify-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Local Sandbox Verification Active</span>
+          {isSuccess ? (
+            <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-600 text-xs text-emerald-200 text-center space-y-1 animate-fade-in shadow-lg">
+              <div className="font-semibold flex items-center justify-center gap-1.5 text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <span>Verification Successful</span>
               </div>
-              <p className="text-[11px] text-[#9CAFC3]">
-                Enter any 6 digits (or click{" "}
-                <button
-                  type="button"
-                  onClick={() => setOtpCode("123456")}
-                  className="font-mono font-bold text-[#FFFFFF] underline hover:text-[#7DD3FC] cursor-pointer"
-                >
-                  123456
-                </button>
-                ) to verify and sign in as{" "}
-                <strong className="text-[#FFFFFF]">
-                  {isAdminEmail(email) ? "Admin / Owner" : "Customer"}
-                </strong>
-                .
+              <p className="text-[11px] text-emerald-200/90">
+                Synchronizing your credentials and loading your account...
               </p>
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl bg-[#080B10] border border-[#243447] text-[11px] text-[#9CAFC3] text-center">
+              Please enter the 6-digit OTP code sent to your email. Check your spam folder if it doesn't appear in 1 minute.
             </div>
           )}
 

@@ -205,6 +205,23 @@ export async function verifyEmailOtp(
       return { success: false, error: "Authentication failed. No session established." };
     }
 
+    // Ensure customer_profiles has a matching record
+    try {
+      await supabase.from("customer_profiles").upsert(
+        {
+          auth_user_id: data.user.id,
+          email: trimmedEmail,
+          is_email_verified: true,
+          full_name: data.user.user_metadata?.full_name || null,
+          role: isAdminEmail(trimmedEmail) ? "owner" : "customer",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "auth_user_id" }
+      );
+    } catch {
+      // Continue even if database sync encounters a network delay
+    }
+
     const role = isAdminEmail(trimmedEmail) ? "owner" : "customer";
     if (typeof window !== "undefined") {
       document.cookie = `one_store_user_email=${trimmedEmail}; path=/; max-age=2592000; SameSite=Lax`;

@@ -13,6 +13,7 @@ export function Header() {
   const { itemCount, setIsOpen } = useCart();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -30,6 +31,14 @@ export function Header() {
         if (isMounted) {
           setIsLoggedIn(true);
           setIsAdmin(!!hasAdminCookie);
+          if (hasAdminCookie) {
+            setUserName("Arjun Taneja");
+          } else {
+            const match = document.cookie.match(/one_store_user_email=([^;]+)/);
+            if (match && match[1]) {
+              setUserName(decodeURIComponent(match[1]).split("@")[0]);
+            }
+          }
         }
       }
 
@@ -41,10 +50,16 @@ export function Header() {
         if (data?.user?.email && isMounted) {
           setIsLoggedIn(true);
           const email = data.user.email.toLowerCase().trim();
-          setIsAdmin(email === "arjuntaneja204@gmail.com");
+          const adminCheck = email === "arjuntaneja204@gmail.com";
+          setIsAdmin(adminCheck);
+          const name =
+            data.user.user_metadata?.full_name ||
+            (adminCheck ? "Arjun Taneja" : email.split("@")[0]);
+          setUserName(name);
         } else if (!emailCookie && !session && isMounted) {
           setIsLoggedIn(false);
           setIsAdmin(false);
+          setUserName(null);
         }
       } catch {
         // Fallback to cookie check
@@ -121,41 +136,55 @@ export function Header() {
           >
             <Search className="h-5 w-5" />
           </Link>
+          {/* Admin Command Link (Strictly restricted to Arjun) */}
           {isAdmin && (
             <Link
               href="/admin"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
-              title="Restricted Operations Portal (Arjun Taneja Only)"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/50 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
+              title="Admin Command Dashboard (Arjun Taneja Only)"
             >
               <Shield className="h-3.5 w-3.5" />
               <span>Admin</span>
             </Link>
           )}
 
-          <Link
-            href={isLoggedIn ? (isAdmin ? "/admin" : "/account") : "/login"}
-            aria-label={isLoggedIn ? (isAdmin ? "Admin Console" : "My Account") : "Sign In"}
-            title={isLoggedIn ? (isAdmin ? "Admin Console" : "My Account") : "Sign In"}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
-              isLoggedIn
-                ? "bg-[#102A43] text-[#7DD3FC] border-[#7DD3FC]/50 hover:bg-[#7DD3FC] hover:text-[#080B10]"
-                : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border-transparent hover:border-[#243447]"
-            }`}
-          >
-            <User className="h-5 w-5" />
-          </Link>
+          {/* User Account or Sign In */}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/account"
+                aria-label="My Account"
+                title="My Profile & Orders"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 hover:bg-[#7DD3FC] hover:text-[#080B10] text-xs font-semibold transition-all"
+              >
+                <div className="h-5 w-5 rounded-full bg-[#7DD3FC]/20 text-[#7DD3FC] flex items-center justify-center text-[10px] font-bold">
+                  {(userName || "U").charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden md:inline font-medium max-w-[110px] truncate">
+                  {userName || "Account"}
+                </span>
+              </Link>
 
-          {isLoggedIn && (
-            <button
-              type="button"
-              onClick={handleSignOut}
-              aria-label="Sign Out"
-              title="Sign Out (Browse as regular user)"
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#102A43]/60 hover:bg-red-950/50 text-[#9CAFC3] hover:text-red-300 border border-[#243447] hover:border-red-800/60 text-xs font-medium transition-all"
+              <button
+                type="button"
+                onClick={handleSignOut}
+                aria-label="Sign Out"
+                title="Sign Out (Browse as guest shopper)"
+                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#080B10] hover:bg-red-950/50 text-[#9CAFC3] hover:text-red-300 border border-[#243447] hover:border-red-800/60 text-xs font-medium transition-all"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              aria-label="Sign In"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] hover:text-[#7DD3FC] text-xs font-semibold transition-all"
             >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>Logout</span>
-            </button>
+              <User className="h-3.5 w-3.5 text-[#7DD3FC]" />
+              <span>Sign In</span>
+            </Link>
           )}
           <button
             type="button"
