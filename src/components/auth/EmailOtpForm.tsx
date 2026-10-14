@@ -295,10 +295,10 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               <ShieldCheck className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">
-              Verify your identity
+              Check your email
             </h2>
             <p className="text-xs text-[#9CAFC3]">
-              We have dispatched a 6-digit verification code to:
+              We have dispatched your authentication email to:
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#080B10] border border-[#243447] text-xs font-mono text-[#7DD3FC]">
               <span>{maskEmail(email)}</span>
@@ -324,8 +324,19 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               </p>
             </div>
           ) : (
-            <div className="p-3 rounded-xl bg-[#080B10] border border-[#243447] text-[11px] text-[#9CAFC3] text-center">
-              Please enter the 6-digit OTP code sent to your email. Check your spam folder if it doesn't appear in 1 minute.
+            <div className="p-4 rounded-2xl bg-[#080B10] border border-[#7DD3FC]/30 text-xs text-[#9CAFC3] space-y-2">
+              <div className="font-semibold text-[#FFFFFF] flex items-center gap-1.5 text-xs">
+                <Sparkles className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                <span>Two Ways to Sign In:</span>
+              </div>
+              <ul className="space-y-1.5 text-[11px] list-disc list-inside text-[#9CAFC3]">
+                <li>
+                  <strong className="text-[#7DD3FC]">Option 1 (Fastest):</strong> Open your email and click the <strong className="text-[#FFFFFF]">"Sign in"</strong> button. You will be logged in immediately.
+                </li>
+                <li>
+                  <strong className="text-[#7DD3FC]">Option 2:</strong> If your email contains a 6-digit code, enter the digits below.
+                </li>
+              </ul>
             </div>
           )}
 
@@ -337,7 +348,10 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           )}
 
           {/* 6-Digit OTP Input */}
-          <div className="py-2">
+          <div className="py-1">
+            <div className="text-center text-[11px] text-[#9CAFC3] mb-2 font-medium">
+              Enter 6-digit code (if provided in email):
+            </div>
             <OtpInput
               value={otpCode}
               onChange={setOtpCode}
