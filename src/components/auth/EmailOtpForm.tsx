@@ -109,13 +109,13 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       return;
     }
 
-    // Success redirect
-    if (isAdminEmail(email.trim().toLowerCase()) && (nextUrl === "/account" || !nextUrl)) {
-      router.push("/admin");
-    } else {
-      router.push(nextUrl);
-    }
-    router.refresh();
+    // Success redirect: Hard navigation guarantees server components and cookies sync cleanly
+    const target =
+      isAdminEmail(email.trim().toLowerCase()) && (nextUrl === "/account" || !nextUrl || nextUrl === "/")
+        ? "/admin"
+        : nextUrl;
+
+    window.location.href = target;
   };
 
   // Handle Resend
@@ -318,7 +318,15 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                 <span>Local Sandbox Verification Active</span>
               </div>
               <p className="text-[11px] text-[#9CAFC3]">
-                Enter any 6 digits (e.g. <strong className="font-mono text-[#FFFFFF]">123456</strong>) to verify and sign in as{" "}
+                Enter any 6 digits (or click{" "}
+                <button
+                  type="button"
+                  onClick={() => setOtpCode("123456")}
+                  className="font-mono font-bold text-[#FFFFFF] underline hover:text-[#7DD3FC] cursor-pointer"
+                >
+                  123456
+                </button>
+                ) to verify and sign in as{" "}
                 <strong className="text-[#FFFFFF]">
                   {isAdminEmail(email) ? "Admin / Owner" : "Customer"}
                 </strong>

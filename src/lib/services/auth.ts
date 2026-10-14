@@ -155,6 +155,15 @@ export async function verifyEmailOtp(
       localStorage.setItem("one_store_session", JSON.stringify(demoUser));
       document.cookie = `one_store_user_email=${trimmedEmail}; path=/; max-age=2592000; SameSite=Lax`;
       document.cookie = `one_store_user_role=${role}; path=/; max-age=2592000; SameSite=Lax`;
+      try {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmedEmail }),
+        });
+      } catch {
+        // Fallback to client cookie
+      }
     }
 
     return {

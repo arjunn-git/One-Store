@@ -31,22 +31,31 @@ export function OtpInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const val = e.target.value.replace(/\D/g, ""); // digits only
-    if (!val) return;
 
     const newDigits = [...digits];
-    // If pasted or multi-char
+
+    if (!val) {
+      newDigits[index] = "";
+      onChange(newDigits.join(""));
+      return;
+    }
+
+    // If pasted multi-char
     if (val.length > 1) {
-      const pastedChars = val.slice(0, length).split("");
-      pastedChars.forEach((ch, idx) => {
-        newDigits[idx] = ch;
+      const chars = val.split("");
+      chars.forEach((ch, idx) => {
+        if (index + idx < length) {
+          newDigits[index + idx] = ch;
+        }
       });
       onChange(newDigits.join(""));
-      const nextIndex = Math.min(pastedChars.length, length - 1);
+      const nextIndex = Math.min(index + chars.length, length - 1);
       inputRefs.current[nextIndex]?.focus();
       return;
     }
 
-    newDigits[index] = val;
+    // Single digit entry (or replacement)
+    newDigits[index] = val.slice(-1);
     onChange(newDigits.join(""));
 
     // Move to next input
@@ -101,7 +110,7 @@ export function OtpInput({
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          maxLength={1}
+          maxLength={2}
           value={digit}
           disabled={disabled}
           onChange={(e) => handleChange(e, index)}

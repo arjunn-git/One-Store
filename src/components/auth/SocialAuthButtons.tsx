@@ -21,11 +21,10 @@ export function SocialAuthButtons() {
         setErrorMsg(res.error || "Google sign-in is not enabled yet in your Supabase dashboard. Please use the 6-digit Email OTP above.");
         setLoadingProvider(null);
       } else if (res.isDevDemo) {
-        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl)
+        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl || nextUrl === "/")
           ? "/admin"
           : nextUrl;
-        router.push(target);
-        router.refresh();
+        window.location.href = target;
       }
     } catch {
       setErrorMsg("Google sign-in could not be completed. Please use Email OTP.");
@@ -42,11 +41,10 @@ export function SocialAuthButtons() {
         setErrorMsg(res.error || "Apple sign-in is not enabled yet in your Supabase dashboard. Please use the 6-digit Email OTP above.");
         setLoadingProvider(null);
       } else if (res.isDevDemo) {
-        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl)
+        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl || nextUrl === "/")
           ? "/admin"
           : nextUrl;
-        router.push(target);
-        router.refresh();
+        window.location.href = target;
       }
     } catch {
       setErrorMsg("Apple sign-in could not be completed. Please use Email OTP.");
