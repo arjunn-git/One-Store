@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, Search, User, Globe } from "lucide-react";
+import { ShoppingBag, Search, User, Globe, Shield } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
@@ -9,6 +10,26 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 export function Header() {
   const { market, setMarket } = useMarket();
   const { itemCount, setIsOpen } = useCart();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const emailCookie = document.cookie.includes("one_store_user_email");
+      const session = localStorage.getItem("one_store_session");
+      if (emailCookie || session) {
+        setIsLoggedIn(true);
+        if (
+          document.cookie.includes("arjuntaneja204%40gmail.com") ||
+          document.cookie.includes("arjuntaneja204@gmail.com") ||
+          document.cookie.includes("one_store_user_role=owner") ||
+          (session && session.includes("arjuntaneja204@gmail.com"))
+        ) {
+          setIsAdmin(true);
+        }
+      }
+    }
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#243447] bg-[#080B10]/90 backdrop-blur-md">
@@ -69,10 +90,25 @@ export function Header() {
           >
             <Search className="h-5 w-5" />
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span>Admin</span>
+            </Link>
+          )}
+
           <Link
-            href="/login"
-            aria-label="Account"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
+            href={isLoggedIn ? (isAdmin ? "/admin" : "/account") : "/login"}
+            aria-label={isLoggedIn ? "My Account" : "Sign In"}
+            title={isLoggedIn ? (isAdmin ? "Admin Console" : "My Account") : "Sign In"}
+            className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
+              isLoggedIn
+                ? "bg-[#102A43] text-[#7DD3FC] border-[#7DD3FC]/50 hover:bg-[#7DD3FC] hover:text-[#080B10]"
+                : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border-transparent hover:border-[#243447]"
+            }`}
           >
             <User className="h-5 w-5" />
           </Link>
