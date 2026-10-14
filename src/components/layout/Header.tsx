@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { ShoppingBag, Search, User, Globe } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
+import { useCart } from "@/lib/context/CartContext";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export function Header() {
   const { market, setMarket } = useMarket();
+  const { itemCount, setIsOpen } = useCart();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#243447] bg-[#080B10]/90 backdrop-blur-md">
@@ -73,18 +76,22 @@ export function Header() {
           >
             <User className="h-5 w-5" />
           </Link>
-          <Link
-            href="/cart"
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
             aria-label="Shopping Cart"
             className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC] transition-all"
           >
             <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#7DD3FC] text-[10px] font-bold text-[#080B10]">
-              0
-            </span>
-          </Link>
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#7DD3FC] text-[10px] font-bold text-[#080B10]">
+                {itemCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
+      <CartDrawer />
     </header>
   );
 }

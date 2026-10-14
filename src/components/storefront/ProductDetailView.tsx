@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMarket } from "@/lib/context/MarketContext";
+import { useCart } from "@/lib/context/CartContext";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
@@ -27,6 +28,7 @@ interface ProductDetailViewProps {
 
 export function ProductDetailView({ product }: ProductDetailViewProps) {
   const { market } = useMarket();
+  const { addItem } = useCart();
 
   // Selected variant state
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
@@ -47,6 +49,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
+    addItem(product, selectedVariant, quantity);
     setAddedToCart(true);
     setTimeout(() => {
       setAddedToCart(false);
