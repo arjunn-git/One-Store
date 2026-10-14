@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import Link from "next/link";
 import {
   Package,
@@ -14,19 +15,25 @@ import {
 } from "lucide-react";
 
 export default async function OrdersPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Fetch orders from Supabase if user exists
   let orders = [];
-  if (user) {
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    orders = data || [];
+
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data } = await supabase
+          .from("orders")
+          .select("*")
+          .order("created_at", { ascending: false });
+        orders = data || [];
+      }
+    } catch {
+      orders = [];
+    }
   }
 
   // Demonstration sample orders when user has not yet completed a live checkout

@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { isAdminEmail } from "@/lib/services/auth";
+import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
 import Link from "next/link";
 import {
   User,
@@ -23,27 +23,33 @@ export default async function AccountPage() {
   const cookieStore = await cookies();
   const demoEmail = cookieStore.get("one_store_user_email")?.value;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  let profile = null;
+
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("customer_profiles")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .single();
+        profile = profileData;
+      }
+    } catch {
+      user = null;
+      profile = null;
+    }
+  }
 
   const activeEmail = user?.email || demoEmail;
 
   // If no session found in Supabase or dev cookies, redirect to login
   if (!user && !demoEmail) {
     redirect("/login?next=/account");
-  }
-
-  // Fetch canonical profile if live Supabase is active
-  let profile = null;
-  if (user) {
-    const { data } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("auth_user_id", user.id)
-      .single();
-    profile = data;
   }
 
   const isAdmin = isAdminEmail(activeEmail);

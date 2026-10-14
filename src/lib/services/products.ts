@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
 
 // Fallback seed catalog matching development fixtures in supabase/seed.sql
@@ -225,6 +226,10 @@ export async function getProducts(options?: {
   searchQuery?: string;
   featuredOnly?: boolean;
 }) {
+  if (!isLiveSupabaseConfigured()) {
+    return filterFallbackProducts(options);
+  }
+
   try {
     const supabase = createPublicClient();
     let query = supabase
@@ -247,6 +252,10 @@ export async function getProducts(options?: {
 }
 
 export async function getProductBySlug(slug: string) {
+  if (!isLiveSupabaseConfigured()) {
+    return FALLBACK_PRODUCTS.find((p) => p.slug === slug) || null;
+  }
+
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase
@@ -266,6 +275,10 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getCategories() {
+  if (!isLiveSupabaseConfigured()) {
+    return FALLBACK_CATEGORIES;
+  }
+
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase

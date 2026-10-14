@@ -17,29 +17,40 @@ import {
 } from "lucide-react";
 
 import { cookies } from "next/headers";
-import { isAdminEmail } from "@/lib/services/auth";
+import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
 
 export default async function AdminDashboardPage() {
   const cookieStore = await cookies();
   const demoEmail = cookieStore.get("one_store_user_email")?.value;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      user = null;
+    }
+  }
 
   const activeEmail = user?.email || demoEmail;
   let isAdmin = isAdminEmail(activeEmail);
 
-  if (user && !isAdmin) {
-    const { data: profile } = await supabase
-      .from("customer_profiles")
-      .select("role")
-      .eq("auth_user_id", user.id)
-      .single();
+  if (user && !isAdmin && isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data: profile } = await supabase
+        .from("customer_profiles")
+        .select("role")
+        .eq("auth_user_id", user.id)
+        .single();
 
-    if (profile?.role === "admin" || profile?.role === "owner") {
-      isAdmin = true;
+      if (profile?.role === "admin" || profile?.role === "owner") {
+        isAdmin = true;
+      }
+    } catch {
+      // Ignored
     }
   }
 

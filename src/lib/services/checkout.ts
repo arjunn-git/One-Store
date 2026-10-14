@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isLiveSupabaseConfigured } from "./auth";
 import { FALLBACK_PRODUCTS } from "./products";
 import type { OrderStatus, PaymentStatus } from "@/lib/types/database";
 
@@ -92,37 +93,39 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `OS-2026-${payload.market}-${randomSuffix}`;
 
-    // 5. Attempt PostgreSQL persistence via Supabase
-    try {
-      const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    // 5. Attempt PostgreSQL persistence via Supabase if live credentials are configured
+    if (isLiveSupabaseConfigured()) {
+      try {
+        const supabase = await createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      await supabase.from("orders").insert({
-        order_number: orderNumber,
-        customer_id: user?.id || null,
-        status: "pending_payment" as OrderStatus,
-        payment_status: "pending" as PaymentStatus,
-        currency: payload.currency,
-        subtotal: computedSubtotal,
-        discount_amount: discountAmount,
-        shipping_fee: shippingFee,
-        total_amount: finalTotal,
-        shipping_address: {
-          recipientName: payload.recipientName,
-          phone: payload.phone,
-          line1: payload.line1,
-          line2: payload.line2 || "",
-          city: payload.city,
-          stateOrProvince: payload.stateOrProvince,
-          postalCode: payload.postalCode,
-          countryCode: payload.countryCode,
-        },
-        payment_provider: payload.paymentProvider,
-      });
-    } catch {
-      // Gracefully continue in sandbox/preview mode
+        await supabase.from("orders").insert({
+          order_number: orderNumber,
+          customer_id: user?.id || null,
+          status: "pending_payment" as OrderStatus,
+          payment_status: "pending" as PaymentStatus,
+          currency: payload.currency,
+          subtotal: computedSubtotal,
+          discount_amount: discountAmount,
+          shipping_fee: shippingFee,
+          total_amount: finalTotal,
+          shipping_address: {
+            recipientName: payload.recipientName,
+            phone: payload.phone,
+            line1: payload.line1,
+            line2: payload.line2 || "",
+            city: payload.city,
+            stateOrProvince: payload.stateOrProvince,
+            postalCode: payload.postalCode,
+            countryCode: payload.countryCode,
+          },
+          payment_provider: payload.paymentProvider,
+        });
+      } catch {
+        // Gracefully continue in sandbox/preview mode
+      }
     }
 
     return {
