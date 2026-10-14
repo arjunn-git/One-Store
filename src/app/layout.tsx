@@ -18,6 +18,8 @@ export const metadata: Metadata = {
     "Custom-engineered dropshipping e-commerce platform serving customers across India (INR) and the United Kingdom (GBP).",
 };
 
+import { MarketProvider } from "@/lib/context/MarketContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#080B10] text-[#F4F8FC] selection:bg-[#7DD3FC] selection:text-[#080B10]">
-        {children}
+        <MarketProvider>{children}</MarketProvider>
       </body>
     </html>
   );

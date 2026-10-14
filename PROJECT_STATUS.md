@@ -26,8 +26,8 @@ One Store is a bespoke, custom-coded dropshipping e-commerce platform engineered
 | Stage | Milestone | Status | Key Deliverables |
 |---|---|---|---|
 | **Stage 1** | **Foundation** | **COMPLETED** | Next.js App Router, strict TS, Tailwind v4, Supabase client/server/admin/middleware, migrations, seed, `.env.example`, `.gitignore`, brand system |
-| **Stage 2** | **Storefront** | In Progress / Next | Responsive navigation, hero, product catalog, categories, search, dynamic currency toggle |
-| **Stage 3** | **Authentication** | Queued | Passwordless Email OTP signup/login, branded verification UI, session refresh, customer profile sync, OAuth (Google/Apple), SMS OTP |
+| **Stage 2** | **Storefront** | **COMPLETED** | Responsive navigation, hero, product catalog, categories, search, dynamic currency toggle (INR ₹ / GBP £), product detail pages, variant selector |
+| **Stage 3** | **Authentication** | In Progress / Next | Passwordless Email OTP signup/login, branded verification UI, session refresh, customer profile sync, OAuth (Google/Apple), SMS OTP |
 | **Stage 4** | **Commerce Database** | Queued | Real database queries, variants, inventory reservation, supplier metadata, persistent cart |
 | **Stage 5** | **Checkout & Payments** | Queued | Server-side pricing recalculation, Razorpay & Stripe integration, webhook verification, idempotency |
 | **Stage 6** | **Customer Account** | Queued | Account dashboard, address book, order tracking, return & cancellation requests |

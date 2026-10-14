@@ -1,9 +1,13 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ProductCard } from "@/components/storefront/ProductCard";
+import { getProducts } from "@/lib/services/products";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const featuredProducts = await getProducts({ featuredOnly: true });
+
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
       <Header />
@@ -15,7 +19,7 @@ export default function Home() {
             {/* Market badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102A43] border border-[#243447] text-xs font-medium text-[#7DD3FC] mb-6">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Engineered for India &amp; the United Kingdom</span>
+              <span>Dual-Market Operations: India (INR ₹) &amp; United Kingdom (GBP £)</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#FFFFFF] max-w-4xl leading-[1.1]">
@@ -78,6 +82,34 @@ export default function Home() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Products Section */}
+        <section className="py-20 px-4 md:px-8 border-b border-[#243447]">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#7DD3FC]">
+                  Flagship Releases
+                </span>
+                <h2 className="text-2xl md:text-3xl font-bold text-[#FFFFFF] mt-1">
+                  Featured Products
+                </h2>
+              </div>
+              <Link
+                href="/products"
+                className="mt-4 md:mt-0 text-sm font-medium text-[#7DD3FC] hover:text-[#FFFFFF] flex items-center gap-1 transition-colors"
+              >
+                View complete catalog <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
             </div>
           </div>
         </section>

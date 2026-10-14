@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { ShoppingBag, Search, User, Globe } from "lucide-react";
-import { useState } from "react";
+import { useMarket } from "@/lib/context/MarketContext";
 
 export function Header() {
-  const [market, setMarket] = useState<"IN" | "GB">("IN");
+  const { market, setMarket } = useMarket();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#243447] bg-[#080B10]/90 backdrop-blur-md">
