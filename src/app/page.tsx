@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { Hero3DStage } from "@/components/storefront/Hero3DStage";
 import { getProducts } from "@/lib/services/products";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
@@ -14,11 +15,11 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden border-b border-[#243447] py-20 md:py-32 px-4 md:px-8">
+        <section className="relative overflow-hidden border-b border-[#243447] py-16 md:py-24 px-4 md:px-8">
           <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
             {/* Market badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102A43] border border-[#243447] text-xs font-medium text-[#7DD3FC] mb-6">
-              <Sparkles className="h-3.5 w-3.5" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102A43] border border-[#243447] text-xs font-medium text-[#7DD3FC] mb-6 shadow-sm animate-float-3d">
+              <Sparkles className="h-3.5 w-3.5 text-[#7DD3FC]" />
               <span>Dual-Market Operations: India (INR ₹) &amp; United Kingdom (GBP £)</span>
             </div>
 
@@ -35,21 +36,24 @@ export default async function Home() {
               curated quality.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
               <Link
                 href="/products"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-[#7DD3FC] text-[#080B10] font-semibold text-sm hover:bg-[#FFFFFF] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-sm hover:bg-[#FFFFFF] hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#7DD3FC]/20"
               >
-                Explore Catalogue
+                <span>Explore Catalogue</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/signup"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-[#102A43] text-[#F4F8FC] border border-[#243447] font-semibold text-sm hover:border-[#7DD3FC] hover:text-[#7DD3FC] transition-all flex items-center justify-center"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#102A43] text-[#F4F8FC] border border-[#243447] font-semibold text-sm hover:border-[#7DD3FC] hover:text-[#7DD3FC] hover:scale-105 transition-all flex items-center justify-center shadow-md"
               >
-                Create Account (Email OTP)
+                <span>Create Account (Email OTP)</span>
               </Link>
             </div>
+
+            {/* 3D Interactive Floating Dual-Market Stage */}
+            <Hero3DStage />
 
             {/* Feature points */}
             <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left w-full max-w-3xl border-t border-[#243447]/60 pt-8">
@@ -155,7 +159,7 @@ export default async function Home() {
                 <Link
                   key={cat.slug}
                   href={`/categories/${cat.slug}`}
-                  className="group relative p-8 rounded-xl bg-[#102A43]/40 border border-[#243447] hover:border-[#7DD3FC] transition-all flex flex-col justify-between min-h-[220px]"
+                  className="group relative p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] hover:border-[#7DD3FC] hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#7DD3FC]/15 transition-all duration-300 flex flex-col justify-between min-h-[220px]"
                 >
                   <div>
                     <h3 className="text-xl font-bold text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
@@ -164,7 +168,7 @@ export default async function Home() {
                     <p className="text-xs text-[#9CAFC3] mt-2 leading-relaxed">{cat.desc}</p>
                   </div>
                   <div className="text-xs font-semibold text-[#7DD3FC] flex items-center gap-1.5 mt-6">
-                    Browse Selection <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                    Browse Selection <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
                 </Link>
               ))}
