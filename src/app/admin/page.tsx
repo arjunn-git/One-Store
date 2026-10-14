@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   DollarSign,
   Activity,
+  LogOut,
+  Store,
 } from "lucide-react";
 
 import { cookies } from "next/headers";
@@ -157,10 +159,26 @@ export default async function AdminDashboardPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs px-3 py-1 rounded-full bg-[#102A43] border border-[#243447] text-[#7DD3FC] font-semibold">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs px-3 py-1.5 rounded-full bg-[#102A43] border border-[#243447] text-[#7DD3FC] font-semibold">
                 Role: Operations Admin
               </span>
+              <Link
+                href="/"
+                className="px-3 py-1.5 rounded-xl bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC] text-[#FFFFFF] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Store className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                <span>View Storefront</span>
+              </Link>
+              <form action="/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 rounded-xl bg-red-950/50 border border-red-800/80 hover:bg-red-900/60 text-red-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </form>
             </div>
           </div>
 
