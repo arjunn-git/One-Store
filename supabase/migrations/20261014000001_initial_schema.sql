@@ -243,3 +243,44 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 );
 
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- -----------------------------------------------------------------------------
+-- 8. Auto-provision Customer Profile & Admin Role Trigger
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.customer_profiles (
+    auth_user_id,
+    email,
+    full_name,
+    is_email_verified,
+    role
+  ) VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'Customer'),
+    NEW.email_confirmed_at IS NOT NULL,
+    CASE 
+      WHEN LOWER(NEW.email) = 'arjuntaneja204@gmail.com' THEN 'owner'::user_role
+      ELSE 'customer'::user_role
+    END
+  )
+  ON CONFLICT (auth_user_id) DO UPDATE
+  SET 
+    email = EXCLUDED.email,
+    is_email_verified = EXCLUDED.is_email_verified,
+    role = CASE 
+      WHEN LOWER(EXCLUDED.email) = 'arjuntaneja204@gmail.com' THEN 'owner'::user_role
+      ELSE customer_profiles.role
+    END,
+    updated_at = NOW();
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT OR UPDATE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

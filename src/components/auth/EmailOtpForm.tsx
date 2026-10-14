@@ -7,10 +7,11 @@ import {
   sendSignupOtp,
   verifyEmailOtp,
   maskEmail,
+  isAdminEmail,
 } from "@/lib/services/auth";
 import { OtpInput } from "./OtpInput";
 import { SocialAuthButtons } from "./SocialAuthButtons";
-import { Mail, ArrowRight, ShieldCheck, RefreshCw, Edit2, AlertCircle } from "lucide-react";
+import { Mail, ArrowRight, ShieldCheck, RefreshCw, Edit2, AlertCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 interface EmailOtpFormProps {
@@ -34,6 +35,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
+  const [isSandbox, setIsSandbox] = useState(false);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -76,6 +78,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       return;
     }
 
+    setIsSandbox(!!res.isDevDemo);
     setStep("verify");
     setCountdown(60);
     setOtpCode("");
@@ -107,7 +110,11 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     }
 
     // Success redirect
-    router.push(nextUrl);
+    if (isAdminEmail(email.trim().toLowerCase()) && (nextUrl === "/account" || !nextUrl)) {
+      router.push("/admin");
+    } else {
+      router.push(nextUrl);
+    }
     router.refresh();
   };
 
@@ -303,6 +310,22 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               </button>
             </div>
           </div>
+
+          {isSandbox && (
+            <div className="p-3.5 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs text-[#7DD3FC] text-center space-y-1">
+              <div className="font-semibold flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Local Sandbox Verification Active</span>
+              </div>
+              <p className="text-[11px] text-[#9CAFC3]">
+                Enter any 6 digits (e.g. <strong className="font-mono text-[#FFFFFF]">123456</strong>) to verify and sign in as{" "}
+                <strong className="text-[#FFFFFF]">
+                  {isAdminEmail(email) ? "Admin / Owner" : "Customer"}
+                </strong>
+                .
+              </p>
+            </div>
+          )}
 
           {errorMessage && (
             <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-800 text-xs text-red-300 flex items-start gap-2">

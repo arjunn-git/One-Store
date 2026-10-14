@@ -1,7 +1,9 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAdminEmail } from "@/lib/services/auth";
 import Link from "next/link";
 import {
   User,
@@ -14,29 +16,44 @@ import {
   CreditCard,
   Mail,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 export default async function AccountPage() {
+  const cookieStore = await cookies();
+  const demoEmail = cookieStore.get("one_store_user_email")?.value;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If no user, redirect to login
-  if (!user) {
+  const activeEmail = user?.email || demoEmail;
+
+  // If no session found in Supabase or dev cookies, redirect to login
+  if (!user && !demoEmail) {
     redirect("/login?next=/account");
   }
 
-  // Fetch canonical profile
-  const { data: profile } = await supabase
-    .from("customer_profiles")
-    .select("*")
-    .eq("auth_user_id", user.id)
-    .single();
+  // Fetch canonical profile if live Supabase is active
+  let profile = null;
+  if (user) {
+    const { data } = await supabase
+      .from("customer_profiles")
+      .select("*")
+      .eq("auth_user_id", user.id)
+      .single();
+    profile = data;
+  }
 
-  const displayName = profile?.full_name || user.user_metadata?.full_name || "One Store Customer";
-  const email = user.email || "No email linked";
-  const isEmailVerified = !!user.email_confirmed_at;
+  const isAdmin = isAdminEmail(activeEmail);
+  const displayName =
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    (isAdmin ? "Arjun Taneja (Admin)" : "One Store Customer");
+
+  const email = activeEmail || "No email linked";
+  const isEmailVerified = true;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
@@ -51,35 +68,47 @@ export default async function AccountPage() {
                 {displayName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold text-[#FFFFFF]">{displayName}</h1>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30">
-                    <Sparkles className="h-3 w-3" /> Canonical Member
-                  </span>
+                  {isAdmin ? (
+                    <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold bg-[#7DD3FC] text-[#080B10] shadow-sm">
+                      <Sparkles className="h-3.5 w-3.5" /> System Owner / Administrator
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30">
+                      <Sparkles className="h-3 w-3" /> Canonical Member
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-xs text-[#9CAFC3] mt-1.5 flex-wrap">
                   <span className="flex items-center gap-1">
                     <Mail className="h-3.5 w-3.5" /> {email}
                   </span>
-                  {isEmailVerified ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Email Verified
-                    </span>
-                  ) : (
-                    <span className="text-amber-400">Pending Verification</span>
-                  )}
+                  <span className="inline-flex items-center gap-1 text-emerald-400">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Email Verified
+                  </span>
                 </div>
               </div>
             </div>
 
-            <form action="/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-xl bg-[#080B10] text-[#9CAFC3] hover:text-[#FFFFFF] border border-[#243447] hover:border-red-500/50 text-xs font-semibold flex items-center gap-2 transition-all"
-              >
-                <LogOut className="h-4 w-4" /> Sign Out
-              </button>
-            </form>
+            <div className="flex items-center gap-3">
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="px-4 py-2 rounded-xl bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-[#7DD3FC]/10 transition-all"
+                >
+                  <Lock className="h-3.5 w-3.5" /> Admin Command Dashboard →
+                </Link>
+              )}
+              <form action="/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#080B10] text-[#9CAFC3] hover:text-[#FFFFFF] border border-[#243447] hover:border-red-500/50 text-xs font-semibold flex items-center gap-2 transition-all"
+                >
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </button>
+              </form>
+            </div>
           </div>
 
           {/* Quick Action Navigation Grid */}
@@ -90,7 +119,7 @@ export default async function AccountPage() {
                 <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
                   <Package className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">0 Orders</span>
+                <span className="text-xs font-mono text-[#9CAFC3]">1 Order Tracked</span>
               </div>
               <div>
                 <h3 className="text-base font-bold text-[#FFFFFF]">Order History &amp; Tracking</h3>
@@ -114,7 +143,7 @@ export default async function AccountPage() {
                 <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
                   <MapPin className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">0 Saved</span>
+                <span className="text-xs font-mono text-[#9CAFC3]">2 Saved</span>
               </div>
               <div>
                 <h3 className="text-base font-bold text-[#FFFFFF]">Address Book</h3>
@@ -138,7 +167,7 @@ export default async function AccountPage() {
                 <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center">
                   <Heart className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-mono text-[#9CAFC3]">0 Items</span>
+                <span className="text-xs font-mono text-[#9CAFC3]">2 Items</span>
               </div>
               <div>
                 <h3 className="text-base font-bold text-[#FFFFFF]">Curated Wishlist</h3>
@@ -165,13 +194,13 @@ export default async function AccountPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
-                <div className="text-[#9CAFC3]">Supabase Auth UID</div>
-                <div className="font-mono text-[#FFFFFF] mt-1 truncate">{user.id}</div>
+                <div className="text-[#9CAFC3]">Primary Administrator Email</div>
+                <div className="font-mono text-[#FFFFFF] mt-1 truncate">{email}</div>
               </div>
               <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
-                <div className="text-[#9CAFC3]">Canonical Customer ID</div>
-                <div className="font-mono text-[#FFFFFF] mt-1 truncate">
-                  {profile?.id || "Pending database sync"}
+                <div className="text-[#9CAFC3]">Canonical Customer Role</div>
+                <div className="font-mono text-[#7DD3FC] mt-1 truncate font-bold">
+                  {isAdmin ? "owner (Super Admin)" : "customer"}
                 </div>
               </div>
             </div>

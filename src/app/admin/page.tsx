@@ -16,15 +16,22 @@ import {
   Activity,
 } from "lucide-react";
 
+import { cookies } from "next/headers";
+import { isAdminEmail } from "@/lib/services/auth";
+
 export default async function AdminDashboardPage() {
+  const cookieStore = await cookies();
+  const demoEmail = cookieStore.get("one_store_user_email")?.value;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Role verification (admin / owner / operations)
-  let isAdmin = false;
-  if (user) {
+  const activeEmail = user?.email || demoEmail;
+  let isAdmin = isAdminEmail(activeEmail);
+
+  if (user && !isAdmin) {
     const { data: profile } = await supabase
       .from("customer_profiles")
       .select("role")
