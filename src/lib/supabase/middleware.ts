@@ -49,6 +49,14 @@ export async function updateSession(request: NextRequest) {
   const isAuthenticated = !!activeEmail;
   const isAdmin = isAdminEmail(activeEmail);
 
+  // If request arrives with ?code= anywhere other than /auth/callback, forward to callback handler
+  if (request.nextUrl.searchParams.has("code") && pathname !== "/auth/callback") {
+    const code = request.nextUrl.searchParams.get("code");
+    const callbackUrl = new URL("/auth/callback", request.url);
+    callbackUrl.searchParams.set("code", code!);
+    return NextResponse.redirect(callbackUrl);
+  }
+
   // If already authenticated and visiting /login or /signup, direct to destination
   if ((pathname === "/login" || pathname === "/signup") && isAuthenticated) {
     const nextParam = request.nextUrl.searchParams.get("next");
@@ -59,12 +67,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Protect admin routes
+  // Protect admin routes: strictly restricted to arjuntaneja204@gmail.com
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+    if (!isAdmin) {
+      // Normal customer accounts can NEVER view admin portal
+      const url = request.nextUrl.clone();
+      url.pathname = "/account";
+      url.search = "";
       return NextResponse.redirect(url);
     }
   }

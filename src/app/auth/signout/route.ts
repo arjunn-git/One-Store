@@ -4,7 +4,16 @@ import { cookies } from "next/headers";
 import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 
 export async function POST(request: Request) {
-  const { origin } = new URL(request.url);
+  return handleSignOut(request);
+}
+
+export async function GET(request: Request) {
+  return handleSignOut(request);
+}
+
+async function handleSignOut(request: Request) {
+  const { searchParams, origin } = new URL(request.url);
+  const next = searchParams.get("next") || "/";
 
   if (isLiveSupabaseConfigured()) {
     try {
@@ -19,7 +28,7 @@ export async function POST(request: Request) {
   cookieStore.delete("one_store_user_email");
   cookieStore.delete("one_store_user_role");
 
-  return NextResponse.redirect(`${origin}/login`, {
+  return NextResponse.redirect(`${origin}${next}`, {
     status: 303,
   });
 }

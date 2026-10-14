@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/services/auth";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/account";
+  const nextParam = searchParams.get("next");
 
   if (code) {
     const supabase = await createClient();
@@ -12,6 +13,8 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       const user = data.user;
+      const isAdmin = isAdminEmail(user.email);
+      const destination = nextParam || (isAdmin ? "/admin" : "/account");
 
       // Idempotently ensure canonical profile exists
       try {
@@ -37,13 +40,29 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
 
+      let response: NextResponse;
       if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
+        response = NextResponse.redirect(`${origin}${destination}`);
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+        response = NextResponse.redirect(`https://${forwardedHost}${destination}`);
       } else {
-        return NextResponse.redirect(`${origin}${next}`);
+        response = NextResponse.redirect(`${origin}${destination}`);
       }
+
+      if (user.email) {
+        response.cookies.set("one_store_user_email", user.email, {
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+          sameSite: "lax",
+        });
+        response.cookies.set("one_store_user_role", isAdmin ? "owner" : "customer", {
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+          sameSite: "lax",
+        });
+      }
+
+      return response;
     }
   }
 

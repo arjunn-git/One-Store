@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, Search, User, Globe, Shield } from "lucide-react";
+import { ShoppingBag, Search, User, Globe, Shield, LogOut } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { signOutUser } from "@/lib/services/auth";
 
 export function Header() {
   const { market, setMarket } = useMarket();
@@ -14,22 +15,52 @@ export function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let isMounted = true;
+    async function checkAuth() {
+      if (typeof window === "undefined") return;
+
       const emailCookie = document.cookie.includes("one_store_user_email");
       const session = localStorage.getItem("one_store_session");
+      const hasAdminCookie =
+        document.cookie.includes("arjuntaneja204%40gmail.com") ||
+        document.cookie.includes("arjuntaneja204@gmail.com") ||
+        (session && session.includes("arjuntaneja204@gmail.com"));
+
       if (emailCookie || session) {
-        setIsLoggedIn(true);
-        if (
-          document.cookie.includes("arjuntaneja204%40gmail.com") ||
-          document.cookie.includes("arjuntaneja204@gmail.com") ||
-          document.cookie.includes("one_store_user_role=owner") ||
-          (session && session.includes("arjuntaneja204@gmail.com"))
-        ) {
-          setIsAdmin(true);
+        if (isMounted) {
+          setIsLoggedIn(true);
+          setIsAdmin(!!hasAdminCookie);
         }
       }
+
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+
+        if (data?.user?.email && isMounted) {
+          setIsLoggedIn(true);
+          const email = data.user.email.toLowerCase().trim();
+          setIsAdmin(email === "arjuntaneja204@gmail.com");
+        } else if (!emailCookie && !session && isMounted) {
+          setIsLoggedIn(false);
+          setIsAdmin(false);
+        }
+      } catch {
+        // Fallback to cookie check
+      }
     }
+
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleSignOut = async () => {
+    await signOutUser();
+    window.location.href = "/";
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#243447] bg-[#080B10]/90 backdrop-blur-md">
@@ -94,6 +125,7 @@ export function Header() {
             <Link
               href="/admin"
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
+              title="Restricted Operations Portal (Arjun Taneja Only)"
             >
               <Shield className="h-3.5 w-3.5" />
               <span>Admin</span>
@@ -102,7 +134,7 @@ export function Header() {
 
           <Link
             href={isLoggedIn ? (isAdmin ? "/admin" : "/account") : "/login"}
-            aria-label={isLoggedIn ? "My Account" : "Sign In"}
+            aria-label={isLoggedIn ? (isAdmin ? "Admin Console" : "My Account") : "Sign In"}
             title={isLoggedIn ? (isAdmin ? "Admin Console" : "My Account") : "Sign In"}
             className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
               isLoggedIn
@@ -112,6 +144,19 @@ export function Header() {
           >
             <User className="h-5 w-5" />
           </Link>
+
+          {isLoggedIn && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              aria-label="Sign Out"
+              title="Sign Out (Browse as regular user)"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#102A43]/60 hover:bg-red-950/50 text-[#9CAFC3] hover:text-red-300 border border-[#243447] hover:border-red-800/60 text-xs font-medium transition-all"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Logout</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setIsOpen(true)}
