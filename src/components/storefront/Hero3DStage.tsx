@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { Globe, Shield, Sparkles, Zap, ArrowRight, Check } from "lucide-react";
+import { useRef, useState } from "react";
+import { ShieldCheck, Truck, RotateCcw, Sparkles, Check, Gift } from "lucide-react";
 import Link from "next/link";
 
 export function Hero3DStage() {
@@ -34,7 +34,7 @@ export function Hero3DStage() {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full max-w-4xl mx-auto my-12 py-10 px-4 perspective-1000 select-none cursor-pointer"
+      className="relative w-full max-w-4xl mx-auto my-10 py-6 px-4 perspective-1000 select-none cursor-pointer"
     >
       {/* 3D Parallax Main Stage */}
       <div
@@ -43,7 +43,7 @@ export function Hero3DStage() {
           transformStyle: "preserve-3d",
           transition: isHovered ? "transform 0.12s ease-out" : "transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
-        className="relative w-full min-h-[340px] md:min-h-[380px] rounded-3xl bg-gradient-to-b from-[#102A43]/50 via-[#080B10]/80 to-[#102A43]/30 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-8 overflow-hidden backdrop-blur-md"
+        className="relative w-full min-h-[340px] md:min-h-[380px] rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#080B10]/90 to-[#102A43]/40 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-8 overflow-hidden backdrop-blur-md"
       >
         {/* 3D Background Glowing Depth Rings */}
         <div
@@ -76,11 +76,14 @@ export function Hero3DStage() {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#102A43]/90 border border-[#7DD3FC]/40 text-[11px] font-semibold text-[#7DD3FC] shadow-sm">
               <Sparkles className="h-3 w-3" />
-              <span>Unified Cross-Border Commerce Engine</span>
+              <span>Curated Flagship Collection</span>
             </div>
             <h3 className="text-xl md:text-2xl font-black text-[#FFFFFF] tracking-tight">
-              Bespoke Dual-Market Operations
+              Premium Lifestyle &amp; Studio Gear
             </h3>
+            <p className="text-xs text-[#9CAFC3] max-w-md mx-auto">
+              Engineered hardware, studio audio &amp; minimalist carry delivered express to India &amp; the United Kingdom.
+            </p>
           </div>
         </div>
 
@@ -90,18 +93,18 @@ export function Hero3DStage() {
             transform: "translateZ(75px) translateX(-38%) translateY(-40px)",
             transition: "transform 0.4s ease",
           }}
-          className="hidden sm:flex absolute left-4 md:left-8 top-12 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
+          className="hidden sm:flex absolute left-4 md:left-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
         >
           <div className="h-11 w-11 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-mono text-xl font-bold shrink-0 shadow-inner">
             ₹
           </div>
           <div className="text-left text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[#FFFFFF]">Market: India</span>
+              <span className="font-bold text-[#FFFFFF]">India Store</span>
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
             </div>
-            <div className="text-[11px] text-[#9CAFC3]">INR (₹) • Razorpay &amp; UPI</div>
-            <div className="text-[10px] text-[#7DD3FC] font-semibold mt-0.5">Blue Dart Express (1-3d)</div>
+            <div className="text-[11px] text-[#9CAFC3]">Instant UPI &amp; 0-Cost EMI</div>
+            <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">Blue Dart Express (1-3 Days)</div>
           </div>
         </div>
 
@@ -111,37 +114,37 @@ export function Hero3DStage() {
             transform: "translateZ(75px) translateX(38%) translateY(-40px)",
             transition: "transform 0.4s ease",
           }}
-          className="hidden sm:flex absolute right-4 md:right-8 top-12 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
+          className="hidden sm:flex absolute right-4 md:right-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
         >
           <div className="h-11 w-11 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-mono text-xl font-bold shrink-0 shadow-inner">
             £
           </div>
           <div className="text-left text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[#FFFFFF]">Market: United Kingdom</span>
+              <span className="font-bold text-[#FFFFFF]">UK Flagship</span>
               <span className="h-2 w-2 rounded-full bg-[#7DD3FC] animate-ping" />
             </div>
-            <div className="text-[11px] text-[#9CAFC3]">GBP (£) • Stripe &amp; Apple Pay</div>
+            <div className="text-[11px] text-[#9CAFC3]">Apple Pay, Klarna &amp; Cards</div>
             <div className="text-[10px] text-[#7DD3FC] font-semibold mt-0.5">Royal Mail 24 Tracked</div>
           </div>
         </div>
 
-        {/* Bottom 3D Floating Feature Ribbon */}
+        {/* Bottom 3D Floating Feature Ribbon (Marketing Hooks) */}
         <div
           style={{ transform: "translateZ(65px)" }}
           className="mt-6 flex flex-wrap items-center justify-center gap-3 text-[11px] text-[#9CAFC3] z-20"
         >
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#102A43]/70 border border-[#243447] text-[#FFFFFF]">
-            <Check className="h-3 w-3 text-[#7DD3FC]" />
-            <span>Zero FX Friction</span>
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#102A43]/80 border border-[#243447] text-[#FFFFFF] shadow-sm">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#7DD3FC]" />
+            <span className="font-semibold">100% Authentic Guaranteed</span>
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#102A43]/70 border border-[#243447] text-[#FFFFFF]">
-            <Check className="h-3 w-3 text-[#7DD3FC]" />
-            <span>PostgreSQL RLS Security</span>
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#102A43]/80 border border-[#243447] text-[#FFFFFF] shadow-sm">
+            <Truck className="h-3.5 w-3.5 text-[#7DD3FC]" />
+            <span className="font-semibold">Free Express Air Shipping</span>
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#102A43]/70 border border-[#243447] text-[#FFFFFF]">
-            <Check className="h-3 w-3 text-[#7DD3FC]" />
-            <span>Passwordless OTP Auth</span>
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#102A43]/80 border border-[#243447] text-[#FFFFFF] shadow-sm">
+            <RotateCcw className="h-3.5 w-3.5 text-[#7DD3FC]" />
+            <span className="font-semibold">14-Day Risk-Free Returns</span>
           </span>
         </div>
       </div>
