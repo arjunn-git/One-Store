@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 
 import { MarketProvider } from "@/lib/context/MarketContext";
 import { CartProvider } from "@/lib/context/CartContext";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 export default function RootLayout({
   children,
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#080B10] text-[#F4F8FC] selection:bg-[#7DD3FC] selection:text-[#080B10]">
+        <GoogleAnalytics />
         <MarketProvider>
           <CartProvider>{children}</CartProvider>
         </MarketProvider>
