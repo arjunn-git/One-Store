@@ -18,7 +18,16 @@ export function isAdminEmail(email?: string | null): boolean {
 // Check if live Supabase project is connected
 export function isLiveSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  return !!(url && !url.includes("placeholder") && !url.includes("your-project-ref"));
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  return !!(
+    url &&
+    !url.includes("placeholder") &&
+    !url.includes("your-project-ref") &&
+    key &&
+    !key.includes("placeholder")
+  );
 }
 
 // Mask email for privacy (e.g. a***4@gmail.com)
