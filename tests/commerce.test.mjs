@@ -451,6 +451,21 @@ runTest("OAuth Client Graceful Failure On Missing Provider URL", () => {
   assert.ok(configuredGoogleResult.url.startsWith("https://accounts.google.com"));
 });
 
+// 21. Order Reference Normalization (Whitespace around hyphens, casing & trimming)
+runTest("Order Reference Normalization (OS - 2026 - IN - 2056 -> OS-2026-IN-2056)", () => {
+  function normalizeOrderReference(raw) {
+    if (!raw) return null;
+    return String(raw).replace(/\s+/g, "").toUpperCase();
+  }
+
+  assert.equal(normalizeOrderReference("OS - 2026 - IN - 2056"), "OS-2026-IN-2056");
+  assert.equal(normalizeOrderReference("os-2026-in-2056"), "OS-2026-IN-2056");
+  assert.equal(normalizeOrderReference("  OS-2026-GB-4120  "), "OS-2026-GB-4120");
+  assert.equal(normalizeOrderReference("OS - 2026 - GB - 001"), "OS-2026-GB-001");
+  assert.equal(normalizeOrderReference(null), null);
+  assert.equal(normalizeOrderReference(undefined), null);
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

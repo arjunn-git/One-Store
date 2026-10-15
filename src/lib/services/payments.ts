@@ -221,9 +221,18 @@ export async function markOrderPaymentStatus(
 
 // 4. Secure Customer Order Lookup (Guards against viewing other customer's orders)
 export async function getSecureOrderDetails(
-  orderNumber: string,
+  rawOrderNumber: string,
   token?: string | null
 ): Promise<{ order: Order | null; error?: string; status: number }> {
+  if (!rawOrderNumber) {
+    return { order: null, error: "Missing order reference", status: 400 };
+  }
+
+  // Normalize reference: strip whitespace around dashes, trim, and uppercase
+  // (e.g. "OS - 2026 - IN - 2056" -> "OS-2026-IN-2056")
+  const orderNumber = String(rawOrderNumber).replace(/\s+/g, "").toUpperCase();
+  const cleanToken = token ? String(token).trim() : null;
+
   let order: any = null;
   let user: any = null;
 
@@ -235,6 +244,7 @@ export async function getSecureOrderDetails(
       const { data: authData } = await supabase.auth.getUser();
       user = authData?.user;
 
+      // 1. Try admin client (works when service role key is present)
       const { data: dbOrder, error } = await adminSupabase
         .from("orders")
         .select("*, items:order_items(*)")
@@ -243,6 +253,37 @@ export async function getSecureOrderDetails(
 
       if (dbOrder && !error) {
         order = dbOrder;
+      } else if (user) {
+        // 2. Fallback: try authenticated user client (bypasses RLS for own orders)
+        const { data: userOrder } = await supabase
+          .from("orders")
+          .select("*, items:order_items(*)")
+          .eq("order_number", orderNumber)
+          .maybeSingle();
+
+        if (userOrder) {
+          order = userOrder;
+        }
+      }
+
+      // 3. If items was not joined, populate separately
+      if (order && (!order.items || order.items.length === 0)) {
+        const { data: items } = await adminSupabase
+          .from("order_items")
+          .select("*")
+          .eq("order_id", order.id);
+
+        if (items && items.length > 0) {
+          order.items = items;
+        } else if (user) {
+          const { data: userItems } = await supabase
+            .from("order_items")
+            .select("*")
+            .eq("order_id", order.id);
+          if (userItems && userItems.length > 0) {
+            order.items = userItems;
+          }
+        }
       }
     } catch {
       // Fall through to memory store
@@ -264,6 +305,14 @@ export async function getSecureOrderDetails(
     return { order, status: 200 };
   }
 
+  // Extract order notes
+  let orderNotes: Record<string, unknown> = {};
+  try {
+    if (order.notes) {
+      orderNotes = typeof order.notes === "string" ? JSON.parse(order.notes) : order.notes;
+    }
+  } catch {}
+
   // 2. Is user the owner customer profile?
   if (user && order.customer_id) {
     try {
@@ -280,20 +329,28 @@ export async function getSecureOrderDetails(
     } catch {}
   }
 
-  // 3. Check access token (for guest checkouts and callback redirects)
-  let orderNotes: Record<string, unknown> = {};
-  try {
-    if (order.notes) {
-      orderNotes = typeof order.notes === "string" ? JSON.parse(order.notes) : order.notes;
+  // 2b. Match user email with order customer email or shipping recipient email
+  if (user && user.email) {
+    const userEmail = user.email.toLowerCase().trim();
+    let shippingEmail = "";
+    if (order.shipping_address && typeof order.shipping_address === "object") {
+      shippingEmail = (order.shipping_address.customerEmail || order.shipping_address.email || "").toLowerCase().trim();
     }
-  } catch {}
+    if (shippingEmail && shippingEmail === userEmail) {
+      return { order, status: 200 };
+    }
+    if (orderNotes.customer_email && String(orderNotes.customer_email).toLowerCase().trim() === userEmail) {
+      return { order, status: 200 };
+    }
+  }
 
-  if (token && orderNotes.access_token && orderNotes.access_token === token) {
+  // 3. Check access token (for guest checkouts and callback redirects)
+  if (cleanToken && orderNotes.access_token && orderNotes.access_token === cleanToken) {
     return { order, status: 200 };
   }
 
   // If token was provided and matched order verification token, or token exists on order
-  if (token) {
+  if (cleanToken) {
     return { order, status: 200 };
   }
 

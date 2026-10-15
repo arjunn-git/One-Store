@@ -16,10 +16,16 @@ import {
 } from "lucide-react";
 import { getSecureOrderDetails } from "@/lib/services/payments";
 
+export const dynamic = "force-dynamic";
+
 interface SuccessPageProps {
   searchParams: Promise<{
     orderNumber?: string;
+    order_number?: string;
+    orderId?: string;
+    order_id?: string;
     token?: string;
+    access_token?: string;
   }>;
 }
 
@@ -39,7 +45,16 @@ function formatCurrency(amount: number, currency: "INR" | "GBP") {
 }
 
 async function SuccessDetails({ searchParams }: SuccessPageProps) {
-  const { orderNumber, token } = await searchParams;
+  const params = await searchParams;
+  const rawOrderNumber =
+    params.orderNumber ||
+    params.order_number ||
+    params.orderId ||
+    params.order_id;
+  const token = params.token || params.access_token;
+  const orderNumber = rawOrderNumber
+    ? String(rawOrderNumber).replace(/\s+/g, "").toUpperCase()
+    : null;
 
   if (!orderNumber) {
     return (

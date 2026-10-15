@@ -65,8 +65,10 @@ export default function CheckoutPage() {
       setIsLoading(false);
       if (data.success) {
         clearCart();
+        const safeOrderNum = encodeURIComponent(String(pendingTestOrder.orderNumber).replace(/\s+/g, "").toUpperCase());
+        const safeToken = encodeURIComponent(pendingTestOrder.accessToken || "");
         router.push(
-          `/checkout/success?orderNumber=${pendingTestOrder.orderNumber}&token=${pendingTestOrder.accessToken || ""}`
+          `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
         );
       } else {
         setErrorMessage(data.error || "Sandbox completion failed.");
@@ -203,8 +205,10 @@ export default function CheckoutPage() {
 
               if (verifyData.success) {
                 clearCart();
+                const safeOrderNum = encodeURIComponent(String(data.orderNumber).replace(/\s+/g, "").toUpperCase());
+                const safeToken = encodeURIComponent(data.accessToken || "");
                 router.push(
-                  `/checkout/success?orderNumber=${data.orderNumber}&token=${data.accessToken}`
+                  `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
                 );
               } else {
                 setErrorMessage(
