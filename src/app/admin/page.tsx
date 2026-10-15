@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { createClient } from "@/lib/supabase/server";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
 import Link from "next/link";
@@ -144,6 +145,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
       <Header />
+      <AdminNav />
 
       <main className="flex-1 py-12 px-4 md:px-8">
         <div className="max-w-7xl mx-auto space-y-10">

@@ -241,8 +241,10 @@ export async function verifyEmailOtp(
 // Google OAuth
 export async function signInWithGoogle(): Promise<AuthResponse> {
   if (!isLiveSupabaseConfigured()) {
-    // In dev mode simulate Google Sign-in for admin
-    return verifyEmailOtp("arjuntaneja204@gmail.com", "123456");
+    return {
+      success: false,
+      error: "Google OAuth credentials (Client ID & Secret) are not yet configured in Supabase. Please use Email OTP.",
+    };
   }
 
   try {
@@ -274,7 +276,10 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
 // Apple Sign-In
 export async function signInWithApple(): Promise<AuthResponse> {
   if (!isLiveSupabaseConfigured()) {
-    return verifyEmailOtp("arjuntaneja204@gmail.com", "123456");
+    return {
+      success: false,
+      error: "Apple Sign-In credentials are not yet configured in Supabase. Please use Email OTP.",
+    };
   }
 
   try {

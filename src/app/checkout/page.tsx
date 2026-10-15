@@ -113,10 +113,62 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Clear client cart and navigate to success confirmation
+      // 1. If Stripe checkout session URL is provided, redirect to Stripe
+      if (data.stripeCheckoutUrl) {
+        clearCart();
+        window.location.href = data.stripeCheckoutUrl;
+        return;
+      }
+
+      // 2. If Razorpay order is initialized with keys, open Razorpay Standard Checkout
+      if (data.razorpayOrderId && data.razorpayKeyId) {
+        // Dynamically load Razorpay SDK if not present
+        if (!("Razorpay" in window)) {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.async = true;
+          document.body.appendChild(script);
+          await new Promise((resolve) => (script.onload = resolve));
+        }
+
+        const options = {
+          key: data.razorpayKeyId,
+          amount: Math.round(total * 100),
+          currency: "INR",
+          name: "One Store",
+          description: `Order ${data.orderNumber}`,
+          order_id: data.razorpayOrderId,
+          prefill: {
+            name: formData.recipientName,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: {
+            color: "#7DD3FC",
+          },
+          handler: function () {
+            clearCart();
+            router.push(
+              `/checkout/success?orderNumber=${data.orderNumber}&amount=${total}&currency=INR`
+            );
+          },
+          modal: {
+            ondismiss: function () {
+              setErrorMessage("Payment was not completed. You can try again whenever ready.");
+            },
+          },
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+        return;
+      }
+
+      // 3. Test mode or sandbox fallback
       clearCart();
       router.push(
-        `/checkout/success?orderNumber=${data.orderNumber}&amount=${total}&currency=${market === "IN" ? "INR" : "GBP"}`
+        `/checkout/success?orderNumber=${data.orderNumber}&amount=${total}&currency=${market === "IN" ? "INR" : "GBP"}${data.isTestMode ? "&testMode=true" : ""}`
       );
     } catch (err: unknown) {
       setIsLoading(false);

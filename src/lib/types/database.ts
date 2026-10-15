@@ -75,6 +75,12 @@ export interface Product {
   compare_at_price_inr?: number | null;
   price_gbp: number;
   compare_at_price_gbp?: number | null;
+  cost_price_inr?: number | null;
+  cost_price_gbp?: number | null;
+  supplier_name?: string | null;
+  available_in_in?: boolean;
+  available_in_gb?: boolean;
+  shipping_info?: string | null;
   sku: string;
   status: "draft" | "active" | "archived";
   seo_title?: string | null;
@@ -91,9 +97,23 @@ export interface ProductVariant {
   sku: string;
   price_inr_adjustment: number;
   price_gbp_adjustment: number;
+  cost_price_inr?: number | null;
+  cost_price_gbp?: number | null;
   inventory_count: number;
+  reserved_count?: number;
   low_stock_threshold: number;
   options: Record<string, string>;
+  created_at: string;
+}
+
+export interface InventoryMovement {
+  id: string;
+  variant_id: string;
+  change_amount: number;
+  previous_count: number;
+  new_count: number;
+  reason: string;
+  performed_by?: string | null;
   created_at: string;
 }
 
