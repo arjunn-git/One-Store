@@ -15,6 +15,7 @@ import {
   Lock,
 } from "lucide-react";
 import { getSecureOrderDetails } from "@/lib/services/payments";
+import { OrderSuccessFallback } from "@/components/storefront/OrderSuccessFallback";
 
 export const dynamic = "force-dynamic";
 
@@ -116,27 +117,9 @@ async function SuccessDetails({ searchParams }: SuccessPageProps) {
     );
   }
 
-  // Order Not Found
+  // Order Not Found in Server Store — Check Client Storage & Show Fallback
   if (!result.order) {
-    return (
-      <div className="max-w-xl mx-auto p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] text-center space-y-4">
-        <div className="h-14 w-14 rounded-full bg-red-950/40 text-red-400 border border-red-800 flex items-center justify-center mx-auto">
-          <XCircle className="h-7 w-7" />
-        </div>
-        <h1 className="text-xl font-bold text-[#FFFFFF]">Order Not Found</h1>
-        <p className="text-xs text-[#9CAFC3]">
-          We could not locate an order matching reference <span className="font-mono text-[#7DD3FC]">{orderNumber}</span> in our verified records.
-        </p>
-        <div className="pt-2">
-          <Link
-            href="/products"
-            className="inline-block px-5 py-2.5 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-xs"
-          >
-            Browse Products
-          </Link>
-        </div>
-      </div>
-    );
+    return <OrderSuccessFallback orderNumber={orderNumber} />;
   }
 
   const order = result.order;

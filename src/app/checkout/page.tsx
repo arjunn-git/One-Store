@@ -64,8 +64,42 @@ export default function CheckoutPage() {
       const data = await res.json();
       setIsLoading(false);
       if (data.success) {
+        const cleanOrderNumber = String(pendingTestOrder.orderNumber).replace(/\s+/g, "").toUpperCase();
+        const backupOrder = {
+          order_number: cleanOrderNumber,
+          orderNumber: cleanOrderNumber,
+          total_amount: total,
+          currency: market === "IN" ? "INR" : "GBP",
+          payment_status: "succeeded",
+          status: "processing",
+          created_at: new Date().toISOString(),
+          items: items.map((i) => ({
+            product_name: i.productName,
+            variant_name: i.variantName,
+            quantity: i.quantity,
+            unit_price: market === "IN" ? i.priceInr : i.priceGbp,
+            total_price: (market === "IN" ? i.priceInr : i.priceGbp) * i.quantity,
+            image_url: getCartItemImage(i),
+          })),
+          shipping_address: {
+            recipientName: formData.recipientName,
+            phone: formData.phone,
+            line1: formData.line1,
+            city: formData.city,
+            stateOrProvince: formData.stateOrProvince,
+            postalCode: formData.postalCode,
+            countryCode: market,
+          },
+        };
+        try {
+          localStorage.setItem(`one_store_order_${cleanOrderNumber}`, JSON.stringify(backupOrder));
+          localStorage.setItem("one_store_last_order", JSON.stringify(backupOrder));
+        } catch {
+          // Ignore storage errors
+        }
+
         clearCart();
-        const safeOrderNum = encodeURIComponent(String(pendingTestOrder.orderNumber).replace(/\s+/g, "").toUpperCase());
+        const safeOrderNum = encodeURIComponent(cleanOrderNumber);
         const safeToken = encodeURIComponent(pendingTestOrder.accessToken || "");
         router.push(
           `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
@@ -204,8 +238,42 @@ export default function CheckoutPage() {
               setIsLoading(false);
 
               if (verifyData.success) {
+                const cleanOrderNumber = String(data.orderNumber).replace(/\s+/g, "").toUpperCase();
+                const backupOrder = {
+                  order_number: cleanOrderNumber,
+                  orderNumber: cleanOrderNumber,
+                  total_amount: total,
+                  currency: market === "IN" ? "INR" : "GBP",
+                  payment_status: "succeeded",
+                  status: "processing",
+                  created_at: new Date().toISOString(),
+                  items: items.map((i) => ({
+                    product_name: i.productName,
+                    variant_name: i.variantName,
+                    quantity: i.quantity,
+                    unit_price: market === "IN" ? i.priceInr : i.priceGbp,
+                    total_price: (market === "IN" ? i.priceInr : i.priceGbp) * i.quantity,
+                    image_url: getCartItemImage(i),
+                  })),
+                  shipping_address: {
+                    recipientName: formData.recipientName,
+                    phone: formData.phone,
+                    line1: formData.line1,
+                    city: formData.city,
+                    stateOrProvince: formData.stateOrProvince,
+                    postalCode: formData.postalCode,
+                    countryCode: market,
+                  },
+                };
+                try {
+                  localStorage.setItem(`one_store_order_${cleanOrderNumber}`, JSON.stringify(backupOrder));
+                  localStorage.setItem("one_store_last_order", JSON.stringify(backupOrder));
+                } catch {
+                  // Ignore storage errors
+                }
+
                 clearCart();
-                const safeOrderNum = encodeURIComponent(String(data.orderNumber).replace(/\s+/g, "").toUpperCase());
+                const safeOrderNum = encodeURIComponent(cleanOrderNumber);
                 const safeToken = encodeURIComponent(data.accessToken || "");
                 router.push(
                   `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
