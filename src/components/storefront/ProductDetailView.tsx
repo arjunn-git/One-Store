@@ -37,6 +37,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Variant adjustments
   const adjInr = selectedVariant ? selectedVariant.price_inr_adjustment : 0;
@@ -62,26 +63,51 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
         {/* Left: Product Image Stage */}
         <div className="space-y-4">
-          <div className="relative aspect-square w-full rounded-2xl bg-[#102A43]/40 border border-[#243447] flex items-center justify-center p-8 overflow-hidden shadow-2xl">
-            {/* Visual aesthetic glow */}
-            <div className="absolute inset-0 bg-radial from-[#7DD3FC]/10 via-transparent to-transparent"></div>
-
-            <div className="relative z-10 flex flex-col items-center justify-center text-center">
-              <div className="w-40 h-40 rounded-3xl bg-[#080B10] border border-[#243447] flex items-center justify-center text-[#7DD3FC] shadow-2xl">
-                <span className="font-mono text-5xl font-black">1</span>
+          <div className="relative aspect-square w-full rounded-2xl bg-[#080B10] border border-[#243447] flex items-center justify-center p-4 overflow-hidden shadow-2xl">
+            {product.images && product.images.length > 0 ? (
+              <img
+                src={product.images[activeImageIndex] || product.images[0]}
+                alt={product.name}
+                className="w-full h-full object-cover rounded-xl"
+              />
+            ) : (
+              <div className="relative z-10 flex flex-col items-center justify-center text-center">
+                <div className="w-40 h-40 rounded-3xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#7DD3FC] shadow-2xl">
+                  <span className="font-mono text-5xl font-black">1</span>
+                </div>
+                <div className="mt-6 font-mono text-xs text-[#9CAFC3] uppercase tracking-widest">
+                  SKU: {selectedVariant?.sku || product.sku}
+                </div>
               </div>
-              <div className="mt-6 font-mono text-xs text-[#9CAFC3] uppercase tracking-widest">
-                SKU: {selectedVariant?.sku || product.sku}
-              </div>
-            </div>
+            )}
 
             {/* Badges */}
             {product.is_featured && (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded bg-[#7DD3FC] text-[#080B10] text-xs font-bold uppercase tracking-wider">
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-xs font-bold uppercase tracking-wider shadow-lg">
                 Featured Flagship
               </span>
             )}
           </div>
+
+          {/* Thumbnail Gallery */}
+          {product.images && product.images.length > 1 && (
+            <div className="flex items-center gap-3">
+              {product.images.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`h-16 w-16 rounded-xl border overflow-hidden transition-all ${
+                    activeImageIndex === idx
+                      ? "border-[#7DD3FC] ring-2 ring-[#7DD3FC]/40 scale-105"
+                      : "border-[#243447] opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Product Actions & Specs */}

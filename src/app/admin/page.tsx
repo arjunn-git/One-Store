@@ -93,54 +93,67 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  // Demonstration admin data
-  const stats = {
-    grossRevenueInr: 1248900,
-    grossRevenueGbp: 12450,
-    totalOrders: 48,
-    pendingFulfillment: 3,
-    activeCustomers: 129,
-    lowStockItems: 2,
-  };
+  // Query live production database for executive metrics
+  let grossVolumeInr = 0;
+  let grossVolumeGbp = 0;
+  let pendingFulfillmentCount = 0;
+  let activeCustomersCount = 0;
+  let liveOrders: any[] = [];
+  let catalogProducts: any[] = [];
 
-  const recentOrders = [
-    {
-      orderNumber: "OS-2026-IN-9812",
-      customer: "Aarav Sharma",
-      market: "India (₹)",
-      total: "₹24,999",
-      status: "awaiting_fulfillment",
-      paymentStatus: "succeeded",
-      date: "10 mins ago",
-    },
-    {
-      orderNumber: "OS-2026-GB-4120",
-      customer: "Oliver Smith",
-      market: "UK (£)",
-      total: "£145.00",
-      status: "shipped",
-      paymentStatus: "succeeded",
-      date: "1 hour ago",
-    },
-    {
-      orderNumber: "OS-2026-IN-8819",
-      customer: "Priya Patel",
-      market: "India (₹)",
-      total: "₹38,999",
-      status: "delivered",
-      paymentStatus: "succeeded",
-      date: "Yesterday",
-    },
-    {
-      orderNumber: "OS-2026-GB-3012",
-      customer: "Emma Watson",
-      market: "UK (£)",
-      total: "£380.00",
-      status: "processing",
-      paymentStatus: "succeeded",
-      date: "2 days ago",
-    },
-  ];
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+
+      // 1. Fetch real orders with line items and customer profile
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("*, customer:customer_profiles(*), items:order_items(*)")
+        .order("created_at", { ascending: false });
+
+      if (ordersData && ordersData.length > 0) {
+        liveOrders = ordersData;
+        ordersData.forEach((ord: any) => {
+          if (ord.payment_status === "succeeded") {
+            if (ord.currency === "INR") {
+              grossVolumeInr += Number(ord.total_amount) || 0;
+            } else {
+              grossVolumeGbp += Number(ord.total_amount) || 0;
+            }
+          }
+          if (
+            ord.status === "processing" ||
+            ord.status === "pending_payment" ||
+            (ord.payment_status === "succeeded" && ord.status !== "delivered" && ord.status !== "cancelled")
+          ) {
+            pendingFulfillmentCount++;
+          }
+        });
+      }
+
+      // 2. Fetch real active registered customer accounts
+      const { count: customerCount } = await supabase
+        .from("customer_profiles")
+        .select("*", { count: "exact", head: true });
+      activeCustomersCount = customerCount || 0;
+
+      // 3. Fetch real products with variants for inventory monitor
+      const { data: prods } = await supabase
+        .from("products")
+        .select("*, variants:product_variants(*)")
+        .eq("status", "active");
+
+      if (prods && prods.length > 0) {
+        catalogProducts = prods;
+      }
+    } catch (err) {
+      console.error("Admin dashboard fetch error:", err);
+    }
+  }
+
+  if (catalogProducts.length === 0) {
+    catalogProducts = FALLBACK_PRODUCTS;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
@@ -186,43 +199,53 @@ export default async function AdminDashboardPage() {
 
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Metric 1 */}
+            {/* Metric 1: India Revenue */}
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl">
               <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
                 <span>Gross Volume (India)</span>
                 <TrendingUp className="h-4 w-4 text-[#7DD3FC]" />
               </div>
-              <div className="text-2xl font-black text-[#FFFFFF]">₹12,48,900</div>
-              <div className="text-[11px] text-emerald-400">+18.4% month-over-month</div>
+              <div className="text-2xl font-black text-[#FFFFFF]">
+                ₹{grossVolumeInr.toLocaleString("en-IN")}
+              </div>
+              <div className="text-[11px] text-emerald-400">
+                {liveOrders.filter((o) => o.currency === "INR" && o.payment_status === "succeeded").length} completed order(s)
+              </div>
             </div>
 
-            {/* Metric 2 */}
+            {/* Metric 2: UK Revenue */}
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl">
               <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
                 <span>Gross Volume (UK)</span>
                 <DollarSign className="h-4 w-4 text-[#7DD3FC]" />
               </div>
-              <div className="text-2xl font-black text-[#FFFFFF]">£12,450.00</div>
-              <div className="text-[11px] text-emerald-400">+12.2% month-over-month</div>
+              <div className="text-2xl font-black text-[#FFFFFF]">
+                £{grossVolumeGbp.toFixed(2)}
+              </div>
+              <div className="text-[11px] text-emerald-400">
+                {liveOrders.filter((o) => o.currency === "GBP" && o.payment_status === "succeeded").length} completed order(s)
+              </div>
             </div>
 
-            {/* Metric 3 */}
+            {/* Metric 3: Pending Fulfillment */}
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl">
               <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
                 <span>Pending Fulfillment</span>
                 <Package className="h-4 w-4 text-amber-400" />
               </div>
-              <div className="text-2xl font-black text-[#FFFFFF]">{stats.pendingFulfillment}</div>
-              <div className="text-[11px] text-amber-300">Requires dispatch label generation</div>
+              <div className="text-2xl font-black text-[#FFFFFF]">{pendingFulfillmentCount}</div>
+              <div className="text-[11px] text-amber-300">
+                {pendingFulfillmentCount === 0 ? "All orders dispatched" : "Requires dispatch label generation"}
+              </div>
             </div>
 
-            {/* Metric 4 */}
+            {/* Metric 4: Active Registered Accounts */}
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl">
               <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
                 <span>Active Customers</span>
                 <Users className="h-4 w-4 text-[#7DD3FC]" />
               </div>
-              <div className="text-2xl font-black text-[#FFFFFF]">{stats.activeCustomers}</div>
+              <div className="text-2xl font-black text-[#FFFFFF]">{activeCustomersCount}</div>
               <div className="text-[11px] text-[#7DD3FC]">Dual-market canonical accounts</div>
             </div>
           </div>
@@ -233,101 +256,187 @@ export default async function AdminDashboardPage() {
               <div>
                 <h2 className="text-lg font-bold text-[#FFFFFF]">Live Orders Stream</h2>
                 <p className="text-xs text-[#9CAFC3]">
-                  Real-time transaction queue synced with Razorpay and Stripe webhooks.
+                  Real-time transaction queue synced with Razorpay and Stripe payment webhooks.
                 </p>
               </div>
 
               <div className="flex items-center gap-2 text-xs">
-                <button className="px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
-                  All Orders ({recentOrders.length})
-                </button>
+                <Link
+                  href="/admin/orders"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#7DD3FC] border border-[#243447] font-semibold transition-all"
+                >
+                  Manage All Orders ({liveOrders.length})
+                </Link>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
-                    <th className="pb-3">Order Ref</th>
-                    <th className="pb-3">Customer</th>
-                    <th className="pb-3">Market</th>
-                    <th className="pb-3">Amount</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3">Payment</th>
-                    <th className="pb-3">Time</th>
-                    <th className="pb-3 text-right">Quick Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#243447]/60">
-                  {recentOrders.map((order) => (
-                    <tr key={order.orderNumber} className="hover:bg-[#102A43]/20">
-                      <td className="py-4 font-mono font-bold text-[#7DD3FC]">
-                        {order.orderNumber}
-                      </td>
-                      <td className="py-4 font-semibold text-[#FFFFFF]">{order.customer}</td>
-                      <td className="py-4 text-[#9CAFC3]">{order.market}</td>
-                      <td className="py-4 font-bold text-[#FFFFFF]">{order.total}</td>
-                      <td className="py-4">
-                        {order.status === "delivered" ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                            Delivered
-                          </span>
-                        ) : order.status === "shipped" ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
-                            In Transit
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-800">
-                            Awaiting Dispatch
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4">
-                        <span className="text-emerald-400 font-semibold">Paid</span>
-                      </td>
-                      <td className="py-4 text-[#9CAFC3]">{order.date}</td>
-                      <td className="py-4 text-right">
-                        <button className="px-3 py-1 rounded bg-[#080B10] hover:bg-[#102A43] border border-[#243447] hover:border-[#7DD3FC] text-[#FFFFFF] font-semibold text-[11px] transition-all">
-                          Inspect Order
-                        </button>
-                      </td>
+            {liveOrders.length === 0 ? (
+              <div className="py-12 text-center space-y-3 bg-[#080B10]/60 rounded-xl border border-[#243447]/60">
+                <Package className="h-10 w-10 mx-auto text-[#7DD3FC]/60" />
+                <div className="text-sm font-bold text-[#FFFFFF]">No Customer Orders Recorded Yet</div>
+                <p className="text-xs text-[#9CAFC3] max-w-md mx-auto">
+                  Your live Supabase database is connected and awaiting transactions. Place a test checkout order from the storefront to see live orders appear here instantly.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs transition-all shadow-md shadow-[#7DD3FC]/10"
+                  >
+                    <Store className="h-4 w-4" />
+                    <span>Place Test Order on Storefront</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
+                      <th className="pb-3">Order Ref</th>
+                      <th className="pb-3">Customer</th>
+                      <th className="pb-3">Market</th>
+                      <th className="pb-3">Amount</th>
+                      <th className="pb-3">Fulfillment</th>
+                      <th className="pb-3">Payment</th>
+                      <th className="pb-3">Time</th>
+                      <th className="pb-3 text-right">Quick Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#243447]/60">
+                    {liveOrders.slice(0, 10).map((order) => {
+                      const customerDisplay =
+                        order.shipping_address?.recipientName ||
+                        order.customer?.full_name ||
+                        order.customer_email ||
+                        "Customer";
+
+                      return (
+                        <tr key={order.id || order.order_number} className="hover:bg-[#102A43]/20 transition-colors">
+                          <td className="py-4 font-mono font-bold text-[#7DD3FC]">
+                            {order.order_number}
+                          </td>
+                          <td className="py-4 font-semibold text-[#FFFFFF]">{customerDisplay}</td>
+                          <td className="py-4 text-[#9CAFC3]">
+                            {order.currency === "INR" ? "India (₹)" : "UK (£)"}
+                          </td>
+                          <td className="py-4 font-bold text-[#FFFFFF]">
+                            {order.currency === "INR"
+                              ? `₹${Number(order.total_amount).toLocaleString("en-IN")}`
+                              : `£${Number(order.total_amount).toFixed(2)}`}
+                          </td>
+                          <td className="py-4">
+                            {order.status === "delivered" ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                                Delivered
+                              </span>
+                            ) : order.status === "shipped" ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
+                                In Transit
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-800">
+                                {order.status?.replace("_", " ") || "Processing"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                                order.payment_status === "succeeded"
+                                  ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                                  : "bg-amber-950/80 text-amber-300 border border-amber-800"
+                              }`}
+                            >
+                              {order.payment_status || "Pending"}
+                            </span>
+                          </td>
+                          <td className="py-4 text-[#9CAFC3]">
+                            {order.created_at ? new Date(order.created_at).toLocaleDateString() : "Just now"}
+                          </td>
+                          <td className="py-4 text-right">
+                            <Link
+                              href="/admin/orders"
+                              className="px-3 py-1 rounded bg-[#080B10] hover:bg-[#102A43] border border-[#243447] hover:border-[#7DD3FC] text-[#FFFFFF] font-semibold text-[11px] transition-all inline-block"
+                            >
+                              Manage Dispatch
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Catalog & Inventory Operations */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Inventory adjustments */}
             <div className="p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4">
-              <h2 className="text-lg font-bold text-[#FFFFFF] flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-400" />
-                <span>Inventory &amp; Low-Stock Monitor</span>
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-[#FFFFFF] flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-400" />
+                  <span>Inventory &amp; Low-Stock Monitor</span>
+                </h2>
+                <Link
+                  href="/admin/inventory"
+                  className="text-xs text-[#7DD3FC] hover:underline font-semibold"
+                >
+                  Manage Stock
+                </Link>
+              </div>
               <div className="space-y-3">
-                {FALLBACK_PRODUCTS.map((prod) => (
-                  <div
-                    key={prod.id}
-                    className="p-4 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-bold text-[#FFFFFF]">{prod.name}</div>
-                      <div className="font-mono text-[11px] text-[#9CAFC3] mt-0.5">
-                        SKU: {prod.sku}
+                {catalogProducts.map((prod) => {
+                  const availableUnits =
+                    prod.variants && prod.variants.length > 0
+                      ? prod.variants.reduce((s: number, v: any) => s + (v.inventory_count || 0), 0)
+                      : 10;
+
+                  return (
+                    <div
+                      key={prod.id}
+                      className="p-4 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-[#102A43] border border-[#243447] overflow-hidden shrink-0 flex items-center justify-center">
+                          {prod.images && prod.images[0] ? (
+                            <img
+                              src={prod.images[0]}
+                              alt={prod.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Package className="h-5 w-5 text-[#9CAFC3]" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-bold text-[#FFFFFF]">{prod.name}</div>
+                          <div className="font-mono text-[11px] text-[#9CAFC3] mt-0.5">
+                            SKU: {prod.sku}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span
+                          className={`px-2.5 py-1 rounded-full border font-mono font-semibold ${
+                            availableUnits <= 5
+                              ? "bg-red-950/80 text-red-300 border-red-800"
+                              : "bg-[#102A43] text-[#7DD3FC] border-[#243447]"
+                          }`}
+                        >
+                          {availableUnits} Units Available
+                        </span>
+                        <Link
+                          href="/admin/inventory"
+                          className="text-[11px] text-[#7DD3FC] hover:underline font-semibold"
+                        >
+                          Adjust
+                        </Link>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="px-2.5 py-1 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] font-mono font-semibold">
-                        {prod.variants.reduce((s, v) => s + v.inventory_count, 0)} Units Available
-                      </span>
-                      <button className="text-[11px] text-[#7DD3FC] hover:underline font-semibold">
-                        Adjust
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

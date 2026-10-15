@@ -109,12 +109,27 @@ export async function processRazorpayPaymentSuccess(
   };
 }
 
+// In-memory store for fallback/dev environments attached to globalThis
+const FALLBACK_ORDER_STORE: Map<string, { payment_status: PaymentStatus; status: OrderStatus; metadata?: any }> =
+  (globalThis as any).__one_store_fallback_orders__ ||
+  ((globalThis as any).__one_store_fallback_orders__ = new Map());
+
 // 3. Mark Order Payment Status in Database
 export async function markOrderPaymentStatus(
   orderNumber: string,
   paymentStatus: PaymentStatus,
   metadata?: Record<string, unknown>
 ): Promise<boolean> {
+  const nextFulfillmentStatus: OrderStatus =
+    paymentStatus === "succeeded" ? "processing" : "pending_payment";
+
+  // Always record in local store for dev sandbox consistency
+  FALLBACK_ORDER_STORE.set(orderNumber, {
+    payment_status: paymentStatus,
+    status: nextFulfillmentStatus,
+    metadata,
+  });
+
   if (!isLiveSupabaseConfigured()) {
     return true;
   }
@@ -180,14 +195,15 @@ export async function getSecureOrderDetails(
   token?: string | null
 ): Promise<{ order: Order | null; error?: string; status: number }> {
   if (!isLiveSupabaseConfigured()) {
+    const stored = FALLBACK_ORDER_STORE.get(orderNumber);
     // Development fallback mock order
     return {
       order: {
         id: "ord_dev_sample",
         order_number: orderNumber,
         customer_id: "cust_sample",
-        status: "pending_payment",
-        payment_status: "pending",
+        status: stored?.status || "pending_payment",
+        payment_status: stored?.payment_status || "pending",
         currency: "INR",
         subtotal: 24999,
         discount_amount: 0,

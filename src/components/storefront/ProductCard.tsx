@@ -83,21 +83,37 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Subtle geometric backdrop */}
         <div className="absolute inset-0 bg-radial from-[#102A43]/60 via-transparent to-transparent opacity-60 group-hover:scale-115 transition-transform duration-700"></div>
 
-        {/* 3D Floating Product Wireframe / Emblem */}
-        <div
-          style={{
-            transform: isHovered ? "translateZ(30px) scale(1.08)" : "translateZ(0px) scale(1)",
-            transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          }}
-          className="relative z-10 flex flex-col items-center justify-center text-center p-4"
-        >
-          <div className="w-20 h-20 rounded-2xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#7DD3FC] group-hover:border-[#7DD3FC] group-hover:shadow-lg group-hover:shadow-[#7DD3FC]/20 transition-all duration-300 shadow-inner">
-            <span className="font-mono text-2xl font-black">1</span>
+        {/* Product Image Stage with 3D Depth */}
+        {product.images && product.images[0] ? (
+          <div
+            style={{
+              transform: isHovered ? "translateZ(24px) scale(1.06)" : "translateZ(0px) scale(1)",
+              transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+            className="relative z-10 w-full h-full flex items-center justify-center p-2"
+          >
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover rounded-xl shadow-lg border border-[#243447]/60"
+            />
           </div>
-          <span className="text-[11px] font-mono text-[#9CAFC3] mt-3 uppercase tracking-widest font-semibold">
-            {product.sku}
-          </span>
-        </div>
+        ) : (
+          <div
+            style={{
+              transform: isHovered ? "translateZ(30px) scale(1.08)" : "translateZ(0px) scale(1)",
+              transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+            className="relative z-10 flex flex-col items-center justify-center text-center p-4"
+          >
+            <div className="w-20 h-20 rounded-2xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#7DD3FC] group-hover:border-[#7DD3FC] group-hover:shadow-lg group-hover:shadow-[#7DD3FC]/20 transition-all duration-300 shadow-inner">
+              <span className="font-mono text-2xl font-black">1</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#9CAFC3] mt-3 uppercase tracking-widest font-semibold">
+              {product.sku}
+            </span>
+          </div>
+        )}
 
         {/* Featured badge (3D Popped) */}
         {product.is_featured && (
