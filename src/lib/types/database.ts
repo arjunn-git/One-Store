@@ -194,7 +194,8 @@ export type ActivityEventType =
   | "CUSTOMER_SIGNUP"
   | "CUSTOMER_LOGOUT"
   | "SEARCH_QUERY"
-  | "INVENTORY_UPDATE";
+  | "INVENTORY_UPDATE"
+  | "SUPPORT_INQUIRY";
 
 export interface ActivityEvent {
   id: string;

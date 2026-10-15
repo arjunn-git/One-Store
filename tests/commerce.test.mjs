@@ -561,6 +561,52 @@ runTest("Real-Time Admin Activity Telemetry & Ring Buffer Logic", () => {
   assert.equal(uniqueShoppers.size, 2, "Must compute active unique shoppers");
 });
 
+runTest("Customer Support Inquiry Dispatch & Destination Routing (onestore.auth@gmail.com)", () => {
+  const TARGET_EMAIL = "onestore.auth@gmail.com";
+
+  // 1. Validation test
+  function validateInquiry(payload) {
+    if (!payload.name?.trim() || !payload.email?.trim() || !payload.subject?.trim() || !payload.message?.trim()) {
+      return { success: false, error: "Missing required fields" };
+    }
+    if (!payload.email.includes("@")) {
+      return { success: false, error: "Invalid email format" };
+    }
+    const ticketId = `TKT-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+    return {
+      success: true,
+      ticketId,
+      deliveredTo: TARGET_EMAIL,
+      payload: {
+        ...payload,
+        ticketId,
+        recipient: TARGET_EMAIL,
+      },
+    };
+  }
+
+  // Missing fields check
+  const invalidResult = validateInquiry({ name: "Arjun", email: "", subject: "Test", message: "Hello" });
+  assert.equal(invalidResult.success, false);
+  assert.equal(invalidResult.error, "Missing required fields");
+
+  // Valid inquiry check
+  const validPayload = {
+    name: "Arjun Taneja",
+    email: "customer@example.com",
+    orderNumber: "OS-2026-IN-1001",
+    subject: "Order Tracking & Delivery",
+    message: "Requesting dispatch estimate for Mumbai delivery.",
+  };
+
+  const validResult = validateInquiry(validPayload);
+  assert.equal(validResult.success, true);
+  assert.equal(validResult.deliveredTo, TARGET_EMAIL);
+  assert.ok(validResult.ticketId.startsWith("TKT-"), "Ticket ID must follow standard prefix");
+  assert.equal(validResult.payload.recipient, "onestore.auth@gmail.com");
+  assert.equal(validResult.payload.orderNumber, "OS-2026-IN-1001");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

@@ -13,6 +13,7 @@ import {
   Bell,
   CheckCircle2,
   Sparkles,
+  Headphones,
 } from "lucide-react";
 import type { ActivityEvent, ActivityEventType } from "@/lib/types/database";
 
@@ -82,6 +83,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
     if (selectedFilter === "CART") return act.type === "CART_ADD" || act.type === "CART_REMOVE";
     if (selectedFilter === "MARKET") return act.type === "MARKET_SWITCH";
     if (selectedFilter === "AUTH") return act.type === "CUSTOMER_LOGIN" || act.type === "CUSTOMER_SIGNUP";
+    if (selectedFilter === "SUPPORT") return act.type === "SUPPORT_INQUIRY";
     return true;
   });
 
@@ -101,6 +103,8 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       case "CUSTOMER_LOGIN":
       case "CUSTOMER_SIGNUP":
         return <User className="h-4 w-4 text-indigo-400" />;
+      case "SUPPORT_INQUIRY":
+        return <Headphones className="h-4 w-4 text-emerald-400" />;
       case "SEARCH_QUERY":
         return <Search className="h-4 w-4 text-[#9CAFC3]" />;
       default:
@@ -183,7 +187,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        {["ALL", "ORDERS", "PAYMENTS", "CART", "MARKET", "AUTH"].map((tab) => (
+        {["ALL", "ORDERS", "PAYMENTS", "SUPPORT", "CART", "MARKET", "AUTH"].map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedFilter(tab)}
@@ -196,6 +200,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
             {tab === "ALL" && `All (${activities.length})`}
             {tab === "ORDERS" && "Orders"}
             {tab === "PAYMENTS" && "Payments"}
+            {tab === "SUPPORT" && "Support Inquiries"}
             {tab === "CART" && "Cart Changes"}
             {tab === "MARKET" && "Market Switches"}
             {tab === "AUTH" && "Logins / Signups"}
