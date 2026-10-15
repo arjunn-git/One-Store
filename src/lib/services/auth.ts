@@ -185,18 +185,40 @@ export async function verifyEmailOtp(
   try {
     const supabase = createClient();
 
-    const { data, error } = await supabase.auth.verifyOtp({
+    // 1. Primary verification attempt
+    let verifyResponse = await supabase.auth.verifyOtp({
       email: trimmedEmail,
       token,
       type: type === "signup" ? "signup" : "email",
     });
 
+    // 2. If primary failed with invalid/expired token, fallback to alternate OTP type
+    // (Supabase internally switches token type between 'email' and 'signup' depending on user existence)
+    if (
+      verifyResponse.error &&
+      (verifyResponse.error.message.toLowerCase().includes("invalid") ||
+        verifyResponse.error.message.toLowerCase().includes("expired"))
+    ) {
+      const fallbackType = type === "signup" ? "email" : "signup";
+      const fallbackResponse = await supabase.auth.verifyOtp({
+        email: trimmedEmail,
+        token,
+        type: fallbackType,
+      });
+
+      if (!fallbackResponse.error && fallbackResponse.data.user) {
+        verifyResponse = fallbackResponse;
+      }
+    }
+
+    const { data, error } = verifyResponse;
+
     if (error) {
       if (error.message.toLowerCase().includes("expired")) {
-        return { success: false, error: "This verification code has expired. Please request a new one." };
+        return { success: false, error: "This verification code has expired. Please request a new 6-digit code." };
       }
       if (error.message.toLowerCase().includes("invalid")) {
-        return { success: false, error: "Incorrect verification code. Please check your email and try again." };
+        return { success: false, error: "Incorrect verification code. Please check the 6 digits in your email." };
       }
       return { success: false, error: error.message };
     }

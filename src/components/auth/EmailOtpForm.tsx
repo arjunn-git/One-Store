@@ -327,16 +327,11 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
             <div className="p-4 rounded-2xl bg-[#080B10] border border-[#7DD3FC]/30 text-xs text-[#9CAFC3] space-y-2">
               <div className="font-semibold text-[#FFFFFF] flex items-center gap-1.5 text-xs">
                 <Sparkles className="h-3.5 w-3.5 text-[#7DD3FC]" />
-                <span>Two Ways to Sign In:</span>
+                <span>Numeric OTP Verification:</span>
               </div>
-              <ul className="space-y-1.5 text-[11px] list-disc list-inside text-[#9CAFC3]">
-                <li>
-                  <strong className="text-[#7DD3FC]">Option 1 (Fastest):</strong> Open your email and click the <strong className="text-[#FFFFFF]">"Sign in"</strong> button. You will be logged in immediately.
-                </li>
-                <li>
-                  <strong className="text-[#7DD3FC]">Option 2:</strong> If your email contains a 6-digit code, enter the digits below.
-                </li>
-              </ul>
+              <p className="text-[11px] text-[#9CAFC3] leading-relaxed">
+                Please enter the <strong className="text-[#7DD3FC]">6-digit numeric verification code</strong> from your email below. The code expires in 10 minutes.
+              </p>
             </div>
           )}
 
@@ -349,8 +344,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
 
           {/* 6-Digit OTP Input */}
           <div className="py-1">
-            <div className="text-center text-[11px] text-[#9CAFC3] mb-2 font-medium">
-              Enter 6-digit code (if provided in email):
+            <div className="text-center text-[11px] text-[#FFFFFF] mb-2 font-semibold">
+              Enter 6-Digit Verification Code:
             </div>
             <OtpInput
               value={otpCode}

@@ -224,6 +224,47 @@ runTest("Server-Side Price Calculation: Tampered Client Prices Ignored", () => {
   assert.equal(trustedItemTotal, 49998, "Server must enforce real catalog price (₹49,998) instead of client-submitted price");
 });
 
+// 12. Supabase Dual OTP Type ('email' vs 'signup') Fallback Simulation
+runTest("Supabase Dual OTP Type Fallback: Token Resolution Across Signup & Login", () => {
+  function simulateVerifyOtp(token, requestedType, validTokenType) {
+    // Primary attempt
+    if (requestedType === validTokenType && token === "654321") {
+      return { success: true, userId: "usr_verified_123" };
+    }
+    // Fallback attempt
+    const fallbackType = requestedType === "signup" ? "email" : "signup";
+    if (fallbackType === validTokenType && token === "654321") {
+      return { success: true, userId: "usr_verified_123", recoveredViaFallback: true };
+    }
+    return { success: false, error: "Invalid verification code" };
+  }
+
+  // Case A: Existing user token validated on email type
+  const resLogin = simulateVerifyOtp("654321", "email", "email");
+  assert.equal(resLogin.success, true);
+
+  // Case B: New user where Supabase internally created as 'email' but client sent 'signup'
+  const resSignupFallback = simulateVerifyOtp("654321", "signup", "email");
+  assert.equal(resSignupFallback.success, true);
+  assert.equal(resSignupFallback.recoveredViaFallback, true);
+
+  // Case C: Invalid code
+  const resBad = simulateVerifyOtp("000000", "email", "email");
+  assert.equal(resBad.success, false);
+});
+
+// 13. Resend Cooldown Enforcement
+runTest("OTP Resend Cooldown Timer Logic (60s Guard)", () => {
+  function canResendOtp(lastSentTimestamp, currentTimestamp, cooldownSeconds = 60) {
+    const elapsedSeconds = (currentTimestamp - lastSentTimestamp) / 1000;
+    return elapsedSeconds >= cooldownSeconds;
+  }
+
+  const now = Date.now();
+  assert.equal(canResendOtp(now - 30 * 1000, now), false, "Must block resend within 30 seconds");
+  assert.equal(canResendOtp(now - 61 * 1000, now), true, "Must allow resend after 61 seconds");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
