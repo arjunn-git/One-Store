@@ -34,9 +34,17 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setMarket = (newMarket: SupportedMarket) => {
+    if (newMarket === market) return;
     setMarketState(newMarket);
-    localStorage.setItem("one_store_market", newMarket);
-    document.cookie = `one_store_market=${newMarket}; path=/; max-age=31536000; SameSite=Lax`;
+    try {
+      localStorage.setItem("one_store_market", newMarket);
+      document.cookie = `one_store_market=${newMarket}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {
+      // Ignore storage errors in private browsing
+    }
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   };
 
   const currency: SupportedCurrency = BRAND.markets[market].currency;

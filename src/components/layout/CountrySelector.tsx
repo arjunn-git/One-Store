@@ -47,9 +47,9 @@ export function CountrySelector({ compact = false, className = "" }: CountrySele
   };
 
   const selectMarket = (code: MarketCode) => {
-    setMarket(code);
     setIsOpen(false);
-    triggerRef.current?.focus();
+    if (code === market) return;
+    setMarket(code);
   };
 
   const marketOptions: MarketCode[] = ["IN", "GB"];

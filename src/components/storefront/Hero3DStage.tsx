@@ -3,8 +3,10 @@
 import { useRef, useState } from "react";
 import { ShieldCheck, Truck, RotateCcw, Sparkles, Check, Gift } from "lucide-react";
 import Link from "next/link";
+import { useMarket } from "@/lib/context/MarketContext";
 
 export function Hero3DStage() {
+  const { market, setMarket } = useMarket();
   const containerRef = useRef<HTMLDivElement>(null);
   const [rotate, setRotate] = useState({ x: 8, y: -6 });
   const [isHovered, setIsHovered] = useState(false);
@@ -88,12 +90,22 @@ export function Hero3DStage() {
         </div>
 
         {/* Left 3D Floating Satellite: India (₹ INR) */}
-        <div
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMarket("IN");
+          }}
+          aria-label="Switch to India Store"
           style={{
             transform: "translateZ(75px) translateX(-38%) translateY(-40px)",
             transition: "transform 0.4s ease",
           }}
-          className="hidden sm:flex absolute left-4 md:left-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
+          className={`hidden sm:flex absolute left-4 md:left-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all text-left ${
+            market === "IN"
+              ? "border-[#7DD3FC] ring-2 ring-[#7DD3FC]/30 shadow-[#7DD3FC]/20"
+              : "border-[#243447] hover:border-[#7DD3FC]/60 opacity-80 hover:opacity-100"
+          }`}
         >
           <div className="h-11 w-11 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-mono text-xl font-bold shrink-0 shadow-inner">
             ₹
@@ -101,20 +113,34 @@ export function Hero3DStage() {
           <div className="text-left text-xs">
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-[#FFFFFF]">India Store</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              {market === "IN" ? (
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              ) : (
+                <span className="text-[10px] text-[#7DD3FC] underline ml-1">Switch</span>
+              )}
             </div>
             <div className="text-[11px] text-[#9CAFC3]">Instant UPI &amp; 0-Cost EMI</div>
             <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">Blue Dart Express (1-3 Days)</div>
           </div>
-        </div>
+        </button>
 
         {/* Right 3D Floating Satellite: UK (£ GBP) */}
-        <div
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMarket("GB");
+          }}
+          aria-label="Switch to UK Flagship Store"
           style={{
             transform: "translateZ(75px) translateX(38%) translateY(-40px)",
             transition: "transform 0.4s ease",
           }}
-          className="hidden sm:flex absolute right-4 md:right-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border border-[#243447] hover:border-[#7DD3FC] shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all"
+          className={`hidden sm:flex absolute right-4 md:right-8 top-10 p-4 rounded-2xl bg-[#080B10]/95 border shadow-xl items-center gap-3.5 backdrop-blur-md hover:scale-105 transition-all text-left ${
+            market === "GB"
+              ? "border-[#7DD3FC] ring-2 ring-[#7DD3FC]/30 shadow-[#7DD3FC]/20"
+              : "border-[#243447] hover:border-[#7DD3FC]/60 opacity-80 hover:opacity-100"
+          }`}
         >
           <div className="h-11 w-11 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-mono text-xl font-bold shrink-0 shadow-inner">
             £
@@ -122,12 +148,16 @@ export function Hero3DStage() {
           <div className="text-left text-xs">
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-[#FFFFFF]">UK Flagship</span>
-              <span className="h-2 w-2 rounded-full bg-[#7DD3FC] animate-ping" />
+              {market === "GB" ? (
+                <span className="h-2 w-2 rounded-full bg-[#7DD3FC] animate-ping" />
+              ) : (
+                <span className="text-[10px] text-[#7DD3FC] underline ml-1">Switch</span>
+              )}
             </div>
             <div className="text-[11px] text-[#9CAFC3]">Apple Pay, Klarna &amp; Cards</div>
             <div className="text-[10px] text-[#7DD3FC] font-semibold mt-0.5">Royal Mail 24 Tracked</div>
           </div>
-        </div>
+        </button>
 
         {/* Bottom 3D Floating Feature Ribbon (Marketing Hooks) */}
         <div
