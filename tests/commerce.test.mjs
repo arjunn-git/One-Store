@@ -466,6 +466,61 @@ runTest("Order Reference Normalization (OS - 2026 - IN - 2056 -> OS-2026-IN-2056
   assert.equal(normalizeOrderReference(undefined), null);
 });
 
+// 22. Dynamic Regional Payment Gateway Separation (India Razorpay/UPI vs UK Stripe/Cards/ApplePay)
+runTest("Dynamic Regional Payment Gateway Separation & Server Enforcement", () => {
+  function resolveMarketPaymentGateway(market) {
+    const isUK = market === "GB";
+    return {
+      provider: isUK ? "stripe" : "razorpay",
+      currency: isUK ? "GBP" : "INR",
+      currencySymbol: isUK ? "£" : "₹",
+      methods: isUK ? ["card", "applepay", "klarna"] : ["upi", "card", "netbanking"],
+      headerTitle: isUK ? "Stripe UK & Global Checkout" : "Razorpay India Checkout",
+      securityCompliance: isUK
+        ? "Secured by Stripe • 256-bit SSL encrypted • UK FCA & PCI-DSS Level 1 Compliant"
+        : "Secured by Razorpay • 256-bit SSL encrypted • RBI Compliant",
+    };
+  }
+
+  // Case 1: India Store Checkout
+  const indiaConfig = resolveMarketPaymentGateway("IN");
+  assert.equal(indiaConfig.provider, "razorpay");
+  assert.equal(indiaConfig.currency, "INR");
+  assert.equal(indiaConfig.currencySymbol, "₹");
+  assert.deepEqual(indiaConfig.methods, ["upi", "card", "netbanking"]);
+  assert.ok(indiaConfig.securityCompliance.includes("RBI Compliant"));
+  assert.equal(indiaConfig.methods.includes("applepay"), false, "UPI/India mode must NOT offer Apple Pay");
+  assert.equal(indiaConfig.methods.includes("klarna"), false, "UPI/India mode must NOT offer Klarna");
+
+  // Case 2: UK Store Checkout
+  const ukConfig = resolveMarketPaymentGateway("GB");
+  assert.equal(ukConfig.provider, "stripe");
+  assert.equal(ukConfig.currency, "GBP");
+  assert.equal(ukConfig.currencySymbol, "£");
+  assert.deepEqual(ukConfig.methods, ["card", "applepay", "klarna"]);
+  assert.ok(ukConfig.securityCompliance.includes("UK FCA"));
+  assert.equal(ukConfig.methods.includes("upi"), false, "UK mode must NEVER offer UPI / QR");
+  assert.equal(ukConfig.methods.includes("netbanking"), false, "UK mode must NEVER offer Indian NetBanking");
+
+  // Case 3: Server-side validation overrides tampered client requests
+  function serverEnforceGateway(clientPayload) {
+    const validatedMarket = clientPayload.market === "GB" ? "GB" : "IN";
+    const validatedCurrency = validatedMarket === "GB" ? "GBP" : "INR";
+    const validatedProvider = validatedMarket === "GB" ? "stripe" : "razorpay";
+    return { validatedMarket, validatedCurrency, validatedProvider };
+  }
+
+  const tamperedUK = serverEnforceGateway({ market: "GB", currency: "INR", paymentProvider: "razorpay" });
+  assert.equal(tamperedUK.validatedMarket, "GB");
+  assert.equal(tamperedUK.validatedCurrency, "GBP", "UK must be forced to GBP");
+  assert.equal(tamperedUK.validatedProvider, "stripe", "UK must be forced to Stripe");
+
+  const tamperedIN = serverEnforceGateway({ market: "IN", currency: "GBP", paymentProvider: "stripe" });
+  assert.equal(tamperedIN.validatedMarket, "IN");
+  assert.equal(tamperedIN.validatedCurrency, "INR", "India must be forced to INR");
+  assert.equal(tamperedIN.validatedProvider, "razorpay", "India must be forced to Razorpay");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

@@ -50,6 +50,11 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
       return { success: false, error: "Cannot process an empty cart." };
     }
 
+    // Enforce strict server-side market, currency, and regional payment gateway isolation
+    const validatedMarket: "IN" | "GB" = payload.market === "GB" ? "GB" : "IN";
+    const validatedCurrency: "INR" | "GBP" = validatedMarket === "GB" ? "GBP" : "INR";
+    const validatedProvider: "razorpay" | "stripe" = validatedMarket === "GB" ? "stripe" : "razorpay";
+
     // 1. Fetch available products from live database (or fallback)
     let dbProducts: (Product & { variants: ProductVariant[] })[] = [];
     let supabase = null;
@@ -109,9 +114,9 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
         };
       }
 
-      const basePrice = payload.currency === "INR" ? catalogItem.price_inr : catalogItem.price_gbp;
+      const basePrice = validatedCurrency === "INR" ? catalogItem.price_inr : catalogItem.price_gbp;
       const adj = variant
-        ? payload.currency === "INR"
+        ? validatedCurrency === "INR"
           ? variant.price_inr_adjustment || 0
           : variant.price_gbp_adjustment || 0
         : 0;
@@ -134,8 +139,8 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     }
 
     // 3. Shipping calculation
-    const freeShippingThreshold = payload.currency === "INR" ? 5000 : 50;
-    const standardShipping = payload.currency === "INR" ? 250 : 5;
+    const freeShippingThreshold = validatedCurrency === "INR" ? 5000 : 50;
+    const standardShipping = validatedCurrency === "INR" ? 250 : 5;
     const shippingFee = computedSubtotal >= freeShippingThreshold ? 0 : standardShipping;
 
     // 4. Discount verification
@@ -148,7 +153,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
 
     // 5. Generate human-readable order number & access token
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const orderNumber = `OS-2026-${payload.market}-${randomSuffix}`;
+    const orderNumber = `OS-2026-${validatedMarket}-${randomSuffix}`;
     const accessToken = crypto.randomBytes(24).toString("hex");
 
     let createdOrderId = `ord_${Date.now()}`;
@@ -164,7 +169,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
       customer_email: payload.customerEmail,
       status: "pending_payment" as OrderStatus,
       payment_status: "pending" as PaymentStatus,
-      currency: payload.currency,
+      currency: validatedCurrency,
       subtotal: computedSubtotal,
       discount_amount: discountAmount,
       shipping_fee: shippingFee,
@@ -178,9 +183,9 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
         city: payload.city,
         stateOrProvince: payload.stateOrProvince,
         postalCode: payload.postalCode,
-        countryCode: payload.countryCode,
+        countryCode: validatedMarket,
       },
-      payment_provider: payload.paymentProvider,
+      payment_provider: validatedProvider,
       notes: JSON.stringify({
         access_token: accessToken,
         created_at: new Date().toISOString(),
@@ -251,7 +256,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
             customer_id: customerProfileId,
             status: "pending_payment" as OrderStatus,
             payment_status: "pending" as PaymentStatus,
-            currency: payload.currency,
+            currency: validatedCurrency,
             subtotal: computedSubtotal,
             discount_amount: discountAmount,
             shipping_fee: shippingFee,
@@ -264,9 +269,9 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
               city: payload.city,
               stateOrProvince: payload.stateOrProvince,
               postalCode: payload.postalCode,
-              countryCode: payload.countryCode,
+              countryCode: validatedMarket,
             },
-            payment_provider: payload.paymentProvider,
+            payment_provider: validatedProvider,
             notes: JSON.stringify({
               access_token: accessToken,
               created_at: new Date().toISOString(),
@@ -329,7 +334,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     let stripeCheckoutUrl: string | undefined;
 
     // Process India / Razorpay
-    if (payload.paymentProvider === "razorpay") {
+    if (validatedProvider === "razorpay") {
       if (
         razorpayKeyId &&
         razorpayKeySecret &&
@@ -379,7 +384,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     }
 
     // Process UK / Stripe
-    if (payload.paymentProvider === "stripe") {
+    if (validatedProvider === "stripe") {
       if (stripeSecretKey && !stripeSecretKey.includes("placeholder")) {
         try {
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -454,8 +459,8 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
       orderId: createdOrderId,
       accessToken,
       totalAmount: finalTotal,
-      currency: payload.currency,
-      paymentProvider: payload.paymentProvider,
+      currency: validatedCurrency,
+      paymentProvider: validatedProvider,
       razorpayOrderId,
       razorpayKeyId,
       stripeCheckoutUrl,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -40,7 +40,9 @@ export default function CheckoutPage() {
   const [paymentProvider, setPaymentProvider] = useState<"razorpay" | "stripe">(
     market === "IN" ? "razorpay" : "stripe"
   );
-  const [selectedPaymentTab, setSelectedPaymentTab] = useState<"upi" | "card" | "netbanking">("upi");
+  const [selectedPaymentTab, setSelectedPaymentTab] = useState<
+    "upi" | "card" | "netbanking" | "applepay" | "klarna"
+  >(market === "IN" ? "upi" : "card");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingTestOrder, setPendingTestOrder] = useState<{
@@ -48,6 +50,17 @@ export default function CheckoutPage() {
     accessToken?: string;
     message?: string;
   } | null>(null);
+
+  // Dynamically keep payment provider and default method tab aligned with active market
+  useEffect(() => {
+    if (market === "IN") {
+      setPaymentProvider("razorpay");
+      setSelectedPaymentTab("upi");
+    } else {
+      setPaymentProvider("stripe");
+      setSelectedPaymentTab("card");
+    }
+  }, [market]);
 
   const handleCompleteSandboxPayment = async () => {
     if (!pendingTestOrder) return;
@@ -377,24 +390,30 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Form inputs (2 cols) */}
               <div className="lg:col-span-2 space-y-8">
-                {/* Razorpay Standard Checkout Simulation Modal */}
+                {/* Dynamic Regional Payment Modal (Razorpay for India vs Stripe for UK) */}
                 {pendingTestOrder && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
                     <div className="max-w-md w-full rounded-2xl bg-[#0c141e] border border-[#243447] overflow-hidden shadow-2xl space-y-0">
-                      {/* Razorpay Brand Header */}
+                      {/* Regional Gateway Brand Header */}
                       <div className="bg-[#102A43] p-5 border-b border-[#243447] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center text-[#7DD3FC] font-black text-lg">
-                            1
+                            {market === "IN" ? "₹" : "£"}
                           </div>
                           <div>
-                            <div className="text-sm font-bold text-[#FFFFFF]">Razorpay Checkout</div>
-                            <div className="text-[11px] font-mono text-[#7DD3FC]">Order {pendingTestOrder.orderNumber}</div>
+                            <div className="text-sm font-bold text-[#FFFFFF]">
+                              {market === "IN" ? "Razorpay India Checkout" : "Stripe UK & Global Checkout"}
+                            </div>
+                            <div className="text-[11px] font-mono text-[#7DD3FC]">
+                              Order {pendingTestOrder.orderNumber}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-[10px] text-[#9CAFC3] uppercase tracking-wider">Amount Due</div>
-                          <div className="text-base font-extrabold text-[#FFFFFF] font-mono">{formatCurrency(total)}</div>
+                          <div className="text-base font-extrabold text-[#FFFFFF] font-mono">
+                            {formatCurrency(total)}
+                          </div>
                         </div>
                       </div>
 
@@ -402,68 +421,154 @@ export default function CheckoutPage() {
                       <div className="p-6 space-y-5">
                         <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-950/40 border border-blue-800/80 text-[11px] text-blue-200">
                           <ShieldCheck className="h-4 w-4 text-[#7DD3FC] shrink-0" />
-                          <span>Test Sandbox Mode — Click below to verify and complete transaction</span>
+                          <span>
+                            {market === "IN"
+                              ? "Test Sandbox Mode — Verify instant INR payment via Razorpay"
+                              : "Test Sandbox Mode — Verify instant GBP payment via Stripe UK"}
+                          </span>
                         </div>
 
                         {/* Payment Method Selector Tabs */}
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-[#9CAFC3] uppercase tracking-wider">Select Payment Option</div>
+                          <div className="text-xs font-semibold text-[#9CAFC3] uppercase tracking-wider">
+                            {market === "IN"
+                              ? "Select Indian Payment Option (₹)"
+                              : "Select UK Payment Option (£)"}
+                          </div>
                           <div className="grid grid-cols-3 gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedPaymentTab("upi")}
-                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                selectedPaymentTab === "upi"
-                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                              }`}
-                            >
-                              UPI / QR
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedPaymentTab("card")}
-                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                selectedPaymentTab === "card"
-                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                              }`}
-                            >
-                              Card
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedPaymentTab("netbanking")}
-                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                selectedPaymentTab === "netbanking"
-                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                              }`}
-                            >
-                              NetBanking
-                            </button>
+                            {market === "IN" ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("upi")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "upi"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  UPI / QR
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("card")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "card"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  Card
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("netbanking")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "netbanking"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  NetBanking
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("card")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "card"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  UK Card
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("applepay")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "applepay"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  Apple / Google
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPaymentTab("klarna")}
+                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                    selectedPaymentTab === "klarna"
+                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                                  }`}
+                                >
+                                  Klarna Pay
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
 
                         {/* Method Preview */}
                         <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-2">
-                          {selectedPaymentTab === "upi" && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-[#FFFFFF]">UPI (Google Pay, PhonePe, Paytm, BHIM)</div>
-                              <div className="text-[11px] font-mono text-[#7DD3FC]">{formData.phone || "9876543210"}@okhdfcbank</div>
-                            </div>
-                          )}
-                          {selectedPaymentTab === "card" && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-[#FFFFFF]">Test Visa / Mastercard / RuPay</div>
-                              <div className="text-[11px] font-mono text-[#7DD3FC]">4111 •••• •••• 4242 (Expires 12/28)</div>
-                            </div>
-                          )}
-                          {selectedPaymentTab === "netbanking" && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-[#FFFFFF]">HDFC / ICICI / SBI / Axis Bank</div>
-                              <div className="text-[11px] text-[#9CAFC3]">Instant NetBanking gateway settlement</div>
-                            </div>
+                          {market === "IN" ? (
+                            <>
+                              {selectedPaymentTab === "upi" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">UPI (Google Pay, PhonePe, Paytm, BHIM)</div>
+                                  <div className="text-[11px] font-mono text-[#7DD3FC]">
+                                    {formData.phone ? `${formData.phone}@okhdfcbank` : "9876543210@okhdfcbank"}
+                                  </div>
+                                  <div className="text-[10px] text-[#9CAFC3]">
+                                    Instant UPI intent or dynamic QR settlement
+                                  </div>
+                                </div>
+                              )}
+                              {selectedPaymentTab === "card" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">Indian Debit / Credit Card (RuPay, Visa, MC)</div>
+                                  <div className="text-[11px] font-mono text-[#7DD3FC]">4111 •••• •••• 4242 (Expires 12/28 • CVV 123)</div>
+                                  <div className="text-[10px] text-[#9CAFC3]">RBI 2FA OTP verification simulation</div>
+                                </div>
+                              )}
+                              {selectedPaymentTab === "netbanking" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">NetBanking (HDFC, ICICI, SBI, Axis)</div>
+                                  <div className="text-[11px] text-[#9CAFC3]">Instant direct Indian bank settlement</div>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {selectedPaymentTab === "card" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">UK &amp; Global Card (Visa, Mastercard, Amex)</div>
+                                  <div className="text-[11px] font-mono text-[#7DD3FC]">4242 •••• •••• 4242 (Expires 12/28 • CVC 888)</div>
+                                  <div className="text-[10px] text-[#9CAFC3]">UK FCA &amp; 3D-Secure 2 authentication verified</div>
+                                </div>
+                              )}
+                              {selectedPaymentTab === "applepay" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">Apple Pay / Google Pay (1-Touch Express)</div>
+                                  <div className="text-[11px] text-[#7DD3FC]">Biometric TouchID / FaceID Authorization</div>
+                                  <div className="text-[10px] text-[#9CAFC3]">Direct GBP debit linked to UK bank account</div>
+                                </div>
+                              )}
+                              {selectedPaymentTab === "klarna" && (
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-[#FFFFFF]">Klarna — Pay in 3 (0% Interest)</div>
+                                  <div className="text-[11px] font-mono text-[#7DD3FC]">
+                                    3 monthly instalments of £{(total / 3).toFixed(2)}
+                                  </div>
+                                  <div className="text-[10px] text-[#9CAFC3]">
+                                    £{(total / 3).toFixed(2)} charged today, rest in 30 and 60 days
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
 
@@ -480,7 +585,9 @@ export default function CheckoutPage() {
                             ) : (
                               <>
                                 <CheckCircle2 className="h-4 w-4" />
-                                <span>Simulate Successful Payment: Pay {formatCurrency(total)}</span>
+                                <span>
+                                  Simulate Successful {market === "IN" ? "Razorpay" : "Stripe"} Payment: Pay {formatCurrency(total)}
+                                </span>
                               </>
                             )}
                           </button>
@@ -495,7 +602,9 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="text-[10px] text-center text-[#9CAFC3]">
-                          Secured by Razorpay • 256-bit SSL encrypted • Sandbox Test Verification
+                          {market === "IN"
+                            ? "Secured by Razorpay • 256-bit SSL encrypted • RBI Compliant"
+                            : "Secured by Stripe • 256-bit SSL encrypted • UK FCA & PCI-DSS Level 1 Compliant"}
                         </div>
                       </div>
                     </div>
@@ -650,54 +759,52 @@ export default function CheckoutPage() {
                     <span className="h-6 w-6 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center text-xs font-mono">
                       3
                     </span>
-                    <span>Payment Gateway</span>
+                    <span>Payment Gateway &amp; Methods</span>
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Razorpay Option (India INR) */}
-                    <div
-                      onClick={() => setPaymentProvider("razorpay")}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentProvider === "razorpay"
-                          ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                          : "bg-[#080B10] border-[#243447] text-[#9CAFC3] hover:border-[#9CAFC3]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-sm text-[#FFFFFF]">Razorpay</span>
-                        {market === "IN" && (
+                  {market === "IN" ? (
+                    <div className="p-5 rounded-xl border border-[#7DD3FC] bg-[#102A43]/50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-bold text-sm text-[#FFFFFF]">Razorpay India Gateway</span>
                           <span className="text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
-                            Recommended for India (₹)
+                            Active for India (₹ INR)
                           </span>
-                        )}
+                        </div>
+                        <span className="text-xs font-bold text-[#7DD3FC]">INR (₹)</span>
                       </div>
-                      <p className="text-xs text-[#9CAFC3]">
-                        UPI, NetBanking, RuPay, Visa, Mastercard, and Indian Wallets.
+                      <p className="text-xs text-[#9CAFC3] leading-relaxed">
+                        Authorized Indian payment gateway supporting UPI (Google Pay, PhonePe, Paytm, BHIM, QR code), Debit/Credit Cards (RuPay, Visa, Mastercard), NetBanking (HDFC, ICICI, SBI, Axis), and 0-Cost EMI.
                       </p>
+                      <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#7DD3FC]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">UPI / QR</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">RuPay &amp; Cards</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">NetBanking</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">0% EMI</span>
+                      </div>
                     </div>
-
-                    {/* Stripe Option (UK GBP) */}
-                    <div
-                      onClick={() => setPaymentProvider("stripe")}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentProvider === "stripe"
-                          ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                          : "bg-[#080B10] border-[#243447] text-[#9CAFC3] hover:border-[#9CAFC3]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-sm text-[#FFFFFF]">Stripe</span>
-                        {market === "GB" && (
+                  ) : (
+                    <div className="p-5 rounded-xl border border-[#7DD3FC] bg-[#102A43]/50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-bold text-sm text-[#FFFFFF]">Stripe UK &amp; Global Gateway</span>
                           <span className="text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
-                            Recommended for UK (£)
+                            Active for United Kingdom (£ GBP)
                           </span>
-                        )}
+                        </div>
+                        <span className="text-xs font-bold text-[#7DD3FC]">GBP (£)</span>
                       </div>
-                      <p className="text-xs text-[#9CAFC3]">
-                        Visa, Mastercard, American Express, Apple Pay &amp; Google Pay.
+                      <p className="text-xs text-[#9CAFC3] leading-relaxed">
+                        Authorized UK payment gateway supporting Visa, Mastercard, American Express, Maestro, 1-Touch Apple Pay &amp; Google Pay, and Klarna Pay in 3 (0% interest).
                       </p>
+                      <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#7DD3FC]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Cards (Visa, MC, Amex)</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Apple Pay</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Google Pay</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Klarna Pay in 3</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
