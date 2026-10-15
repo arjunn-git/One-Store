@@ -197,29 +197,24 @@ export async function verifyEmailOtp(
   try {
     const supabase = createClient();
 
-    // 1. Primary verification attempt
-    let verifyResponse = await supabase.auth.verifyOtp({
-      email: trimmedEmail,
-      token,
-      type: type === "signup" ? "signup" : "email",
-    });
+    // In Supabase Auth, signInWithOtp generates a 'magiclink' token for existing accounts,
+    // and a 'signup' token for new registrations. We test candidate types in order of likelihood.
+    const candidateTypes: Array<"magiclink" | "signup" | "email"> =
+      type === "signup"
+        ? ["signup", "magiclink", "email"]
+        : ["magiclink", "signup", "email"];
 
-    // 2. If primary failed with invalid/expired token, fallback to alternate OTP type
-    // (Supabase internally switches token type between 'email' and 'signup' depending on user existence)
-    if (
-      verifyResponse.error &&
-      (verifyResponse.error.message.toLowerCase().includes("invalid") ||
-        verifyResponse.error.message.toLowerCase().includes("expired"))
-    ) {
-      const fallbackType = type === "signup" ? "email" : "signup";
-      const fallbackResponse = await supabase.auth.verifyOtp({
+    let verifyResponse: any = null;
+
+    for (const candidateType of candidateTypes) {
+      verifyResponse = await supabase.auth.verifyOtp({
         email: trimmedEmail,
         token,
-        type: fallbackType,
+        type: candidateType,
       });
 
-      if (!fallbackResponse.error && fallbackResponse.data.user) {
-        verifyResponse = fallbackResponse;
+      if (!verifyResponse.error && verifyResponse.data?.user) {
+        break; // Successfully authenticated!
       }
     }
 
