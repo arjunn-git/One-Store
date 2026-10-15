@@ -88,8 +88,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (otpCode.length !== 6) {
-      setErrorMessage("Please enter all 6 digits of your verification code.");
+    if (otpCode.length !== 6 && otpCode.length !== 8) {
+      setErrorMessage("Please enter your complete verification code.");
       return;
     }
 
@@ -330,7 +330,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                 <span>Numeric OTP Verification:</span>
               </div>
               <p className="text-[11px] text-[#9CAFC3] leading-relaxed">
-                Please enter the <strong className="text-[#7DD3FC]">6-digit numeric verification code</strong> from your email below. The code expires in 10 minutes.
+                Please enter the <strong className="text-[#7DD3FC]">numeric verification code</strong> from your email below. The code expires in 10 minutes.
               </p>
             </div>
           )}
@@ -342,14 +342,15 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
             </div>
           )}
 
-          {/* 6-Digit OTP Input */}
+          {/* Numeric OTP Input (Supports 6 or 8 digits) */}
           <div className="py-1">
             <div className="text-center text-[11px] text-[#FFFFFF] mb-2 font-semibold">
-              Enter 6-Digit Verification Code:
+              Enter Verification Code:
             </div>
             <OtpInput
               value={otpCode}
               onChange={setOtpCode}
+              length={8}
               disabled={isLoading}
               hasError={!!errorMessage}
             />
@@ -358,7 +359,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           {/* Verify Button */}
           <button
             type="submit"
-            disabled={isLoading || otpCode.length !== 6}
+            disabled={isLoading || (otpCode.length !== 6 && otpCode.length !== 8)}
             className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-sm hover:bg-[#FFFFFF] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isLoading ? (
@@ -391,7 +392,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                   disabled={isLoading}
                   className="text-[#7DD3FC] font-semibold hover:underline"
                 >
-                  Resend 6-Digit Code
+                  Resend Verification Code
                 </button>
               )}
             </div>

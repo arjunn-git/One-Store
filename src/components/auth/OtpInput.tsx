@@ -13,7 +13,7 @@ interface OtpInputProps {
 export function OtpInput({
   value,
   onChange,
-  length = 6,
+  length = 8,
   disabled = false,
   hasError = false,
 }: OtpInputProps) {
@@ -100,7 +100,7 @@ export function OtpInput({
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 sm:gap-3">
+    <div className="flex items-center justify-center gap-1.5 sm:gap-2.5">
       {digits.map((digit, index) => (
         <input
           key={index}
@@ -117,7 +117,7 @@ export function OtpInput({
           onKeyDown={(e) => handleKeyDown(e, index)}
           onPaste={handlePaste}
           aria-label={`Digit ${index + 1}`}
-          className={`w-11 h-14 sm:w-13 sm:h-16 text-center text-xl sm:text-2xl font-mono font-bold rounded-xl transition-all outline-none ${
+          className={`w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-2xl font-mono font-bold rounded-xl transition-all outline-none ${
             hasError
               ? "bg-red-950/40 border-2 border-red-500 text-red-200"
               : digit
