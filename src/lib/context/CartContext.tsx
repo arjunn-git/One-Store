@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useMarket } from "./MarketContext";
+import { FALLBACK_PRODUCTS } from "@/lib/services/products";
 import type { Product, ProductVariant } from "@/lib/types/database";
 
 export interface CartLineItem {
@@ -15,6 +16,15 @@ export interface CartLineItem {
   priceGbp: number;
   quantity: number;
   maxInventory: number;
+  imageUrl?: string | null;
+}
+
+export function getCartItemImage(item: CartLineItem): string | null {
+  if (item.imageUrl) return item.imageUrl;
+  const match = FALLBACK_PRODUCTS.find(
+    (p) => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase()
+  );
+  return match?.images?.[0] || null;
 }
 
 interface CartContextValue {
@@ -41,12 +51,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartLineItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount and hydrate images for legacy items
   useEffect(() => {
     try {
       const saved = localStorage.getItem("one_store_cart");
       if (saved) {
-        setItems(JSON.parse(saved));
+        const parsed: CartLineItem[] = JSON.parse(saved);
+        const hydrated = parsed.map((item) => {
+          if (!item.imageUrl) {
+            const match = FALLBACK_PRODUCTS.find(
+              (p) => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase()
+            );
+            return {
+              ...item,
+              imageUrl: match?.images?.[0] || null,
+            };
+          }
+          return item;
+        });
+        setItems(hydrated);
       }
     } catch {
       // Ignore parse errors
@@ -69,6 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const adjInr = variant?.price_inr_adjustment || 0;
     const adjGbp = variant?.price_gbp_adjustment || 0;
     const maxInv = variant?.inventory_count ?? 10;
+    const primaryImage = product.images?.[0] || null;
 
     const existingIndex = items.findIndex((i) => i.id === itemId);
 
@@ -76,6 +100,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const updated = [...items];
       const newQty = Math.min(maxInv, updated[existingIndex].quantity + quantity);
       updated[existingIndex].quantity = newQty;
+      if (!updated[existingIndex].imageUrl && primaryImage) {
+        updated[existingIndex].imageUrl = primaryImage;
+      }
       saveCart(updated);
     } else {
       const newItem: CartLineItem = {
@@ -89,6 +116,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         priceGbp: product.price_gbp + adjGbp,
         quantity: Math.min(maxInv, quantity),
         maxInventory: maxInv,
+        imageUrl: primaryImage,
       };
       saveCart([...items, newItem]);
     }

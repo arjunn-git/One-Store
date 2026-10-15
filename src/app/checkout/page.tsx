@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { useCart } from "@/lib/context/CartContext";
+import { useCart, getCartItemImage } from "@/lib/context/CartContext";
 import { useMarket } from "@/lib/context/MarketContext";
 import Link from "next/link";
 import {
@@ -637,21 +637,37 @@ export default function CheckoutPage() {
                   </h3>
 
                   <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center text-xs">
-                        <div className="truncate max-w-[180px]">
-                          <span className="font-bold text-[#FFFFFF]">{item.productName}</span>
-                          {item.variantName && (
-                            <span className="text-[11px] text-[#7DD3FC] block">
-                              {item.variantName} × {item.quantity}
-                            </span>
-                          )}
+                    {items.map((item) => {
+                      const itemImage = getCartItemImage(item);
+                      return (
+                        <div key={item.id} className="flex justify-between items-center text-xs gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-10 w-10 rounded-lg bg-[#080B10] border border-[#243447] flex items-center justify-center shrink-0 overflow-hidden">
+                              {itemImage ? (
+                                <img
+                                  src={itemImage}
+                                  alt={item.productName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="font-mono text-xs text-[#7DD3FC] font-bold">1</span>
+                              )}
+                            </div>
+                            <div className="truncate max-w-[140px] sm:max-w-[170px]">
+                              <span className="font-bold text-[#FFFFFF] block truncate">{item.productName}</span>
+                              {item.variantName && (
+                                <span className="text-[11px] text-[#7DD3FC] block truncate">
+                                  {item.variantName} × {item.quantity}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-mono text-[#FFFFFF] shrink-0">
+                            {formatCurrency((market === "IN" ? item.priceInr : item.priceGbp) * item.quantity)}
+                          </span>
                         </div>
-                        <span className="font-mono text-[#FFFFFF]">
-                          {formatCurrency((market === "IN" ? item.priceInr : item.priceGbp) * item.quantity)}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-2 text-xs text-[#9CAFC3] pt-4 border-t border-[#243447]">

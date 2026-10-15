@@ -87,8 +87,16 @@ export default function WishlistPage() {
                     className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] flex flex-col justify-between space-y-6 shadow-xl"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="h-20 w-20 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center font-mono font-bold text-xl text-[#7DD3FC] shrink-0">
-                        1
+                      <div className="h-20 w-20 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center shrink-0 overflow-hidden relative">
+                        {item.images && item.images[0] ? (
+                          <img
+                            src={item.images[0]}
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                        ) : (
+                          <span className="font-mono font-bold text-xl text-[#7DD3FC]">1</span>
+                        )}
                       </div>
                       <div className="flex-1">
                         <span className="text-[11px] font-semibold text-[#7DD3FC] uppercase tracking-wider block">

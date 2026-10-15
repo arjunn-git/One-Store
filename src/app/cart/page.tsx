@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { useCart } from "@/lib/context/CartContext";
+import { useCart, getCartItemImage } from "@/lib/context/CartContext";
 import { useMarket } from "@/lib/context/MarketContext";
 import Link from "next/link";
 import {
@@ -107,6 +107,7 @@ export default function CartPage() {
                 {items.map((item) => {
                   const price = market === "IN" ? item.priceInr : item.priceGbp;
                   const itemTotal = price * item.quantity;
+                  const itemImage = getCartItemImage(item);
 
                   return (
                     <div
@@ -114,8 +115,16 @@ export default function CartPage() {
                       className="p-5 rounded-2xl bg-[#102A43]/40 border border-[#243447] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center font-mono font-bold text-xl text-[#7DD3FC] shrink-0">
-                          1
+                        <div className="h-20 w-20 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center shrink-0 overflow-hidden relative">
+                          {itemImage ? (
+                            <img
+                              src={itemImage}
+                              alt={item.productName}
+                              className="w-full h-full object-cover rounded-xl"
+                            />
+                          ) : (
+                            <span className="font-mono font-bold text-xl text-[#7DD3FC]">1</span>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <h3 className="text-sm font-bold text-[#FFFFFF]">{item.productName}</h3>

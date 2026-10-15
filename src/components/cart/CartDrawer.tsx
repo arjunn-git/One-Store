@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useCart } from "@/lib/context/CartContext";
+import { useCart, getCartItemImage } from "@/lib/context/CartContext";
 import { useMarket } from "@/lib/context/MarketContext";
 import Link from "next/link";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
@@ -105,13 +105,23 @@ export function CartDrawer() {
                         minimumFractionDigits: 2,
                       }).format(price);
 
+                const itemImage = getCartItemImage(item);
+
                 return (
                   <div
                     key={item.id}
                     className="p-4 rounded-xl bg-[#102A43]/40 border border-[#243447] flex gap-4"
                   >
-                    <div className="h-16 w-16 rounded-lg bg-[#080B10] border border-[#243447] flex items-center justify-center shrink-0 font-mono font-bold text-[#7DD3FC] text-sm">
-                      1
+                    <div className="h-16 w-16 rounded-lg bg-[#080B10] border border-[#243447] flex items-center justify-center shrink-0 overflow-hidden relative">
+                      {itemImage ? (
+                        <img
+                          src={itemImage}
+                          alt={item.productName}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <span className="font-mono font-bold text-[#7DD3FC] text-sm">1</span>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
