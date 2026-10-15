@@ -121,11 +121,56 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       saveCart([...items, newItem]);
     }
 
+    // Report storefront activity to real-time admin telemetry
+    try {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "CART_ADD",
+          action: `Added to cart: ${product.name}`,
+          market,
+          currency: market === "GB" ? "GBP" : "INR",
+          resourceType: "cart",
+          resourceId: product.id,
+          details: {
+            productName: product.name,
+            variantName: variant?.name || null,
+            quantity,
+            price: market === "GB" ? product.price_gbp + adjGbp : product.price_inr + adjInr,
+          },
+        }),
+      }).catch(() => {});
+    } catch {
+      // Ignored
+    }
+
     setIsOpen(true);
   };
 
   const removeItem = (itemId: string) => {
+    const targetItem = items.find((i) => i.id === itemId);
     saveCart(items.filter((i) => i.id !== itemId));
+
+    if (targetItem) {
+      try {
+        fetch("/api/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "CART_REMOVE",
+            action: `Removed from cart: ${targetItem.productName}`,
+            market,
+            currency: market === "GB" ? "GBP" : "INR",
+            resourceType: "cart",
+            resourceId: targetItem.productId,
+            details: { productName: targetItem.productName },
+          }),
+        }).catch(() => {});
+      } catch {
+        // Ignored
+      }
+    }
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {

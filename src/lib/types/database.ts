@@ -181,3 +181,31 @@ export interface PromoCode {
   expires_at?: string | null;
   created_at: string;
 }
+
+export type ActivityEventType =
+  | "ORDER_CREATED"
+  | "PAYMENT_SUCCESS"
+  | "PAYMENT_FAILED"
+  | "CART_ADD"
+  | "CART_REMOVE"
+  | "CHECKOUT_INITIATED"
+  | "MARKET_SWITCH"
+  | "CUSTOMER_LOGIN"
+  | "CUSTOMER_SIGNUP"
+  | "CUSTOMER_LOGOUT"
+  | "SEARCH_QUERY"
+  | "INVENTORY_UPDATE";
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  action: string;
+  actor: string;
+  market: "IN" | "GB";
+  currency: "INR" | "GBP";
+  resourceType: string;
+  resourceId?: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  timestamp: string;
+}

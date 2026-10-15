@@ -521,6 +521,46 @@ runTest("Dynamic Regional Payment Gateway Separation & Server Enforcement", () =
   assert.equal(tamperedIN.validatedProvider, "razorpay", "India must be forced to Razorpay");
 });
 
+// 23. Real-Time Admin Activity Telemetry & Ring Buffer Ingestion
+runTest("Real-Time Admin Activity Telemetry & Ring Buffer Logic", () => {
+  const activityRing = [];
+  const MAX_LIMIT = 5;
+
+  function pushActivity(event) {
+    const item = {
+      id: `act_${Date.now()}_${Math.random()}`,
+      timestamp: new Date().toISOString(),
+      ...event,
+    };
+    activityRing.unshift(item);
+    if (activityRing.length > MAX_LIMIT) {
+      activityRing.length = MAX_LIMIT;
+    }
+    return item;
+  }
+
+  // Record 6 events to verify ring buffer eviction
+  pushActivity({ type: "CART_ADD", action: "Item 1", actor: "Shopper A", market: "IN" });
+  pushActivity({ type: "CART_ADD", action: "Item 2", actor: "Shopper B", market: "GB" });
+  pushActivity({ type: "MARKET_SWITCH", action: "Switched to UK", actor: "Shopper B", market: "GB" });
+  pushActivity({ type: "CHECKOUT_INITIATED", action: "Checkout started", actor: "Shopper A", market: "IN" });
+  pushActivity({ type: "ORDER_CREATED", action: "Order OS-01", actor: "Shopper A", market: "IN" });
+  pushActivity({ type: "PAYMENT_SUCCESS", action: "Paid OS-01", actor: "Shopper A", market: "IN" });
+
+  assert.equal(activityRing.length, 5, "Ring buffer must strictly clamp to MAX_LIMIT");
+  assert.equal(activityRing[0].type, "PAYMENT_SUCCESS", "Newest event must be at index 0");
+  assert.equal(activityRing[4].type, "CART_ADD", "Older event clamped at tail");
+
+  // Filtering
+  const orderEvents = activityRing.filter((a) => a.type === "ORDER_CREATED");
+  assert.equal(orderEvents.length, 1);
+  assert.equal(orderEvents[0].action, "Order OS-01");
+
+  // Unique active shoppers calculation
+  const uniqueShoppers = new Set(activityRing.map((a) => a.actor));
+  assert.equal(uniqueShoppers.size, 2, "Must compute active unique shoppers");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

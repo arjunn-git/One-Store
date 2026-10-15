@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { LiveActivityMonitor } from "@/components/admin/LiveActivityMonitor";
 import {
   ShoppingBag,
   RefreshCw,
@@ -16,6 +17,7 @@ import {
   X,
   Send,
   ExternalLink,
+  Activity,
 } from "lucide-react";
 import type { OrderStatus, PaymentStatus } from "@/lib/types/database";
 
@@ -76,8 +78,10 @@ export default function AdminOrdersPage() {
   const [updating, setUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const [isLiveSync, setIsLiveSync] = useState(true);
+
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -93,15 +97,24 @@ export default function AdminOrdersPage() {
 
       setOrders(data.orders || []);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error fetching orders");
+      if (!silent) setError(err instanceof Error ? err.message : "Error fetching orders");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
+
+  // Live auto-polling every 4 seconds to sync newly placed customer orders
+  useEffect(() => {
+    if (!isLiveSync) return;
+    const interval = setInterval(() => {
+      fetchOrders(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isLiveSync, statusFilter, search]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,18 +200,57 @@ export default function AdminOrdersPage() {
                 Order Fulfillment &amp; Dispatch Portal
               </h1>
               <p className="text-xs text-[#9CAFC3] mt-1">
-                Track customer checkout orders, manage dispatch transitions, and enter carrier waybill tracking.
+                Track customer checkout orders, manage dispatch transitions, and view real-time customer activity stream.
               </p>
             </div>
 
-            <button
-              onClick={fetchOrders}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#FFFFFF] border border-[#243447] text-xs font-semibold transition-all"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#7DD3FC]" : ""}`} />
-              <span>Refresh Orders</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsLiveSync(!isLiveSync)}
+                className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
+                  isLiveSync
+                    ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
+                    : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                }`}
+              >
+                <span className="relative flex h-2 w-2">
+                  {isLiveSync && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      isLiveSync ? "bg-emerald-500" : "bg-zinc-600"
+                    }`}
+                  ></span>
+                </span>
+                <span>{isLiveSync ? "Live Auto-Sync (4s)" : "Sync Paused"}</span>
+              </button>
+
+              <button
+                onClick={() => fetchOrders(false)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#FFFFFF] border border-[#243447] text-xs font-semibold transition-all"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#7DD3FC]" : ""}`} />
+                <span>Refresh Orders</span>
+              </button>
+            </div>
           </div>
+
+          {/* Live Telemetry & Activity Stream */}
+          <LiveActivityMonitor
+            onOrderClick={(orderNum) => {
+              setSearch(orderNum);
+              const params = new URLSearchParams();
+              params.set("q", orderNum);
+              fetch(`/api/admin/orders?${params.toString()}`)
+                .then((r) => r.json())
+                .then((d) => {
+                  if (d.orders) setOrders(d.orders);
+                })
+                .catch(() => {});
+            }}
+          />
 
           {/* Filter Bar */}
           <div className="p-4 rounded-2xl bg-[#102A43]/40 border border-[#243447] flex flex-col md:flex-row md:items-center justify-between gap-4">

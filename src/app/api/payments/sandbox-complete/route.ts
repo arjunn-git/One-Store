@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { markOrderPaymentStatus } from "@/lib/services/payments";
+import { recordActivity } from "@/lib/services/activity";
 
 // POST /api/payments/sandbox-complete — Explicit developer test sandbox completion
 export async function POST(request: Request) {
@@ -28,6 +29,23 @@ export async function POST(request: Request) {
       verifiedVia: "developer_sandbox_manual_trigger",
       paymentId: `pay_sandbox_${Date.now()}`,
       verifiedAt: new Date().toISOString(),
+    });
+
+    const isUK = String(orderNumber).includes("-GB-");
+    await recordActivity({
+      type: "PAYMENT_SUCCESS",
+      action: isUK ? "Stripe Payment Settled" : "Razorpay Payment Settled",
+      actor: `Customer (${orderNumber})`,
+      market: isUK ? "GB" : "IN",
+      currency: isUK ? "GBP" : "INR",
+      resourceType: "payments",
+      resourceId: orderNumber,
+      details: {
+        orderNumber,
+        status: "succeeded",
+        provider: isUK ? "stripe" : "razorpay",
+        verifiedAt: new Date().toISOString(),
+      },
     });
 
     return NextResponse.json({

@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { LiveActivityMonitor } from "@/components/admin/LiveActivityMonitor";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
@@ -274,6 +275,9 @@ export default async function AdminDashboardPage() {
               <div className="text-[11px] text-[#7DD3FC]">Dual-market canonical accounts</div>
             </div>
           </div>
+
+          {/* Real-time Telemetry & Activity Stream */}
+          <LiveActivityMonitor />
 
           {/* Orders Management Table */}
           <div className="p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-6 shadow-xl">
