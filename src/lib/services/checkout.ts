@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { isLiveSupabaseConfigured } from "./auth";
 import { FALLBACK_PRODUCTS } from "./products";
@@ -28,6 +29,7 @@ export interface OrderResult {
   success: boolean;
   orderNumber?: string;
   orderId?: string;
+  accessToken?: string;
   totalAmount?: number;
   currency?: "INR" | "GBP";
   paymentProvider?: "razorpay" | "stripe";
@@ -35,6 +37,8 @@ export interface OrderResult {
   razorpayKeyId?: string;
   stripeCheckoutUrl?: string;
   isTestMode?: boolean;
+  requiresCredentials?: boolean;
+  message?: string;
   error?: string;
 }
 
@@ -140,12 +144,15 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
 
     const finalTotal = Math.max(0, computedSubtotal - discountAmount + shippingFee);
 
-    // 5. Generate human-readable order number
+    // 5. Generate human-readable order number & access token
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `OS-2026-${payload.market}-${randomSuffix}`;
+    const accessToken = crypto.randomBytes(24).toString("hex");
 
     let createdOrderId = `ord_${Date.now()}`;
     let isTestMode = false;
+    let requiresCredentials = false;
+    let message: string | undefined;
 
     // 6. Database persistence with correct foreign keys & atomic stock decrement
     if (supabase) {
@@ -184,8 +191,8 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
           }
         }
 
-        // Insert Order
-        const { data: insertedOrder, error: orderErr } = await supabase
+        // Insert Order with access_token stored in notes
+        const { data: insertedOrder } = await supabase
           .from("orders")
           .insert({
             order_number: orderNumber,
@@ -208,6 +215,10 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
               countryCode: payload.countryCode,
             },
             payment_provider: payload.paymentProvider,
+            notes: JSON.stringify({
+              access_token: accessToken,
+              created_at: new Date().toISOString(),
+            }),
           })
           .select("id")
           .single();
@@ -296,14 +307,22 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
             const rzpData = await rzpResponse.json();
             razorpayOrderId = rzpData.id;
           } else {
-            console.error("Razorpay order API error:", await rzpResponse.text());
+            const errBody = await rzpResponse.text();
+            console.error("Razorpay order API error:", errBody);
             isTestMode = true;
+            requiresCredentials = true;
+            message = "Unable to create Razorpay order with current credentials. Please verify your Key ID & Secret.";
           }
         } catch {
           isTestMode = true;
+          requiresCredentials = true;
+          message = "Razorpay API connection failed. Please check network and credentials.";
         }
       } else {
         isTestMode = true;
+        requiresCredentials = true;
+        message =
+          "Razorpay test credentials (NEXT_PUBLIC_RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET) are not configured in environment variables.";
       }
     }
 
@@ -319,7 +338,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
           stripeParams.append("client_reference_id", orderNumber);
           stripeParams.append(
             "success_url",
-            `${siteUrl}/checkout/success?orderNumber=${orderNumber}&amount=${finalTotal}&currency=GBP`
+            `${siteUrl}/checkout/success?orderNumber=${orderNumber}&token=${accessToken}`
           );
           stripeParams.append("cancel_url", `${siteUrl}/checkout?cancelled=true`);
 
@@ -365,12 +384,15 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
           } else {
             console.error("Stripe session API error:", await stripeRes.text());
             isTestMode = true;
+            requiresCredentials = true;
           }
         } catch {
           isTestMode = true;
+          requiresCredentials = true;
         }
       } else {
         isTestMode = true;
+        requiresCredentials = true;
       }
     }
 
@@ -378,6 +400,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
       success: true,
       orderNumber,
       orderId: createdOrderId,
+      accessToken,
       totalAmount: finalTotal,
       currency: payload.currency,
       paymentProvider: payload.paymentProvider,
@@ -385,6 +408,8 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
       razorpayKeyId,
       stripeCheckoutUrl,
       isTestMode,
+      requiresCredentials,
+      message,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Checkout computation error.";

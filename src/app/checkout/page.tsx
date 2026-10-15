@@ -42,6 +42,39 @@ export default function CheckoutPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pendingTestOrder, setPendingTestOrder] = useState<{
+    orderNumber: string;
+    accessToken?: string;
+    message?: string;
+  } | null>(null);
+
+  const handleCompleteSandboxPayment = async () => {
+    if (!pendingTestOrder) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/payments/sandbox-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: pendingTestOrder.orderNumber,
+          accessToken: pendingTestOrder.accessToken,
+        }),
+      });
+      const data = await res.json();
+      setIsLoading(false);
+      if (data.success) {
+        clearCart();
+        router.push(
+          `/checkout/success?orderNumber=${pendingTestOrder.orderNumber}&token=${pendingTestOrder.accessToken || ""}`
+        );
+      } else {
+        setErrorMessage(data.error || "Sandbox completion failed.");
+      }
+    } catch {
+      setIsLoading(false);
+      setErrorMessage("Network error during sandbox completion.");
+    }
+  };
 
   const total = subtotal + shippingFee;
 
@@ -146,15 +179,60 @@ export default function CheckoutPage() {
           theme: {
             color: "#7DD3FC",
           },
-          handler: function () {
-            clearCart();
-            router.push(
-              `/checkout/success?orderNumber=${data.orderNumber}&amount=${total}&currency=INR`
-            );
+          handler: async function (response: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+          }) {
+            try {
+              setIsLoading(true);
+              const verifyRes = await fetch("/api/payments/verify/razorpay", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  orderNumber: data.orderNumber,
+                  accessToken: data.accessToken,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              });
+              const verifyData = await verifyRes.json();
+              setIsLoading(false);
+
+              if (verifyData.success) {
+                clearCart();
+                router.push(
+                  `/checkout/success?orderNumber=${data.orderNumber}&token=${data.accessToken}`
+                );
+              } else {
+                setErrorMessage(
+                  verifyData.error || "Payment verification failed. Invalid cryptographic signature."
+                );
+              }
+            } catch {
+              setIsLoading(false);
+              setErrorMessage("Network error during payment verification. Please check your connection.");
+            }
           },
           modal: {
-            ondismiss: function () {
-              setErrorMessage("Payment was not completed. You can try again whenever ready.");
+            ondismiss: async function () {
+              try {
+                await fetch("/api/payments/fail", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    orderNumber: data.orderNumber,
+                    accessToken: data.accessToken,
+                    reason: "Customer dismissed checkout modal",
+                  }),
+                });
+              } catch {
+                // Ignored
+              }
+              setErrorMessage(
+                "Payment was not completed. Your order has been preserved in pending payment state."
+              );
             },
           },
         };
@@ -165,11 +243,18 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 3. Test mode or sandbox fallback
-      clearCart();
-      router.push(
-        `/checkout/success?orderNumber=${data.orderNumber}&amount=${total}&currency=${market === "IN" ? "INR" : "GBP"}${data.isTestMode ? "&testMode=true" : ""}`
-      );
+      // 3. If credentials are not yet configured, show honest setup guidance and sandbox option
+      if (data.requiresCredentials) {
+        setPendingTestOrder({
+          orderNumber: data.orderNumber,
+          accessToken: data.accessToken,
+          message: data.message,
+        });
+        return;
+      }
+
+      // 4. Default fallback
+      setErrorMessage("Payment provider could not be initialized. Please try again.");
     } catch (err: unknown) {
       setIsLoading(false);
       setErrorMessage("Network error during checkout. Please try again.");
@@ -219,6 +304,46 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Form inputs (2 cols) */}
               <div className="lg:col-span-2 space-y-8">
+                {pendingTestOrder && (
+                  <div className="p-5 rounded-2xl bg-[#102A43]/80 border border-amber-500/50 space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                          Gateway Awaiting Configuration: Order {pendingTestOrder.orderNumber}
+                        </div>
+                        <p className="text-xs text-[#FFFFFF] leading-relaxed">
+                          Your order has been recorded into the database in{" "}
+                          <span className="font-mono text-amber-300 font-bold">pending_payment</span>{" "}
+                          status.
+                        </p>
+                        <p className="text-[11px] text-[#9CAFC3] leading-relaxed">
+                          {pendingTestOrder.message ||
+                            "To process real payments via UPI or cards, configure NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your Vercel or .env.local dashboard."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleCompleteSandboxPayment}
+                        disabled={isLoading}
+                        className="px-4 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs transition-all shadow-md shadow-[#7DD3FC]/10"
+                      >
+                        {isLoading ? "Simulating..." : "Test Mode: Complete Sandbox Payment"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingTestOrder(null)}
+                        className="px-3.5 py-2 rounded-xl bg-[#080B10] border border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {errorMessage && (
                   <div className="p-4 rounded-xl bg-red-950/50 border border-red-800 text-xs text-red-300 flex items-start gap-2.5">
                     <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
