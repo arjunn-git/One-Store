@@ -6,7 +6,24 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const nextParam = searchParams.get("next");
+  const errorParam = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
 
+  // 1. Handle user cancellation or provider rejection gracefully
+  if (errorParam || errorDescription) {
+    let friendlyMessage = "Social login was not completed. You can sign in using your verification code.";
+    if (errorParam === "access_denied" || errorDescription?.toLowerCase().includes("denied")) {
+      friendlyMessage = "Sign-in was cancelled. You can sign in using your email code.";
+    } else if (errorDescription) {
+      friendlyMessage = errorDescription;
+    }
+
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent(friendlyMessage)}`
+    );
+  }
+
+  // 2. Exchange authorization code for session
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -16,25 +33,55 @@ export async function GET(request: Request) {
       const isAdmin = isAdminEmail(user.email);
       const destination = nextParam || (isAdmin ? "/admin" : "/account");
 
-      // Idempotently ensure canonical profile exists
+      // Extract full name from various provider metadata formats (Google vs Apple)
+      const meta = user.user_metadata || {};
+      const fullName =
+        meta.full_name ||
+        meta.name ||
+        (meta.first_name ? `${meta.first_name} ${meta.last_name || ""}`.trim() : null);
+
+      // Unified identity & canonical profile preservation:
+      // We look up by canonical auth_user_id (never merge accounts blindly by email alone)
       try {
-        await supabase.from("customer_profiles").upsert(
-          {
+        const { data: existingProfile } = await supabase
+          .from("customer_profiles")
+          .select("id, full_name, email")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (existingProfile) {
+          // Preserve existing profile and don't overwrite existing name if Apple omitted it on repeat sign-in
+          const updateFields: Record<string, any> = {
+            is_email_verified: !!user.email_confirmed_at,
+            updated_at: new Date().toISOString(),
+          };
+          if (fullName && !existingProfile.full_name) {
+            updateFields.full_name = fullName;
+          }
+          if (user.phone) {
+            updateFields.phone = user.phone;
+            updateFields.is_phone_verified = !!user.phone_confirmed_at;
+          }
+          await supabase
+            .from("customer_profiles")
+            .update(updateFields)
+            .eq("auth_user_id", user.id);
+        } else {
+          // Insert new canonical profile
+          await supabase.from("customer_profiles").insert({
             auth_user_id: user.id,
             email: user.email,
             is_email_verified: !!user.email_confirmed_at,
             phone: user.phone || null,
             is_phone_verified: !!user.phone_confirmed_at,
-            full_name: user.user_metadata?.full_name || null,
-            marketing_consent: !!user.user_metadata?.marketing_consent,
-            marketing_consent_at: user.user_metadata?.marketing_consent
-              ? new Date().toISOString()
-              : null,
-          },
-          { onConflict: "auth_user_id" }
-        );
+            full_name: fullName,
+            role: isAdmin ? "owner" : "customer",
+            marketing_consent: !!meta.marketing_consent,
+            marketing_consent_at: meta.marketing_consent ? new Date().toISOString() : null,
+          });
+        }
       } catch {
-        // Continue even if database sync encounters a network hiccup
+        // Continue even if database sync encounters a network delay
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host");
@@ -66,6 +113,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Redirect to an error recovery page if code exchange fails
+  // 3. Fallback if code exchange fails or no code was received
   return NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`);
 }

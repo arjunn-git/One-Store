@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithGoogle, signInWithApple, isAdminEmail } from "@/lib/services/auth";
 
@@ -12,21 +12,31 @@ export function SocialAuthButtons() {
   const [loadingProvider, setLoadingProvider] = useState<"google" | "apple" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    const onPageShow = () => {
+      setLoadingProvider(null);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   const handleGoogle = async () => {
     setLoadingProvider("google");
     setErrorMsg(null);
+
+    const safetyTimer = setTimeout(() => {
+      setLoadingProvider(null);
+    }, 8000);
+
     try {
-      const res = await signInWithGoogle();
+      const res = await signInWithGoogle(nextUrl);
       if (!res.success) {
-        setErrorMsg(res.error || "Google sign-in is not enabled yet in your Supabase dashboard. Please use the 6-digit Email OTP above.");
+        clearTimeout(safetyTimer);
+        setErrorMsg(res.error || "Google sign-in is not enabled yet in your Supabase dashboard. Please use the Email OTP above.");
         setLoadingProvider(null);
-      } else if (res.isDevDemo) {
-        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl || nextUrl === "/")
-          ? "/admin"
-          : nextUrl;
-        window.location.href = target;
       }
     } catch {
+      clearTimeout(safetyTimer);
       setErrorMsg("Google sign-in could not be completed. Please use Email OTP.");
       setLoadingProvider(null);
     }
@@ -35,18 +45,20 @@ export function SocialAuthButtons() {
   const handleApple = async () => {
     setLoadingProvider("apple");
     setErrorMsg(null);
+
+    const safetyTimer = setTimeout(() => {
+      setLoadingProvider(null);
+    }, 8000);
+
     try {
-      const res = await signInWithApple();
+      const res = await signInWithApple(nextUrl);
       if (!res.success) {
-        setErrorMsg(res.error || "Apple sign-in is not enabled yet in your Supabase dashboard. Please use the 6-digit Email OTP above.");
+        clearTimeout(safetyTimer);
+        setErrorMsg(res.error || "Sign in with Apple is not enabled yet in your Supabase dashboard. Please use the Email OTP above.");
         setLoadingProvider(null);
-      } else if (res.isDevDemo) {
-        const target = isAdminEmail("arjuntaneja204@gmail.com") && (nextUrl === "/account" || !nextUrl || nextUrl === "/")
-          ? "/admin"
-          : nextUrl;
-        window.location.href = target;
       }
     } catch {
+      clearTimeout(safetyTimer);
       setErrorMsg("Apple sign-in could not be completed. Please use Email OTP.");
       setLoadingProvider(null);
     }

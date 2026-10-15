@@ -268,34 +268,25 @@ export async function verifyEmailOtp(
 }
 
 // Google OAuth
-export async function signInWithGoogle(): Promise<AuthResponse> {
-  if (!isLiveSupabaseConfigured()) {
-    return {
-      success: false,
-      error: "Google OAuth credentials (Client ID & Secret) are not yet configured in Supabase. Please use Email OTP.",
-    };
-  }
-
+export async function signInWithGoogle(nextUrl?: string): Promise<AuthResponse> {
   try {
-    const supabase = createClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
+    const res = await fetch("/api/auth/oauth/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider: "google", next: nextUrl }),
     });
-
-    if (error) return { success: false, error: error.message };
-    if (data.url) {
-      window.location.href = data.url;
+    const result = await res.json();
+    if (!result.success || !result.configured) {
+      return {
+        success: false,
+        error: result.error || "Google Sign-In is not enabled yet in your Supabase dashboard. Please configure Google OAuth under Authentication -> Providers.",
+      };
     }
-    return { success: true };
+    if (result.url) {
+      window.location.href = result.url;
+      return { success: true };
+    }
+    return { success: false, error: "Unable to retrieve Google authentication URL." };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Google Sign-In";
     return { success: false, error: msg };
@@ -303,30 +294,25 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
 }
 
 // Apple Sign-In
-export async function signInWithApple(): Promise<AuthResponse> {
-  if (!isLiveSupabaseConfigured()) {
-    return {
-      success: false,
-      error: "Apple Sign-In credentials are not yet configured in Supabase. Please use Email OTP.",
-    };
-  }
-
+export async function signInWithApple(nextUrl?: string): Promise<AuthResponse> {
   try {
-    const supabase = createClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
+    const res = await fetch("/api/auth/oauth/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider: "apple", next: nextUrl }),
     });
-
-    if (error) return { success: false, error: error.message };
-    if (data.url) {
-      window.location.href = data.url;
+    const result = await res.json();
+    if (!result.success || !result.configured) {
+      return {
+        success: false,
+        error: result.error || "Sign in with Apple is not enabled yet in your Supabase dashboard. Please configure Apple OAuth under Authentication -> Providers.",
+      };
     }
-    return { success: true };
+    if (result.url) {
+      window.location.href = result.url;
+      return { success: true };
+    }
+    return { success: false, error: "Unable to retrieve Apple authentication URL." };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Sign in with Apple";
     return { success: false, error: msg };

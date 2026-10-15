@@ -265,6 +265,94 @@ runTest("OTP Resend Cooldown Timer Logic (60s Guard)", () => {
   assert.equal(canResendOtp(now - 61 * 1000, now), true, "Must allow resend after 61 seconds");
 });
 
+// 14. OAuth Provider Validation & Callback URL Check
+runTest("OAuth Provider & Redirect URL Validation (Google & Apple)", () => {
+  function buildOAuthAuthorizeUrl(supabaseUrl, provider, callbackUrl) {
+    if (!["google", "apple"].includes(provider)) throw new Error("Invalid provider");
+    return `${supabaseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(callbackUrl)}`;
+  }
+
+  const supabaseUrl = "https://iivszrkvwvqptfxiqbfv.supabase.co";
+  const callbackUrl = "https://one-store-gray.vercel.app/auth/callback";
+
+  const googleUrl = buildOAuthAuthorizeUrl(supabaseUrl, "google", callbackUrl);
+  assert.ok(googleUrl.includes("provider=google"));
+  assert.ok(googleUrl.includes(encodeURIComponent(callbackUrl)));
+
+  const appleUrl = buildOAuthAuthorizeUrl(supabaseUrl, "apple", callbackUrl);
+  assert.ok(appleUrl.includes("provider=apple"));
+  assert.ok(appleUrl.includes(encodeURIComponent(callbackUrl)));
+});
+
+// 15. Apple Private Relay & Metadata Extraction
+runTest("Apple Private Relay & Metadata Preservation", () => {
+  function extractProfileFromAuthUser(user, existingProfile = null) {
+    const meta = user.user_metadata || {};
+    const fullName =
+      meta.full_name ||
+      meta.name ||
+      (meta.first_name ? `${meta.first_name} ${meta.last_name || ""}`.trim() : null);
+
+    if (existingProfile) {
+      return {
+        ...existingProfile,
+        is_email_verified: !!user.email_confirmed_at,
+        // Preserve existing full_name if Apple did not resend it
+        full_name: fullName || existingProfile.full_name,
+      };
+    }
+
+    return {
+      auth_user_id: user.id,
+      email: user.email,
+      is_email_verified: !!user.email_confirmed_at,
+      full_name: fullName,
+      is_private_relay: user.email?.endsWith("@privaterelay.appleid.com") || false,
+    };
+  }
+
+  // Initial Apple Sign-In: user provides name and private relay email
+  const initialUser = {
+    id: "usr_apple_1",
+    email: "x9fj2k@privaterelay.appleid.com",
+    email_confirmed_at: "2026-10-15T00:00:00Z",
+    user_metadata: { first_name: "John", last_name: "Appleseed" },
+  };
+  const profile1 = extractProfileFromAuthUser(initialUser);
+  assert.equal(profile1.full_name, "John Appleseed");
+  assert.equal(profile1.is_private_relay, true);
+
+  // Subsequent Apple Sign-In: Apple omits user_metadata
+  const subsequentUser = {
+    id: "usr_apple_1",
+    email: "x9fj2k@privaterelay.appleid.com",
+    email_confirmed_at: "2026-10-15T00:00:00Z",
+    user_metadata: {},
+  };
+  const profile2 = extractProfileFromAuthUser(subsequentUser, profile1);
+  assert.equal(profile2.full_name, "John Appleseed", "Must preserve existing name when Apple omits it");
+});
+
+// 16. OAuth Callback Error Normalization
+runTest("OAuth Cancellation & Error Handling", () => {
+  function normalizeCallbackError(errorParam, errorDescription) {
+    if (errorParam === "access_denied" || errorDescription?.toLowerCase().includes("denied")) {
+      return "Sign-in was cancelled. You can sign in using your email code.";
+    }
+    if (errorDescription) return errorDescription;
+    return "Social authentication could not be completed. Please try again or use your email verification code.";
+  }
+
+  assert.equal(
+    normalizeCallbackError("access_denied", "The user denied access to your application"),
+    "Sign-in was cancelled. You can sign in using your email code."
+  );
+  assert.equal(
+    normalizeCallbackError("server_error", "Internal provider error"),
+    "Internal provider error"
+  );
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

@@ -30,6 +30,20 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     setCurrentMode(mode);
   }, [mode]);
 
+  // Read error param from OAuth callback redirect if consent cancelled or code exchange failed
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      if (error === "access_denied" || error.toLowerCase().includes("denied") || error.toLowerCase().includes("cancel")) {
+        setErrorMessage("Social sign-in was cancelled. You can sign in using your verification code above.");
+      } else if (error === "auth_exchange_failed") {
+        setErrorMessage("Social authentication could not be completed. Please try again or use your email verification code.");
+      } else {
+        setErrorMessage(decodeURIComponent(error));
+      }
+    }
+  }, [searchParams]);
+
   // Form Inputs
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
