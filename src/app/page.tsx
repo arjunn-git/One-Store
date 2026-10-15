@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -7,7 +8,11 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default async function Home() {
-  const featuredProducts = await getProducts({ featuredOnly: true });
+  const cookieStore = await cookies();
+  const rawMarket = cookieStore.get("one_store_market")?.value;
+  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
+
+  const featuredProducts = await getProducts({ featuredOnly: true, market });
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">

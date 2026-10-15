@@ -32,6 +32,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [marketFilter, setMarketFilter] = useState<"all" | "IN" | "GB">("all");
   const [isPending, startTransition] = useTransition();
 
   const fetchProducts = async () => {
@@ -40,6 +41,7 @@ export default function AdminProductsPage() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (marketFilter !== "all") params.set("market", marketFilter);
       if (search.trim()) params.set("q", search.trim());
 
       const res = await fetch(`/api/admin/products?${params.toString()}`);
@@ -57,7 +59,24 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [statusFilter]);
+  }, [statusFilter, marketFilter]);
+
+  const togglePublishUkTestProducts = async (publish: boolean) => {
+    setLoading(true);
+    const ukTestProducts = products.filter((p) => p.is_test_data);
+    for (const p of ukTestProducts) {
+      try {
+        await fetch(`/api/admin/products/${p.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: publish ? "active" : "draft" }),
+        });
+      } catch {
+        // Continue
+      }
+    }
+    await fetchProducts();
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,29 +153,75 @@ export default function AdminProductsPage() {
               </button>
             </form>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-[#9CAFC3]">Status:</span>
-              {(["all", "active", "draft", "archived"] as const).map((st) => (
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Status Filter */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-[#9CAFC3]">Status:</span>
+                {(["all", "active", "draft", "archived"] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                      statusFilter === st
+                        ? "bg-[#7DD3FC] text-[#080B10] shadow-sm font-bold"
+                        : "bg-[#080B10] text-[#9CAFC3] border border-[#243447] hover:text-[#FFFFFF]"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+
+              {/* Market Filter */}
+              <div className="flex items-center gap-1.5 border-l border-[#243447] pl-4">
+                <span className="text-xs text-[#9CAFC3]">Market:</span>
+                {[
+                  { id: "all", label: "All" },
+                  { id: "IN", label: "🇮🇳 India" },
+                  { id: "GB", label: "🇬🇧 UK" },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setMarketFilter(m.id as "all" | "IN" | "GB")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                      marketFilter === m.id
+                        ? "bg-[#7DD3FC] text-[#080B10] shadow-sm font-bold"
+                        : "bg-[#080B10] text-[#9CAFC3] border border-[#243447] hover:text-[#FFFFFF]"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Development Action: UK Test Catalogue */}
+              <div className="flex items-center gap-2 border-l border-[#243447] pl-4">
                 <button
-                  key={st}
                   type="button"
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-                    statusFilter === st
-                      ? "bg-[#7DD3FC] text-[#080B10] shadow-sm font-bold"
-                      : "bg-[#080B10] text-[#9CAFC3] border border-[#243447] hover:text-[#FFFFFF]"
-                  }`}
+                  onClick={() => togglePublishUkTestProducts(true)}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 text-[11px] font-semibold transition-all"
+                  title="Make all 6 UK test products active for storefront testing"
                 >
-                  {st}
+                  Publish UK Test Products
                 </button>
-              ))}
-              <button
-                onClick={fetchProducts}
-                title="Refresh"
-                className="p-2 rounded-lg bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC] text-[#9CAFC3] hover:text-[#FFFFFF]"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#7DD3FC]" : ""}`} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => togglePublishUkTestProducts(false)}
+                  className="px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800 text-[11px] font-semibold transition-all"
+                  title="Move all 6 UK test products to draft"
+                >
+                  Unpublish to Draft
+                </button>
+                <button
+                  onClick={fetchProducts}
+                  title="Refresh catalog list"
+                  className="p-1.5 rounded-lg bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC] text-[#9CAFC3] hover:text-[#FFFFFF]"
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#7DD3FC]" : ""}`} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -227,9 +292,26 @@ export default function AdminProductsPage() {
                                 >
                                   {p.name}
                                 </Link>
-                                <span className="text-[11px] text-[#9CAFC3]">
-                                  {p.variants?.length || 1} variant(s)
-                                </span>
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <span className="text-[11px] text-[#9CAFC3]">
+                                    {p.variants?.length || 1} variant(s)
+                                  </span>
+                                  {p.available_in_in && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#080B10] text-[#7DD3FC] border border-[#243447] font-semibold">
+                                      🇮🇳 IN
+                                    </span>
+                                  )}
+                                  {p.available_in_gb && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#080B10] text-[#7DD3FC] border border-[#243447] font-semibold">
+                                      🇬🇧 UK
+                                    </span>
+                                  )}
+                                  {p.is_test_data && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-800 font-mono font-bold">
+                                      TEST DATA
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>

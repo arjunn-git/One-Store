@@ -16,6 +16,7 @@ import {
   Minus,
   AlertCircle,
   XCircle,
+  Globe,
 } from "lucide-react";
 
 interface ProductDetailViewProps {
@@ -27,7 +28,7 @@ interface ProductDetailViewProps {
 }
 
 export function ProductDetailView({ product }: ProductDetailViewProps) {
-  const { market } = useMarket();
+  const { market, setMarket } = useMarket();
   const { addItem } = useCart();
 
   // Selected variant state
@@ -47,9 +48,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const currentStock = selectedVariant ? selectedVariant.inventory_count : 10;
   const isOutOfStock = currentStock <= 0;
   const isLowStock = currentStock > 0 && currentStock <= 5;
+  const isAvailableInCurrentMarket =
+    market === "IN" ? product.available_in_in !== false : product.available_in_gb !== false;
 
   const handleAddToCart = () => {
-    if (isOutOfStock) return;
+    if (isOutOfStock || !isAvailableInCurrentMarket) return;
     addItem(product, selectedVariant, quantity);
     setAddedToCart(true);
     setTimeout(() => {
@@ -82,11 +85,15 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             )}
 
             {/* Badges */}
-            {product.is_featured && (
+            {product.is_test_data ? (
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-xs font-mono font-bold tracking-wider shadow-lg">
+                UK TEST DATA RECORD
+              </span>
+            ) : product.is_featured ? (
               <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-xs font-bold uppercase tracking-wider shadow-lg">
                 Featured Flagship
               </span>
-            )}
+            ) : null}
           </div>
 
           {/* Thumbnail Gallery */}
@@ -139,6 +146,43 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               Includes applicable taxes &amp; standard domestic dispatch.
             </div>
           </div>
+
+          {/* Test Record Notice */}
+          {product.is_test_data && (
+            <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/80 text-xs flex items-start gap-3 text-amber-300 shadow-sm">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+              <div>
+                <span className="font-bold uppercase tracking-wider text-[11px] block">
+                  Development Test Record
+                </span>
+                <p className="text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
+                  This item is an illustrative development seed record for the UK market. Stock, prices, and specifications are for testing and evaluation.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Market Mismatch Alert */}
+          {!isAvailableInCurrentMarket && (
+            <div className="p-4 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs space-y-2.5 shadow-md">
+              <div className="flex items-center gap-2 font-bold text-[#7DD3FC]">
+                <Globe className="h-4 w-4 shrink-0" />
+                <span>Regional Market Availability</span>
+              </div>
+              <p className="text-[#9CAFC3] text-xs leading-relaxed">
+                {market === "IN"
+                  ? "This item is configured for the United Kingdom catalogue and dispatched in GBP (£)."
+                  : "This item is configured for the India catalogue and dispatched in INR (₹)."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setMarket(market === "IN" ? "GB" : "IN")}
+                className="px-4 py-2 rounded-lg bg-[#7DD3FC] text-[#080B10] font-bold text-xs hover:bg-[#FFFFFF] transition-all flex items-center gap-2"
+              >
+                <span>Switch to {market === "IN" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}</span>
+              </button>
+            </div>
+          )}
 
           {/* Description */}
           <p className="text-sm text-[#9CAFC3] leading-relaxed">{product.description}</p>
@@ -223,9 +267,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || !isAvailableInCurrentMarket}
               className={`flex-1 w-full sm:w-auto h-12 px-8 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                isOutOfStock
+                !isAvailableInCurrentMarket
+                  ? "bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 cursor-not-allowed opacity-90"
+                  : isOutOfStock
                   ? "bg-[#243447] text-[#9CAFC3] cursor-not-allowed"
                   : addedToCart
                   ? "bg-emerald-500 text-[#080B10] shadow-lg shadow-emerald-500/20"
@@ -235,6 +281,10 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               {addedToCart ? (
                 <>
                   <Check className="h-4 w-4" /> Added to One Store Cart!
+                </>
+              ) : !isAvailableInCurrentMarket ? (
+                <>
+                  <Globe className="h-4 w-4" /> Switch Country to Order
                 </>
               ) : isOutOfStock ? (
                 "Sold Out"

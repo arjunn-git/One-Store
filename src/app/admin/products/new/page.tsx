@@ -69,6 +69,7 @@ export default function NewProductPage() {
   const [shippingInfo, setShippingInfo] = useState("");
   const [status, setStatus] = useState<"active" | "draft" | "archived">("active");
   const [isFeatured, setIsFeatured] = useState(false);
+  const [isTestData, setIsTestData] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -242,6 +243,7 @@ export default function NewProductPage() {
         supplier_name: supplierName.trim() || null,
         available_in_in: availableInIn,
         available_in_gb: availableInGb,
+        is_test_data: isTestData,
         shipping_info: shippingInfo.trim() || null,
         status,
         is_featured: isFeatured,
@@ -632,6 +634,16 @@ export default function NewProductPage() {
                       className="rounded border-[#243447] text-[#7DD3FC] focus:ring-0"
                     />
                     <span>Available for Customers in United Kingdom (£ GBP)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-amber-300">
+                    <input
+                      type="checkbox"
+                      checked={isTestData}
+                      onChange={(e) => setIsTestData(e.target.checked)}
+                      className="rounded border-amber-800 text-amber-500 focus:ring-0"
+                    />
+                    <span>Mark as Development Test Record (Visible in UK Test Suite)</span>
                   </label>
                 </div>
               </div>

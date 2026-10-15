@@ -309,9 +309,14 @@ export async function signInWithGoogle(nextUrl?: string): Promise<AuthResponse> 
 
     if (data?.url) {
       window.location.href = data.url;
+      return { success: true };
     }
 
-    return { success: true };
+    return {
+      success: false,
+      error:
+        "Google OAuth is not enabled in your Supabase dashboard. Please enable Google under Authentication -> Providers.",
+    };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Google Sign-In";
     return { success: false, error: msg };
@@ -355,9 +360,14 @@ export async function signInWithApple(nextUrl?: string): Promise<AuthResponse> {
 
     if (data?.url) {
       window.location.href = data.url;
+      return { success: true };
     }
 
-    return { success: true };
+    return {
+      success: false,
+      error:
+        "Sign in with Apple is not configured in your Supabase dashboard yet. Please configure your Apple Services ID, Team ID, Key ID, and Private Key in Supabase Authentication -> Providers -> Apple.",
+    };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Sign in with Apple";
     return { success: false, error: msg };

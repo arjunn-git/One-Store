@@ -40,6 +40,60 @@ export const FALLBACK_CATEGORIES: Category[] = [
     is_active: true,
     created_at: new Date().toISOString(),
   },
+  {
+    id: "c5000000-0000-0000-0000-000000000005",
+    slug: "electronics",
+    name: "Electronics",
+    description: "High-performance consumer electronics engineered for clarity and wireless mobility.",
+    image_url: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "c6000000-0000-0000-0000-000000000006",
+    slug: "home-office",
+    name: "Home Office",
+    description: "Ergonomic studio fixtures, illumination, and workspace productivity essentials.",
+    image_url: "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "c7000000-0000-0000-0000-000000000007",
+    slug: "home-and-lifestyle",
+    name: "Home and Lifestyle",
+    description: "Thermal drinkware and minimalist daily lifestyle essentials.",
+    image_url: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "c8000000-0000-0000-0000-000000000008",
+    slug: "pet-accessories",
+    name: "Pet Accessories",
+    description: "Specialized pet care accessories and grooming solutions.",
+    image_url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "c9000000-0000-0000-0000-000000000009",
+    slug: "home-accessories",
+    name: "Home Accessories",
+    description: "Motion-activated ambient fixtures and modern home convenience accessories.",
+    image_url: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "c1000000-0000-0000-0000-000000000010",
+    slug: "car-accessories",
+    name: "Car Accessories",
+    description: "Precision vehicle interior detailing kits and automotive maintenance tools.",
+    image_url: "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800&q=80",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const FALLBACK_PRODUCTS: (Product & { variants: ProductVariant[]; category?: Category })[] = [
@@ -298,15 +352,268 @@ export const FALLBACK_PRODUCTS: (Product & { variants: ProductVariant[]; categor
       },
     ],
   },
+  {
+    id: "p7000000-0000-0000-0000-000000000001",
+    slug: "wireless-bluetooth-headphones-uk-test",
+    name: "Wireless Bluetooth Headphones",
+    description:
+      "[DEVELOPMENT TEST RECORD] Over-ear acoustic wireless Bluetooth headphones with passive noise isolation, 40mm drivers, and 30-hour playback.",
+    category_id: "c5000000-0000-0000-0000-000000000005",
+    images: ["https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80"],
+    price_inr: 4299.0,
+    compare_at_price_inr: 5499.0,
+    price_gbp: 39.99,
+    compare_at_price_gbp: 49.99,
+    sku: "UK-TEST-AUD-001",
+    status: "active",
+    is_featured: true,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Wireless Bluetooth Headphones (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[4],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000001",
+        product_id: "p7000000-0000-0000-0000-000000000001",
+        name: "Matte Black",
+        sku: "UK-TEST-AUD-001",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 20,
+        low_stock_threshold: 5,
+        options: { Color: "Matte Black" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "p7000000-0000-0000-0000-000000000002",
+    slug: "adjustable-led-desk-lamp-uk-test",
+    name: "Adjustable LED Desk Lamp",
+    description:
+      "[DEVELOPMENT TEST RECORD] Architectural articulated desk lamp with 5 colour temperature presets, touch stepless dimming, and integrated USB-A charging port.",
+    category_id: "c6000000-0000-0000-0000-000000000006",
+    images: ["https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=800&q=80"],
+    price_inr: 2699.0,
+    compare_at_price_inr: 3299.0,
+    price_gbp: 24.99,
+    compare_at_price_gbp: 29.99,
+    sku: "UK-TEST-HOME-002",
+    status: "active",
+    is_featured: false,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Adjustable LED Desk Lamp (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[5],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000002",
+        product_id: "p7000000-0000-0000-0000-000000000002",
+        name: "Anodized Silver",
+        sku: "UK-TEST-HOME-002",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 15,
+        low_stock_threshold: 4,
+        options: { Finish: "Anodized Silver" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "p7000000-0000-0000-0000-000000000003",
+    slug: "reusable-insulated-water-bottle-uk-test",
+    name: "Reusable Insulated Water Bottle",
+    description:
+      "[DEVELOPMENT TEST RECORD] Double-wall vacuum insulated 18/8 food-grade stainless steel bottle keeping liquids cold for 24h and hot for 12h. Leakproof seal.",
+    category_id: "c7000000-0000-0000-0000-000000000007",
+    images: ["https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&q=80"],
+    price_inr: 1799.0,
+    compare_at_price_inr: 2299.0,
+    price_gbp: 16.99,
+    compare_at_price_gbp: 21.99,
+    sku: "UK-TEST-LIFE-003",
+    status: "active",
+    is_featured: true,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Reusable Insulated Water Bottle (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[6],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000003",
+        product_id: "p7000000-0000-0000-0000-000000000003",
+        name: "Slate Grey 750ml",
+        sku: "UK-TEST-LIFE-003",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 30,
+        low_stock_threshold: 5,
+        options: { Capacity: "750ml" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "p7000000-0000-0000-0000-000000000004",
+    slug: "pet-hair-remover-brush-uk-test",
+    name: "Pet Hair Remover Brush",
+    description:
+      "[DEVELOPMENT TEST RECORD] Reusable multi-surface electrostatic pet hair and lint cleaning roller. Self-cleaning receptacle with quick-release disposal.",
+    category_id: "c8000000-0000-0000-0000-000000000008",
+    images: ["https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80"],
+    price_inr: 1399.0,
+    compare_at_price_inr: 1799.0,
+    price_gbp: 12.99,
+    compare_at_price_gbp: 16.99,
+    sku: "UK-TEST-PET-004",
+    status: "active",
+    is_featured: false,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Pet Hair Remover Brush (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[7],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000004",
+        product_id: "p7000000-0000-0000-0000-000000000004",
+        name: "Standard Pro",
+        sku: "UK-TEST-PET-004",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 25,
+        low_stock_threshold: 5,
+        options: { Model: "Standard Pro" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "p7000000-0000-0000-0000-000000000005",
+    slug: "motion-sensor-night-light-uk-test",
+    name: "Motion Sensor Night Light",
+    description:
+      "[DEVELOPMENT TEST RECORD] Magnetic base rechargeable warm ambient night light with 120-degree PIR motion sensor, auto-off timer, and detachable portable wand.",
+    category_id: "c9000000-0000-0000-0000-000000000009",
+    images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&q=80"],
+    price_inr: 1599.0,
+    compare_at_price_inr: 2199.0,
+    price_gbp: 14.99,
+    compare_at_price_gbp: 19.99,
+    sku: "UK-TEST-HOME-005",
+    status: "active",
+    is_featured: false,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Motion Sensor Night Light (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[8],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000005",
+        product_id: "p7000000-0000-0000-0000-000000000005",
+        name: "Warm Amber 2700K",
+        sku: "UK-TEST-HOME-005",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 20,
+        low_stock_threshold: 4,
+        options: { Kelvin: "2700K" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "p7000000-0000-0000-0000-000000000006",
+    slug: "car-cleaning-gel-kit-uk-test",
+    name: "Car Cleaning Gel Kit",
+    description:
+      "[DEVELOPMENT TEST RECORD] Reusable universal cleaning compound gel for dashboard vents, console seams, and gear selector recesses. Non-sticky residue-free formula.",
+    category_id: "c1000000-0000-0000-0000-000000000010",
+    images: ["https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800&q=80"],
+    price_inr: 1099.0,
+    compare_at_price_inr: 1399.0,
+    price_gbp: 9.99,
+    compare_at_price_gbp: 12.99,
+    sku: "UK-TEST-CAR-006",
+    status: "active",
+    is_featured: false,
+    is_test_data: true,
+    available_in_in: false,
+    available_in_gb: true,
+    supplier_name: "UK Dev Fixture (Manual Inventory)",
+    shipping_info: "Royal Mail Tracked 24/48 Dispatch",
+    seo_title: "Car Cleaning Gel Kit (UK Test) — One Store",
+    seo_description: "Development test catalogue record for UK market.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: FALLBACK_CATEGORIES[9],
+    variants: [
+      {
+        id: "v7000000-0000-0000-0000-000000000006",
+        product_id: "p7000000-0000-0000-0000-000000000006",
+        name: "Neon Blue 160g",
+        sku: "UK-TEST-CAR-006",
+        price_inr_adjustment: 0,
+        price_gbp_adjustment: 0,
+        inventory_count: 40,
+        low_stock_threshold: 8,
+        options: { Size: "160g" },
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
 ];
 
 export async function getProducts(options?: {
   categorySlug?: string;
   searchQuery?: string;
   featuredOnly?: boolean;
+  market?: "IN" | "GB";
 }) {
+  let resolvedMarket = options?.market;
+  if (!resolvedMarket && typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem("one_store_market") as "IN" | "GB";
+      if (saved === "IN" || saved === "GB") resolvedMarket = saved;
+    } catch {
+      // Ignore
+    }
+  }
+
+  const effectiveOptions = { ...options, market: resolvedMarket };
+
   if (!isLiveSupabaseConfigured()) {
-    return filterFallbackProducts(options);
+    return filterFallbackProducts(effectiveOptions);
   }
 
   try {
@@ -316,17 +623,38 @@ export async function getProducts(options?: {
       .select("*, category:categories(*), variants:product_variants(*)")
       .eq("status", "active");
 
-    if (options?.featuredOnly) {
+    if (effectiveOptions.market === "IN") {
+      query = query.eq("available_in_in", true);
+    } else if (effectiveOptions.market === "GB") {
+      query = query.eq("available_in_gb", true);
+    }
+
+    if (effectiveOptions.featuredOnly) {
       query = query.eq("is_featured", true);
     }
 
     const { data, error } = await query;
     if (error || !data || data.length === 0) {
-      return filterFallbackProducts(options);
+      return filterFallbackProducts(effectiveOptions);
     }
-    return data;
+
+    let results = data;
+    if (effectiveOptions.categorySlug) {
+      results = results.filter((p) => p.category?.slug === effectiveOptions.categorySlug);
+    }
+    if (effectiveOptions.searchQuery) {
+      const q = effectiveOptions.searchQuery.toLowerCase();
+      results = results.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q) ||
+          p.category?.name?.toLowerCase().includes(q)
+      );
+    }
+
+    return results;
   } catch {
-    return filterFallbackProducts(options);
+    return filterFallbackProducts(effectiveOptions);
   }
 }
 
@@ -353,25 +681,35 @@ export async function getProductBySlug(slug: string) {
   }
 }
 
-export async function getCategories() {
-  if (!isLiveSupabaseConfigured()) {
-    return FALLBACK_CATEGORIES;
-  }
+export async function getCategories(market?: "IN" | "GB") {
+  let categories: Category[] = FALLBACK_CATEGORIES;
 
-  try {
-    const supabase = createPublicClient();
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("is_active", true);
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = createPublicClient();
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_active", true);
 
-    if (error || !data || data.length === 0) {
-      return FALLBACK_CATEGORIES;
+      if (!error && data && data.length > 0) {
+        categories = data;
+      }
+    } catch {
+      // Fallback
     }
-    return data;
-  } catch {
-    return FALLBACK_CATEGORIES;
   }
+
+  // If market is specified, filter categories that have active products in that market
+  if (market) {
+    const marketProducts = FALLBACK_PRODUCTS.filter((p) =>
+      market === "IN" ? p.available_in_in !== false : p.available_in_gb !== false
+    );
+    const categoryIds = new Set(marketProducts.map((p) => p.category_id));
+    return categories.filter((c) => categoryIds.has(c.id));
+  }
+
+  return categories;
 }
 
 export async function getCategoryBySlug(slug: string) {
@@ -383,8 +721,15 @@ function filterFallbackProducts(options?: {
   categorySlug?: string;
   searchQuery?: string;
   featuredOnly?: boolean;
+  market?: "IN" | "GB";
 }) {
   let list = [...FALLBACK_PRODUCTS];
+
+  if (options?.market === "IN") {
+    list = list.filter((p) => p.available_in_in !== false);
+  } else if (options?.market === "GB") {
+    list = list.filter((p) => p.available_in_gb !== false);
+  }
 
   if (options?.featuredOnly) {
     list = list.filter((p) => p.is_featured);

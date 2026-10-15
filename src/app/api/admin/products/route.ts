@@ -18,12 +18,18 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const market = searchParams.get("market"); // "IN" | "GB"
     const q = searchParams.get("q")?.toLowerCase();
 
     if (!isLiveSupabaseConfigured()) {
       let fallbackList = [...FALLBACK_PRODUCTS];
       if (status && status !== "all") {
         fallbackList = fallbackList.filter((p) => p.status === status);
+      }
+      if (market === "IN") {
+        fallbackList = fallbackList.filter((p) => p.available_in_in !== false);
+      } else if (market === "GB") {
+        fallbackList = fallbackList.filter((p) => p.available_in_gb !== false);
       }
       if (q) {
         fallbackList = fallbackList.filter(
@@ -43,6 +49,12 @@ export async function GET(request: Request) {
 
     if (status && status !== "all") {
       query = query.eq("status", status);
+    }
+
+    if (market === "IN") {
+      query = query.eq("available_in_in", true);
+    } else if (market === "GB") {
+      query = query.eq("available_in_gb", true);
     }
 
     if (q) {
@@ -133,6 +145,7 @@ export async function POST(request: Request) {
         supplier_name: supplier_name?.trim() || null,
         available_in_in: available_in_in !== undefined ? !!available_in_in : true,
         available_in_gb: available_in_gb !== undefined ? !!available_in_gb : true,
+        is_test_data: !!body.is_test_data,
         shipping_info: shipping_info?.trim() || null,
         status: status || "active",
         is_featured: !!is_featured,

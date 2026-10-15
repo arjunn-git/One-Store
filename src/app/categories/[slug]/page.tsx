@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -20,7 +21,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const products = await getProducts({ categorySlug: slug });
+  const cookieStore = await cookies();
+  const rawMarket = cookieStore.get("one_store_market")?.value;
+  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
+
+  const products = await getProducts({ categorySlug: slug, market });
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">

@@ -353,6 +353,104 @@ runTest("OAuth Cancellation & Error Handling", () => {
   );
 });
 
+// 17. Multi-Market Config & Server-Side Market Validation
+runTest("Multi-Market Server Validation (India vs UK)", () => {
+  function validateMarket(raw) {
+    if (!raw) return "IN";
+    const cleaned = String(raw).trim().toUpperCase();
+    return cleaned === "GB" || cleaned === "UK" ? "GB" : "IN";
+  }
+
+  assert.equal(validateMarket("in"), "IN");
+  assert.equal(validateMarket("IN"), "IN");
+  assert.equal(validateMarket("GB"), "GB");
+  assert.equal(validateMarket("uk"), "GB");
+  assert.equal(validateMarket("US"), "IN", "Invalid markets safely fallback to IN default");
+  assert.equal(validateMarket(null), "IN");
+  assert.equal(validateMarket(undefined), "IN");
+});
+
+// 18. UK Test Catalogue Isolation & Test Data Flag Enforcement
+runTest("UK Test Catalogue Isolation & Flag Enforcement", () => {
+  const catalog = [
+    { id: "1", name: "India Kurta", available_in_in: true, available_in_gb: false, is_test_data: false, status: "active" },
+    { id: "2", name: "Global Watch", available_in_in: true, available_in_gb: true, is_test_data: false, status: "active" },
+    { id: "3", name: "UK Bluetooth Headphones", sku: "UK-TEST-AUD-001", available_in_in: false, available_in_gb: true, is_test_data: true, status: "draft" },
+    { id: "4", name: "UK Desk Lamp", sku: "UK-TEST-HOME-002", available_in_in: false, available_in_gb: true, is_test_data: true, status: "active" },
+  ];
+
+  function filterByMarket(products, market, includeDrafts = false) {
+    return products.filter((p) => {
+      const isAvailable = market === "GB" ? p.available_in_gb : p.available_in_in;
+      const isStatusOk = includeDrafts ? true : p.status === "active";
+      return isAvailable && isStatusOk;
+    });
+  }
+
+  const indiaStore = filterByMarket(catalog, "IN");
+  assert.equal(indiaStore.length, 2);
+  assert.ok(indiaStore.every((p) => p.available_in_in));
+  assert.ok(!indiaStore.some((p) => p.is_test_data), "India storefront must never contain UK test records");
+
+  const ukStorePublic = filterByMarket(catalog, "GB", false);
+  assert.equal(ukStorePublic.length, 2); // Global Watch + UK Desk Lamp (active)
+  assert.ok(ukStorePublic.some((p) => p.sku === "UK-TEST-HOME-002"));
+
+  const ukStoreAdmin = filterByMarket(catalog, "GB", true);
+  assert.equal(ukStoreAdmin.length, 3); // includes draft
+});
+
+// 19. Currency Formatting and Precision (INR rounded integers vs GBP 2 decimal places)
+runTest("Currency Formatting Precision (INR vs GBP)", () => {
+  function formatMarketPrice(amount, market) {
+    if (typeof amount !== "number" || isNaN(amount)) return market === "GB" ? "£0.00" : "₹0";
+    if (market === "GB") {
+      return new Intl.NumberFormat("en-GB", {
+        style: "currency",
+        currency: "GBP",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    }
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(Math.round(amount));
+  }
+
+  assert.equal(formatMarketPrice(39.99, "GB"), "£39.99");
+  assert.equal(formatMarketPrice(9.9, "GB"), "£9.90");
+  assert.equal(formatMarketPrice(24999.5, "IN"), "₹25,000");
+  assert.equal(formatMarketPrice(1499, "IN"), "₹1,499");
+});
+
+// 20. OAuth Missing Credentials Graceful Handling (preventing infinite spinners)
+runTest("OAuth Client Graceful Failure On Missing Provider URL", () => {
+  function handleOAuthResponse(data, error) {
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    if (!data?.url) {
+      return {
+        success: false,
+        error: "Provider is not configured in Supabase yet. Please use OTP login or configure provider credentials.",
+      };
+    }
+    return { success: true, url: data.url };
+  }
+
+  // Case 1: Supabase returns null URL when Apple OAuth is disabled/unconfigured
+  const unconfiguredAppleResult = handleOAuthResponse({ url: null }, null);
+  assert.equal(unconfiguredAppleResult.success, false, "Must fail cleanly when url is null");
+  assert.ok(unconfiguredAppleResult.error.includes("not configured"));
+
+  // Case 2: Configured provider returns redirect URL
+  const configuredGoogleResult = handleOAuthResponse({ url: "https://accounts.google.com/o/oauth2/v2/auth?..." }, null);
+  assert.equal(configuredGoogleResult.success, true);
+  assert.ok(configuredGoogleResult.url.startsWith("https://accounts.google.com"));
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

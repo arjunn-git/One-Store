@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getCategories, getProducts } from "@/lib/services/products";
@@ -5,9 +6,13 @@ import Link from "next/link";
 import { ArrowRight, Layers } from "lucide-react";
 
 export default async function CategoriesPage() {
+  const cookieStore = await cookies();
+  const rawMarket = cookieStore.get("one_store_market")?.value;
+  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
+
   const [categories, products] = await Promise.all([
-    getCategories(),
-    getProducts(),
+    getCategories(market),
+    getProducts({ market }),
   ]);
 
   return (

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -14,7 +15,11 @@ interface SearchPageProps {
 
 async function SearchResults({ searchParams }: SearchPageProps) {
   const { q = "" } = await searchParams;
-  const products = q.trim() ? await getProducts({ searchQuery: q }) : [];
+  const cookieStore = await cookies();
+  const rawMarket = cookieStore.get("one_store_market")?.value;
+  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
+
+  const products = q.trim() ? await getProducts({ searchQuery: q, market }) : [];
 
   return (
     <>

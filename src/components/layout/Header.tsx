@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingBag, Search, User, Globe, Shield, LogOut } from "lucide-react";
+import { ShoppingBag, Search, User, Shield, LogOut } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CountrySelector } from "@/components/layout/CountrySelector";
 import { signOutUser } from "@/lib/services/auth";
 
 export function Header() {
@@ -83,16 +84,13 @@ export function Header() {
       <div className="flex items-center justify-between px-4 py-1.5 text-xs text-[#9CAFC3] border-b border-[#243447]/60 md:px-8">
         <div className="flex items-center gap-2">
           <span className="inline-block h-2 w-2 rounded-full bg-[#7DD3FC] animate-pulse"></span>
-          <span>Dual Market Operations: India (INR ₹) &amp; United Kingdom (GBP £)</span>
+          <span className="text-[11px] sm:text-xs">
+            <span className="hidden sm:inline">Dual Market Operations: </span>
+            <span>India (₹) &amp; United Kingdom (£)</span>
+          </span>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setMarket(market === "IN" ? "GB" : "IN")}
-            className="flex items-center gap-1.5 hover:text-[#7DD3FC] transition-colors"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span>Market: {market === "IN" ? "India (₹ INR)" : "UK (£ GBP)"}</span>
-          </button>
+        <div className="flex items-center gap-3">
+          <CountrySelector compact />
         </div>
       </div>
 

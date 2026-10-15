@@ -98,6 +98,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         supplier_name: supplier_name !== undefined ? supplier_name?.trim() : undefined,
         available_in_in: available_in_in !== undefined ? !!available_in_in : undefined,
         available_in_gb: available_in_gb !== undefined ? !!available_in_gb : undefined,
+        is_test_data: body.is_test_data !== undefined ? !!body.is_test_data : undefined,
         shipping_info: shipping_info !== undefined ? shipping_info?.trim() : undefined,
         status: status !== undefined ? status : undefined,
         is_featured: is_featured !== undefined ? !!is_featured : undefined,

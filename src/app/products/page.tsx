@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -18,17 +19,25 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
   const currentCategory = resolvedParams.category;
   const currentSort = resolvedParams.sort || "featured";
 
+  const cookieStore = await cookies();
+  const rawMarket = cookieStore.get("one_store_market")?.value;
+  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
+
   const [allProducts, categories] = await Promise.all([
-    getProducts({ categorySlug: currentCategory }),
-    getCategories(),
+    getProducts({ categorySlug: currentCategory, market }),
+    getCategories(market),
   ]);
 
   const products = [...allProducts].sort((a, b) => {
     if (currentSort === "price-asc") {
-      return a.price_inr - b.price_inr;
+      const priceA = market === "IN" ? a.price_inr : a.price_gbp;
+      const priceB = market === "IN" ? b.price_inr : b.price_gbp;
+      return priceA - priceB;
     }
     if (currentSort === "price-desc") {
-      return b.price_inr - a.price_inr;
+      const priceA = market === "IN" ? a.price_inr : a.price_gbp;
+      const priceB = market === "IN" ? b.price_inr : b.price_gbp;
+      return priceB - priceA;
     }
     return 0;
   });

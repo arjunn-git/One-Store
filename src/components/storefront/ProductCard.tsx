@@ -115,8 +115,15 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Featured badge (3D Popped) */}
-        {product.is_featured && (
+        {/* Featured or Test Data badge (3D Popped) */}
+        {product.is_test_data ? (
+          <div
+            style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
+            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1"
+          >
+            <span>UK TEST DATA</span>
+          </div>
+        ) : product.is_featured ? (
           <div
             style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
             className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1"
@@ -124,7 +131,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <Sparkles className="h-3 w-3" />
             <span>Featured</span>
           </div>
-        )}
+        ) : null}
 
         {/* Stock status badge */}
         <div
