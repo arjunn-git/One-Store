@@ -73,17 +73,50 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
           </p>
         </div>
 
-        <div className="mt-6 md:mt-0 flex items-center gap-3">
+        <div className="mt-6 md:mt-0 flex flex-col sm:flex-row sm:items-center gap-3">
           <span className="text-xs text-[#9CAFC3]">
             Showing <strong className="text-[#FFFFFF]">{products.length}</strong> items
           </span>
+
+          <div className="flex items-center gap-1.5 bg-[#102A43] border border-[#243447] p-1 rounded-xl text-xs">
+            <Link
+              href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=featured`}
+              className={`px-2.5 py-1 rounded-lg transition-all ${
+                currentSort === "featured"
+                  ? "bg-[#7DD3FC] text-[#080B10] font-bold"
+                  : "text-[#9CAFC3] hover:text-[#FFFFFF]"
+              }`}
+            >
+              Featured
+            </Link>
+            <Link
+              href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=price-asc`}
+              className={`px-2.5 py-1 rounded-lg transition-all ${
+                currentSort === "price-asc"
+                  ? "bg-[#7DD3FC] text-[#080B10] font-bold"
+                  : "text-[#9CAFC3] hover:text-[#FFFFFF]"
+              }`}
+            >
+              Price: Low ↑
+            </Link>
+            <Link
+              href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=price-desc`}
+              className={`px-2.5 py-1 rounded-lg transition-all ${
+                currentSort === "price-desc"
+                  ? "bg-[#7DD3FC] text-[#080B10] font-bold"
+                  : "text-[#9CAFC3] hover:text-[#FFFFFF]"
+              }`}
+            >
+              Price: High ↓
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Categories Tab Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 text-xs scrollbar-none">
         <Link
-          href="/products"
+          href={`/products${currentSort !== "featured" ? `?sort=${currentSort}` : ""}`}
           className={`px-4 py-2 rounded-lg font-medium transition-all shrink-0 ${
             !currentCategory
               ? "bg-[#7DD3FC] text-[#080B10] font-semibold"
@@ -95,7 +128,7 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
         {categories.map((cat) => (
           <Link
             key={cat.id}
-            href={`/products?category=${cat.slug}`}
+            href={`/products?category=${cat.slug}${currentSort !== "featured" ? `&sort=${currentSort}` : ""}`}
             className={`px-4 py-2 rounded-lg font-medium transition-all shrink-0 ${
               currentCategory === cat.slug
                 ? "bg-[#7DD3FC] text-[#080B10] font-semibold"

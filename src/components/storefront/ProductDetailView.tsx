@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
+import { useWishlist } from "@/lib/context/WishlistContext";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
@@ -17,6 +18,7 @@ import {
   AlertCircle,
   XCircle,
   Globe,
+  Heart,
 } from "lucide-react";
 
 interface ProductDetailViewProps {
@@ -30,6 +32,8 @@ interface ProductDetailViewProps {
 export function ProductDetailView({ product }: ProductDetailViewProps) {
   const { market, setMarket } = useMarket();
   const { addItem } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isFav = isInWishlist(product.id);
 
   // Selected variant state
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
@@ -293,6 +297,22 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   <ShoppingBag className="h-4 w-4" /> Add to Shopping Cart
                 </>
               )}
+            </button>
+
+            {/* Wishlist Toggle Button */}
+            <button
+              type="button"
+              onClick={() => toggleWishlist({ id: product.id, name: product.name })}
+              aria-label={isFav ? "Remove from wishlist" : "Save to wishlist"}
+              title={isFav ? "In Wishlist (Click to remove)" : "Save to Wishlist"}
+              className={`min-h-[48px] px-4 rounded-xl border font-semibold text-xs transition-all flex items-center justify-center gap-2 ${
+                isFav
+                  ? "bg-red-950/80 border-red-500 text-red-400 shadow-md shadow-red-500/20"
+                  : "bg-[#102A43] border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF] hover:border-[#7DD3FC]"
+              }`}
+            >
+              <Heart className={`h-4 w-4 ${isFav ? "fill-red-400 text-red-400" : ""}`} />
+              <span className="hidden sm:inline">{isFav ? "Saved" : "Save"}</span>
             </button>
           </div>
 

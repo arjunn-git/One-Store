@@ -19,7 +19,10 @@ async function SearchResults({ searchParams }: SearchPageProps) {
   const rawMarket = cookieStore.get("one_store_market")?.value;
   const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
 
-  const products = q.trim() ? await getProducts({ searchQuery: q, market }) : [];
+  const [products, popularProducts] = await Promise.all([
+    q.trim() ? getProducts({ searchQuery: q, market }) : Promise.resolve([]),
+    !q.trim() ? getProducts({ featuredOnly: true, market }) : Promise.resolve([]),
+  ]);
 
   return (
     <>
@@ -53,7 +56,7 @@ async function SearchResults({ searchParams }: SearchPageProps) {
         {/* Quick suggestion terms */}
         <div className="flex items-center justify-center gap-2 mt-4 text-xs text-[#9CAFC3] flex-wrap">
           <span>Suggestions:</span>
-          {["Headphones", "Daypack", "Chronograph", "Studio", "Titanium"].map((tag) => (
+          {["Headphones", "Daypack", "Chronograph", "Lamp", "Bottle"].map((tag) => (
             <Link
               key={tag}
               href={`/search?q=${encodeURIComponent(tag)}`}
@@ -64,6 +67,34 @@ async function SearchResults({ searchParams }: SearchPageProps) {
           ))}
         </div>
       </div>
+
+      {/* When no query is entered, show popular curated releases */}
+      {!q.trim() && popularProducts.length > 0 && (
+        <div className="border-t border-[#243447] pt-12 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#7DD3FC]">
+                Trending Right Now
+              </span>
+              <h2 className="text-xl font-bold text-[#FFFFFF] mt-0.5">
+                Popular Flagship Releases
+              </h2>
+            </div>
+            <Link
+              href="/products"
+              className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] transition-colors"
+            >
+              Browse All Products →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {popularProducts.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results section */}
       {q.trim() && (

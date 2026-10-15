@@ -1,31 +1,56 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useCart } from "@/lib/context/CartContext";
 import { useMarket } from "@/lib/context/MarketContext";
+import { useWishlist } from "@/lib/context/WishlistContext";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
+import type { Product, ProductVariant, Category } from "@/lib/types/database";
 import Link from "next/link";
-import { Heart, ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Heart, ShoppingBag, ArrowRight, Trash2, Check, Sparkles } from "lucide-react";
+
+type FullProduct = Product & {
+  variants?: ProductVariant[];
+  category?: Category;
+};
 
 export default function WishlistPage() {
-  const { addItem } = useCart();
+  const { addItem, setIsOpen } = useCart();
   const { market } = useMarket();
+  const { wishlistIds, removeFromWishlist } = useWishlist();
+  const [allProducts, setAllProducts] = useState<FullProduct[]>(FALLBACK_PRODUCTS);
+  const [movedMessage, setMovedMessage] = useState<string | null>(null);
 
-  // Demonstration initial wishlist items
-  const [wishlist, setWishlist] = useState([
-    FALLBACK_PRODUCTS[0], // One Acoustic Pro
-    FALLBACK_PRODUCTS[2], // One Chronograph
-  ]);
+  // Fetch complete product catalogue to resolve wishlist item details
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/admin/products");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.products) && data.products.length > 0) {
+            setAllProducts(data.products);
+          }
+        }
+      } catch {
+        // Fallback to FALLBACK_PRODUCTS
+      }
+    }
+    loadProducts();
+  }, []);
 
-  const handleRemove = (productId: string) => {
-    setWishlist(wishlist.filter((p) => p.id !== productId));
-  };
+  // Filter catalog by user's active wishlist IDs
+  const wishlistProducts = allProducts.filter((p) => wishlistIds.includes(p.id));
 
-  const handleMoveToCart = (product: (typeof FALLBACK_PRODUCTS)[0]) => {
-    addItem(product, product.variants[0] || null, 1);
-    handleRemove(product.id);
+  const handleMoveToCart = (product: FullProduct) => {
+    const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+    addItem(product, firstVariant, 1);
+    removeFromWishlist(product.id);
+    setMovedMessage(`Moved "${product.name}" to your shopping cart.`);
+    setTimeout(() => setMovedMessage(null), 4000);
+    setIsOpen(true);
   };
 
   return (
@@ -37,36 +62,49 @@ export default function WishlistPage() {
           <div className="border-b border-[#243447] pb-6 flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs text-[#7DD3FC] mb-1 font-semibold uppercase tracking-wider">
-                <Heart className="h-3.5 w-3.5" />
-                <span>Saved Essentials</span>
+                <Heart className="h-3.5 w-3.5 fill-red-400 text-red-400" />
+                <span>Saved Essentials ({wishlistProducts.length})</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                 My Curated Wishlist
               </h1>
             </div>
 
-            <Link href="/account" className="text-xs text-[#9CAFC3] hover:text-[#FFFFFF]">
-              ← Back to Account
+            <Link href="/products" className="text-xs text-[#9CAFC3] hover:text-[#FFFFFF] flex items-center gap-1.5 transition-colors">
+              <span>Continue Shopping</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          {wishlist.length === 0 ? (
+          {movedMessage && (
+            <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in duration-200">
+              <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>{movedMessage}</span>
+            </div>
+          )}
+
+          {wishlistProducts.length === 0 ? (
             <div className="py-24 text-center border border-dashed border-[#243447] rounded-2xl bg-[#102A43]/20 space-y-4">
-              <Heart className="h-12 w-12 text-[#9CAFC3] mx-auto opacity-40" />
+              <div className="h-14 w-14 rounded-2xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#9CAFC3] mx-auto">
+                <Heart className="h-7 w-7 opacity-50 text-red-400" />
+              </div>
               <h2 className="text-lg font-bold text-[#FFFFFF]">Your wishlist is empty</h2>
-              <p className="text-xs text-[#9CAFC3] max-w-sm mx-auto">
-                Save your favorite flagship releases to track stock and price updates.
+              <p className="text-xs text-[#9CAFC3] max-w-sm mx-auto leading-relaxed">
+                Save your favorite flagship acoustic gear, minimal carry, and chronographs to monitor stock and prices across India and the UK.
               </p>
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] transition-all"
-              >
-                Browse Products <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="pt-2">
+                <Link
+                  href="/products"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] transition-all shadow-lg shadow-[#7DD3FC]/10"
+                >
+                  <span>Explore Catalogue</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {wishlist.map((item) => {
+              {wishlistProducts.map((item) => {
                 const price = market === "IN" ? item.price_inr : item.price_gbp;
                 const formattedPrice =
                   market === "IN"
@@ -98,18 +136,21 @@ export default function WishlistPage() {
                           <span className="font-mono font-bold text-xl text-[#7DD3FC]">1</span>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <span className="text-[11px] font-semibold text-[#7DD3FC] uppercase tracking-wider block">
-                          {item.category?.name}
-                        </span>
-                        <h3 className="text-base font-bold text-[#FFFFFF] mt-0.5">{item.name}</h3>
-                        <div className="text-sm font-bold text-[#FFFFFF] mt-2">
+                      <div className="flex-1 min-w-0">
+                        {item.category && (
+                          <span className="text-[11px] font-semibold text-[#7DD3FC] uppercase tracking-wider block font-mono truncate">
+                            {item.category.name}
+                          </span>
+                        )}
+                        <h3 className="text-base font-bold text-[#FFFFFF] mt-0.5 truncate">{item.name}</h3>
+                        <div className="text-sm font-extrabold text-[#FFFFFF] font-mono mt-1.5">
                           {formattedPrice}
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemove(item.id)}
-                        className="text-[#9CAFC3] hover:text-red-400 p-1"
+                        type="button"
+                        onClick={() => removeFromWishlist(item.id)}
+                        className="text-[#9CAFC3] hover:text-red-400 p-2 rounded-lg hover:bg-red-950/30 transition-colors"
                         title="Remove from wishlist"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -118,10 +159,12 @@ export default function WishlistPage() {
 
                     <div className="pt-4 border-t border-[#243447]/60 flex items-center gap-3">
                       <button
+                        type="button"
                         onClick={() => handleMoveToCart(item)}
                         className="flex-1 h-11 px-4 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10"
                       >
-                        <ShoppingBag className="h-4 w-4" /> Move to Shopping Cart
+                        <ShoppingBag className="h-4 w-4" />
+                        <span>Move to Shopping Cart</span>
                       </button>
                       <Link
                         href={`/products/${item.slug}`}

@@ -16,6 +16,7 @@ import {
   Lock,
   RefreshCw,
   AlertCircle,
+  Check,
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -51,6 +52,25 @@ export default function CheckoutPage() {
     message?: string;
   } | null>(null);
 
+  // Promo code state
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discountPercent: number;
+  } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  const handleApplyPromo = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPromoError(null);
+    const clean = promoCode.trim().toUpperCase();
+    if (clean === "LAUNCH10") {
+      setAppliedPromo({ code: "LAUNCH10", discountPercent: 10 });
+    } else {
+      setPromoError("Invalid code. Try LAUNCH10 for 10% off.");
+    }
+  };
+
   // Dynamically keep payment provider and default method tab aligned with active market
   useEffect(() => {
     if (market === "IN") {
@@ -81,7 +101,10 @@ export default function CheckoutPage() {
         const backupOrder = {
           order_number: cleanOrderNumber,
           orderNumber: cleanOrderNumber,
-          total_amount: total,
+          subtotal,
+          discount_amount: discountAmount,
+          shipping_fee: shippingFee,
+          total_amount: checkoutGrandTotal,
           currency: market === "IN" ? "INR" : "GBP",
           payment_status: "succeeded",
           status: "processing",
@@ -127,6 +150,8 @@ export default function CheckoutPage() {
   };
 
   const total = subtotal + shippingFee;
+  const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.discountPercent) / 100) : 0;
+  const checkoutGrandTotal = Math.max(0, total - discountAmount);
 
   const formatCurrency = (amount: number) => {
     if (market === "IN") {
@@ -185,6 +210,7 @@ export default function CheckoutPage() {
           postalCode: formData.postalCode,
           countryCode: market,
           paymentProvider,
+          promoCode: appliedPromo?.code || undefined,
         }),
       });
 
@@ -849,18 +875,52 @@ export default function CheckoutPage() {
                     })}
                   </div>
 
+                  {/* Promo Code Form */}
+                  <div className="pt-3 border-t border-[#243447] space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        placeholder="Promo Code (e.g. LAUNCH10)"
+                        className="flex-1 h-10 px-3 rounded-xl bg-[#080B10] border border-[#243447] text-xs font-mono uppercase text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyPromo}
+                        className="px-3.5 h-10 rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] text-xs font-semibold hover:border-[#7DD3FC] hover:text-[#FFFFFF] transition-all"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {appliedPromo && (
+                      <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
+                        <Check className="h-3.5 w-3.5" /> Code {appliedPromo.code} applied ({appliedPromo.discountPercent}% off)
+                      </div>
+                    )}
+                    {promoError && (
+                      <div className="text-xs text-red-400">{promoError}</div>
+                    )}
+                  </div>
+
                   <div className="space-y-2 text-xs text-[#9CAFC3] pt-4 border-t border-[#243447]">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span className="text-[#FFFFFF] font-semibold">{formattedSubtotal}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-400 font-semibold">
+                        <span>Campaign Discount</span>
+                        <span>-{formatCurrency(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Logistics</span>
                       <span className="text-[#7DD3FC] font-semibold">{formattedShippingFee}</span>
                     </div>
                     <div className="flex justify-between text-base font-extrabold text-[#FFFFFF] pt-3 border-t border-[#243447]">
                       <span>Grand Total</span>
-                      <span className="text-[#7DD3FC]">{formatCurrency(total)}</span>
+                      <span className="text-[#7DD3FC]">{formatCurrency(checkoutGrandTotal)}</span>
                     </div>
                   </div>
 

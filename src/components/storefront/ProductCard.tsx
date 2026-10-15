@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles, Heart } from "lucide-react";
 import { PriceDisplay } from "./PriceDisplay";
+import { useWishlist } from "@/lib/context/WishlistContext";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
 
 interface ProductCardProps {
@@ -15,6 +16,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isFav = isInWishlist(product.id);
   const [transform, setTransform] = useState<string>("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
   const [glare, setGlare] = useState<{ x: number; y: number; opacity: number }>({ x: 50, y: 50, opacity: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -196,8 +199,28 @@ export function ProductCard({ product }: ProductCardProps) {
             size="md"
           />
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] group-hover:bg-[#7DD3FC] group-hover:text-[#080B10] group-hover:rotate-12 transition-all shadow-sm">
-            <ArrowUpRight className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleWishlist({ id: product.id, name: product.name });
+              }}
+              aria-label={isFav ? "Remove from wishlist" : "Save to wishlist"}
+              title={isFav ? "In Wishlist (Click to remove)" : "Save to Wishlist"}
+              className={`relative z-20 flex h-9 w-9 items-center justify-center rounded-xl border transition-all ${
+                isFav
+                  ? "bg-red-950/80 border-red-500 text-red-400 shadow-md shadow-red-500/20"
+                  : "bg-[#102A43] border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF] hover:border-[#7DD3FC]"
+              }`}
+            >
+              <Heart className={`h-4 w-4 ${isFav ? "fill-red-400 text-red-400 scale-110" : ""}`} />
+            </button>
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] group-hover:bg-[#7DD3FC] group-hover:text-[#080B10] group-hover:rotate-12 transition-all shadow-sm">
+              <ArrowUpRight className="h-4 w-4" />
+            </div>
           </div>
         </div>
       </div>

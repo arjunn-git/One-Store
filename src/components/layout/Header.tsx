@@ -17,9 +17,11 @@ import {
   HelpCircle,
   Package,
   ChevronRight,
+  Heart,
 } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
+import { useWishlist } from "@/lib/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CountrySelector } from "@/components/layout/CountrySelector";
 import { signOutUser } from "@/lib/services/auth";
@@ -28,6 +30,7 @@ export function Header() {
   const pathname = usePathname();
   const { market } = useMarket();
   const { itemCount, setIsOpen } = useCart();
+  const { wishlistCount } = useWishlist();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -218,6 +221,21 @@ export function Header() {
             <Search className="h-5 w-5" />
           </Link>
 
+          {/* Wishlist Link */}
+          <Link
+            href="/wishlist"
+            aria-label="Wishlist"
+            title="Saved Essentials"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
+          >
+            <Heart className={`h-5 w-5 ${wishlistCount > 0 ? "text-red-400" : ""}`} />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-[#FFFFFF]">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+
           {/* Admin Command Link (Strictly restricted to Arjun) */}
           {isAdmin && (
             <Link
@@ -356,6 +374,28 @@ export function Header() {
                 <span className="px-2 py-0.5 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/30 text-[10px] font-bold">
                   10% OFF
                 </span>
+              </Link>
+
+              <Link
+                href="/wishlist"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
+                  pathname === "/wishlist"
+                    ? "bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40"
+                    : "text-[#FFFFFF] hover:bg-[#102A43]/40"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Heart className="h-4 w-4 text-red-400" />
+                  <span>My Wishlist</span>
+                </div>
+                {wishlistCount > 0 ? (
+                  <span className="px-2 py-0.5 rounded-full bg-red-950/80 text-red-300 border border-red-800 text-[10px] font-bold">
+                    {wishlistCount}
+                  </span>
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-[#9CAFC3]" />
+                )}
               </Link>
 
               <Link
