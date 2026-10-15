@@ -23,6 +23,13 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") || "/account";
 
+  // Mode State (allows switching between Sign In & Sign Up in the same UI)
+  const [currentMode, setCurrentMode] = useState<"login" | "signup">(mode);
+
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
+
   // Form Inputs
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -59,7 +66,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       return;
     }
 
-    if (mode === "signup" && !acceptTerms) {
+    if (currentMode === "signup" && !acceptTerms) {
       setErrorMessage("You must accept the Terms of Service and Privacy Policy to continue.");
       return;
     }
@@ -67,7 +74,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     setIsLoading(true);
 
     const res =
-      mode === "signup"
+      currentMode === "signup"
         ? await sendSignupOtp(trimmedEmail, fullName.trim(), marketingConsent)
         : await sendLoginOtp(trimmedEmail);
 
@@ -98,7 +105,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     const res = await verifyEmailOtp(
       email.trim().toLowerCase(),
       otpCode,
-      mode === "signup" ? "signup" : "email"
+      currentMode === "signup" ? "signup" : "email"
     );
 
     if (!res.success) {
@@ -127,7 +134,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     setIsLoading(true);
 
     const res =
-      mode === "signup"
+      currentMode === "signup"
         ? await sendSignupOtp(email.trim().toLowerCase(), fullName.trim(), marketingConsent)
         : await sendLoginOtp(email.trim().toLowerCase());
 
@@ -146,14 +153,46 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       {/* Step 1: Email Form */}
       {step === "input" ? (
         <form onSubmit={handleSendCode} className="space-y-6">
+          {/* Segmented Mode Switcher */}
+          <div className="flex p-1 rounded-xl bg-[#080B10] border border-[#243447]">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentMode("login");
+                setErrorMessage(null);
+              }}
+              className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${
+                currentMode === "login"
+                  ? "bg-[#102A43] text-[#7DD3FC] shadow-sm shadow-[#7DD3FC]/10 border border-[#7DD3FC]/30"
+                  : "text-[#9CAFC3] hover:text-[#FFFFFF]"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentMode("signup");
+                setErrorMessage(null);
+              }}
+              className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${
+                currentMode === "signup"
+                  ? "bg-[#102A43] text-[#7DD3FC] shadow-sm shadow-[#7DD3FC]/10 border border-[#7DD3FC]/30"
+                  : "text-[#9CAFC3] hover:text-[#FFFFFF]"
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+
           <div className="text-center space-y-1.5 mb-6">
             <h2 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">
-              {mode === "signup" ? "Create One Store Account" : "Welcome Back"}
+              {currentMode === "signup" ? "Create One Store Account" : "Welcome Back"}
             </h2>
             <p className="text-xs text-[#9CAFC3]">
-              {mode === "signup"
+              {currentMode === "signup"
                 ? "Passwordless access for customers in India & the UK."
-                : "Enter your registered email for an instant 6-digit verification code."}
+                : "Enter your registered email for an instant verification code."}
             </p>
           </div>
 
@@ -165,7 +204,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           )}
 
           {/* Full Name (Signup only) */}
-          {mode === "signup" && (
+          {currentMode === "signup" && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#FFFFFF] uppercase tracking-wider">
                 Full Name
@@ -200,7 +239,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           </div>
 
           {/* Signup Checkboxes */}
-          {mode === "signup" && (
+          {currentMode === "signup" && (
             <div className="space-y-3 pt-2 text-xs text-[#9CAFC3]">
               {/* Terms (Required) */}
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
@@ -249,7 +288,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               <RefreshCw className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <span>{mode === "signup" ? "Continue to Verification" : "Send Login Code"}</span>
+                <span>{currentMode === "signup" ? "Create Account & Send Code" : "Send Login Code"}</span>
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
@@ -270,19 +309,33 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
 
           {/* Switch Mode Link */}
           <div className="text-center pt-2 text-xs text-[#9CAFC3]">
-            {mode === "signup" ? (
+            {currentMode === "signup" ? (
               <span>
                 Already have an account?{" "}
-                <Link href="/login" className="text-[#7DD3FC] font-semibold hover:underline">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("login");
+                    setErrorMessage(null);
+                  }}
+                  className="text-[#7DD3FC] font-semibold hover:underline"
+                >
                   Log in with Email OTP
-                </Link>
+                </button>
               </span>
             ) : (
               <span>
-                Don't have an account yet?{" "}
-                <Link href="/signup" className="text-[#7DD3FC] font-semibold hover:underline">
+                Don&apos;t have an account yet?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("signup");
+                    setErrorMessage(null);
+                  }}
+                  className="text-[#7DD3FC] font-semibold hover:underline"
+                >
                   Create One Store Account
-                </Link>
+                </button>
               </span>
             )}
           </div>
