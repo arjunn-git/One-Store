@@ -101,7 +101,7 @@ export function CountrySelector({ compact = false, className = "" }: CountrySele
         <div
           role="listbox"
           aria-label="Available Markets"
-          className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl border border-[#243447] bg-[#080B10] shadow-2xl backdrop-blur-md z-50 overflow-hidden divide-y divide-[#243447]/60 animate-in fade-in zoom-in-95 duration-100"
+          className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-xl border border-[#243447] bg-[#080B10] shadow-2xl backdrop-blur-md z-50 overflow-hidden divide-y divide-[#243447]/60 animate-in fade-in zoom-in-95 duration-100"
         >
           <div className="p-3 bg-[#0c131c]/80 text-[11px] text-[#9CAFC3]">
             <div className="flex items-center gap-1.5 font-semibold text-[#FFFFFF] uppercase tracking-wider text-[10px]">

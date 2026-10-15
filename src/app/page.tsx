@@ -23,20 +23,20 @@ export default async function Home() {
         <section className="relative overflow-hidden border-b border-[#243447] py-16 md:py-24 px-4 md:px-8">
           <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
             {/* Promotional launch ribbon */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#102A43] border border-[#7DD3FC]/40 text-xs font-medium text-[#FFFFFF] mb-6 shadow-md">
+            <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-2xl sm:rounded-full bg-[#102A43] border border-[#7DD3FC]/40 text-xs font-medium text-[#FFFFFF] mb-6 shadow-md text-center">
               <span className="flex h-2 w-2 rounded-full bg-[#7DD3FC] animate-ping" />
               <span className="text-[#7DD3FC] font-semibold">Special Launch Offer:</span>
               <span>Use code <strong className="font-mono text-[#FFFFFF] bg-[#080B10] px-2 py-0.5 rounded border border-[#7DD3FC]/30">LAUNCH10</strong> for 10% off</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#FFFFFF] max-w-4xl leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#FFFFFF] max-w-4xl leading-[1.15]">
               Engineered Lifestyle. <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFFFFF] via-[#7DD3FC] to-[#FFFFFF]">
                 Precision &amp; Craft.
               </span>
             </h1>
 
-            <p className="mt-6 text-base md:text-lg text-[#9CAFC3] max-w-2xl leading-relaxed">
+            <p className="mt-6 text-sm sm:text-base md:text-lg text-[#9CAFC3] max-w-2xl leading-relaxed">
               Curated studio acoustics, engineered minimalist carry, and precision chronographs.
               Seamless dual-market checkout in INR (₹) and GBP (£) with fully insured express delivery.
             </p>
@@ -94,10 +94,10 @@ export default async function Home() {
             </div>
 
             {/* Social Proof & Customer Trust Bar */}
-            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-[#9CAFC3] bg-[#102A43]/30 px-6 py-2.5 rounded-full border border-[#243447]">
-              <span className="text-amber-400 font-bold">★★★★★</span>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-[#9CAFC3] bg-[#102A43]/30 px-4 sm:px-6 py-2.5 rounded-2xl sm:rounded-full border border-[#243447] text-center max-w-full">
+              <span className="text-amber-400 font-bold tracking-wider">★★★★★</span>
               <span className="text-[#FFFFFF] font-semibold">4.9/5 Customer Satisfaction</span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span>Trusted by 2,400+ creators across India &amp; the UK</span>
             </div>
           </div>

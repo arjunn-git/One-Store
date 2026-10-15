@@ -98,13 +98,13 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
           {/* Thumbnail Gallery */}
           {product.images && product.images.length > 1 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setActiveImageIndex(idx)}
-                  className={`h-16 w-16 rounded-xl border overflow-hidden transition-all ${
+                  className={`h-16 w-16 shrink-0 rounded-xl border overflow-hidden transition-all ${
                     activeImageIndex === idx
                       ? "border-[#7DD3FC] ring-2 ring-[#7DD3FC]/40 scale-105"
                       : "border-[#243447] opacity-60 hover:opacity-100"
@@ -239,24 +239,24 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           </div>
 
           {/* Quantity & Add to Cart Controls */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
             {/* Quantity Stepper */}
-            <div className="flex items-center rounded-lg border border-[#243447] bg-[#102A43] px-3 py-2 text-xs font-semibold text-[#FFFFFF]">
+            <div className="flex items-center justify-between sm:justify-center rounded-xl border border-[#243447] bg-[#102A43] px-3 py-2 text-xs font-semibold text-[#FFFFFF] min-h-[44px]">
               <button
                 type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={quantity <= 1 || isOutOfStock}
-                className="text-[#9CAFC3] hover:text-[#FFFFFF] disabled:opacity-30 disabled:cursor-not-allowed p-1"
+                className="text-[#9CAFC3] hover:text-[#FFFFFF] disabled:opacity-30 disabled:cursor-not-allowed p-2 min-h-[36px] min-w-[36px] flex items-center justify-center transition-colors"
                 aria-label="Decrease quantity"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="w-10 text-center font-mono text-sm">{quantity}</span>
+              <span className="w-12 text-center font-mono text-sm">{quantity}</span>
               <button
                 type="button"
                 onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
                 disabled={quantity >= currentStock || isOutOfStock}
-                className="text-[#9CAFC3] hover:text-[#FFFFFF] disabled:opacity-30 disabled:cursor-not-allowed p-1"
+                className="text-[#9CAFC3] hover:text-[#FFFFFF] disabled:opacity-30 disabled:cursor-not-allowed p-2 min-h-[36px] min-w-[36px] flex items-center justify-center transition-colors"
                 aria-label="Increase quantity"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -268,7 +268,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock || !isAvailableInCurrentMarket}
-              className={`flex-1 w-full sm:w-auto h-12 px-8 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 w-full sm:w-auto min-h-[48px] px-8 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                 !isAvailableInCurrentMarket
                   ? "bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 cursor-not-allowed opacity-90"
                   : isOutOfStock

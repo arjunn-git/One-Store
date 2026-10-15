@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="w-full border-t border-[#243447] bg-[#080B10] text-[#9CAFC3] text-sm mt-auto">
       {/* Guarantees banner */}
       <div className="border-b border-[#243447] py-8 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
               <ShieldCheck className="h-5 w-5" />
@@ -58,8 +58,8 @@ export function Footer() {
       </div>
 
       {/* Main footer navigation */}
-      <div className="max-w-7xl mx-auto px-4 py-12 md:px-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-        <div className="col-span-2">
+      <div className="max-w-7xl mx-auto px-4 py-12 md:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="col-span-1 sm:col-span-2">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex h-7 w-7 items-center justify-center rounded bg-[#102A43] text-[#7DD3FC] font-bold text-sm">
               1
