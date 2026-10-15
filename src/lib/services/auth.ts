@@ -57,7 +57,7 @@ export async function sendLoginOtp(email: string): Promise<AuthResponse> {
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmedEmail,
       options: {
-        shouldCreateUser: false,
+        shouldCreateUser: true,
         emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
@@ -68,6 +68,12 @@ export async function sendLoginOtp(email: string): Promise<AuthResponse> {
           success: false,
           error: "Too many attempts. Please wait 60 seconds before requesting another code.",
           rateLimited: true,
+        };
+      }
+      if (error.message.toLowerCase().includes("signups not allowed")) {
+        return {
+          success: false,
+          error: "Account not found or new signups are disabled in your Supabase project settings. Please make sure 'Allow new users to sign up' is enabled in your Supabase Auth dashboard.",
         };
       }
       return { success: false, error: error.message };
@@ -124,6 +130,12 @@ export async function sendSignupOtp(
           success: false,
           error: "Rate limit reached. Please wait 60 seconds before requesting a new code.",
           rateLimited: true,
+        };
+      }
+      if (error.message.toLowerCase().includes("signups not allowed")) {
+        return {
+          success: false,
+          error: "Signups are currently disabled in your Supabase project settings. Please go to Authentication -> Configuration -> Providers -> Email in your Supabase dashboard and turn on 'Allow new users to sign up'.",
         };
       }
       return { success: false, error: error.message };
