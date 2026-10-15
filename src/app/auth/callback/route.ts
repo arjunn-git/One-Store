@@ -9,6 +9,11 @@ export async function GET(request: Request) {
   const errorParam = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+  const isLocalEnv = process.env.NODE_ENV === "development";
+  const siteBase = isLocalEnv ? origin : forwardedHost ? `${forwardedProto}://${forwardedHost}` : origin;
+
   // 1. Handle user cancellation or provider rejection gracefully
   if (errorParam || errorDescription) {
     let friendlyMessage = "Social login was not completed. You can sign in using your verification code.";
@@ -19,7 +24,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(friendlyMessage)}`
+      `${siteBase}/login?error=${encodeURIComponent(friendlyMessage)}`
     );
   }
 
@@ -28,7 +33,16 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && data.user) {
+    if (error) {
+      console.error("[auth/callback] exchangeCodeForSession failed:", error.message, error.status);
+      return NextResponse.redirect(
+        `${siteBase}/login?error=${encodeURIComponent(
+          error.message || "Social authentication could not be completed."
+        )}`
+      );
+    }
+
+    if (data?.user) {
       const user = data.user;
       const isAdmin = isAdminEmail(user.email);
       const destination = nextParam || (isAdmin ? "/admin" : "/account");
@@ -80,32 +94,25 @@ export async function GET(request: Request) {
             marketing_consent_at: meta.marketing_consent ? new Date().toISOString() : null,
           });
         }
-      } catch {
+      } catch (profileErr) {
+        console.error("[auth/callback] profile sync error:", profileErr);
         // Continue even if database sync encounters a network delay
       }
 
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-
-      let response: NextResponse;
-      if (isLocalEnv) {
-        response = NextResponse.redirect(`${origin}${destination}`);
-      } else if (forwardedHost) {
-        response = NextResponse.redirect(`https://${forwardedHost}${destination}`);
-      } else {
-        response = NextResponse.redirect(`${origin}${destination}`);
-      }
+      const response = NextResponse.redirect(`${siteBase}${destination}`);
 
       if (user.email) {
         response.cookies.set("one_store_user_email", user.email, {
           path: "/",
           maxAge: 60 * 60 * 24 * 30,
           sameSite: "lax",
+          secure: !isLocalEnv,
         });
         response.cookies.set("one_store_user_role", isAdmin ? "owner" : "customer", {
           path: "/",
           maxAge: 60 * 60 * 24 * 30,
           sameSite: "lax",
+          secure: !isLocalEnv,
         });
       }
 
@@ -114,5 +121,5 @@ export async function GET(request: Request) {
   }
 
   // 3. Fallback if code exchange fails or no code was received
-  return NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`);
+  return NextResponse.redirect(`${siteBase}/login?error=auth_exchange_failed`);
 }

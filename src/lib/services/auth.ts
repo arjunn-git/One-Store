@@ -270,23 +270,48 @@ export async function verifyEmailOtp(
 // Google OAuth
 export async function signInWithGoogle(nextUrl?: string): Promise<AuthResponse> {
   try {
+    // 1. Pre-flight check: verify provider is enabled in Supabase so users don't see Supabase's raw JSON 400 page
     const res = await fetch("/api/auth/oauth/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ provider: "google", next: nextUrl }),
     });
-    const result = await res.json();
-    if (!result.success || !result.configured) {
+    const result = await res.json().catch(() => ({ success: true, configured: true }));
+    if (result && (!result.success || result.configured === false)) {
       return {
         success: false,
-        error: result.error || "Google Sign-In is not enabled yet in your Supabase dashboard. Please configure Google OAuth under Authentication -> Providers.",
+        error:
+          result.error ||
+          "Google Sign-In is not enabled yet in your Supabase dashboard. Please configure Google OAuth under Authentication -> Providers.",
       };
     }
-    if (result.url) {
-      window.location.href = result.url;
-      return { success: true };
+
+    // 2. Client-side PKCE initiation via Supabase SDK
+    // This generates the PKCE code_verifier, sets the verifier cookie in the browser, and redirects to Google
+    const supabase = createClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const redirectTo = `${siteUrl}/auth/callback${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ""}`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: "Unable to retrieve Google authentication URL." };
+
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+
+    return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Google Sign-In";
     return { success: false, error: msg };
@@ -296,23 +321,43 @@ export async function signInWithGoogle(nextUrl?: string): Promise<AuthResponse> 
 // Apple Sign-In
 export async function signInWithApple(nextUrl?: string): Promise<AuthResponse> {
   try {
+    // 1. Pre-flight check: verify provider is enabled in Supabase
     const res = await fetch("/api/auth/oauth/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ provider: "apple", next: nextUrl }),
     });
-    const result = await res.json();
-    if (!result.success || !result.configured) {
+    const result = await res.json().catch(() => ({ success: true, configured: true }));
+    if (result && (!result.success || result.configured === false)) {
       return {
         success: false,
-        error: result.error || "Sign in with Apple is not enabled yet in your Supabase dashboard. Please configure Apple OAuth under Authentication -> Providers.",
+        error:
+          result.error ||
+          "Sign in with Apple is not enabled yet in your Supabase dashboard. Please configure Apple OAuth under Authentication -> Providers.",
       };
     }
-    if (result.url) {
-      window.location.href = result.url;
-      return { success: true };
+
+    // 2. Client-side PKCE initiation via Supabase SDK
+    const supabase = createClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const redirectTo = `${siteUrl}/auth/callback${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ""}`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo,
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: "Unable to retrieve Apple authentication URL." };
+
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+
+    return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unable to initialize Sign in with Apple";
     return { success: false, error: msg };

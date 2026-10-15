@@ -54,29 +54,24 @@ export async function POST(request: Request) {
         }
       }
 
-      // If Supabase returns 303/302 Redirect to the provider's OAuth dialog (e.g. accounts.google.com / appleid.apple.com)
+      // If Supabase returns 303/302 Redirect, the provider is enabled and configured!
       if (probeRes.status === 303 || probeRes.status === 302 || probeRes.status === 307) {
-        const location = probeRes.headers.get("location");
-        if (location) {
-          return NextResponse.json({
-            success: true,
-            configured: true,
-            url: location,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          configured: true,
+        });
       }
     } catch {
-      // If server probe encounters a network timeout, fallback to the direct authorize URL
+      // If server probe encounters a network timeout, continue to allow client attempt
     }
 
-    // Return the authorize URL directly if probe was inconclusive
+    // Default to configured: true if probe was inconclusive
     return NextResponse.json({
       success: true,
       configured: true,
-      url: authorizeUrl,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "OAuth initiation failed";
+    const msg = err instanceof Error ? err.message : "OAuth probe failed";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
