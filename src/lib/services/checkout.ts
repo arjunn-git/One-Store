@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isLiveSupabaseConfigured } from "./auth";
 import { FALLBACK_PRODUCTS } from "./products";
+import { saveOrderRecord } from "./payments";
 import type { OrderStatus, PaymentStatus, Product, ProductVariant } from "@/lib/types/database";
 
 export interface CheckoutPayload {
@@ -154,9 +156,56 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     let requiresCredentials = false;
     let message: string | undefined;
 
+    // Immediately register order in active memory store
+    const fullOrderRecord = {
+      id: createdOrderId,
+      order_number: orderNumber,
+      customer_id: null as string | null,
+      customer_email: payload.customerEmail,
+      status: "pending_payment" as OrderStatus,
+      payment_status: "pending" as PaymentStatus,
+      currency: payload.currency,
+      subtotal: computedSubtotal,
+      discount_amount: discountAmount,
+      shipping_fee: shippingFee,
+      tax_amount: 0,
+      total_amount: finalTotal,
+      shipping_address: {
+        recipientName: payload.recipientName,
+        phone: payload.phone,
+        line1: payload.line1,
+        line2: payload.line2 || "",
+        city: payload.city,
+        stateOrProvince: payload.stateOrProvince,
+        postalCode: payload.postalCode,
+        countryCode: payload.countryCode,
+      },
+      payment_provider: payload.paymentProvider,
+      notes: JSON.stringify({
+        access_token: accessToken,
+        created_at: new Date().toISOString(),
+      }),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      items: validatedItems.map((item, idx) => ({
+        id: `item_${idx}_${Date.now()}`,
+        order_id: createdOrderId,
+        product_id: item.productId,
+        variant_id: item.variantId,
+        product_name: item.productName,
+        variant_name: item.variantName,
+        sku: item.sku,
+        unit_price: item.unitPrice,
+        quantity: item.quantity,
+        total_price: item.totalPrice,
+      })),
+    };
+    saveOrderRecord(orderNumber, fullOrderRecord);
+
     // 6. Database persistence with correct foreign keys & atomic stock decrement
     if (supabase) {
       try {
+        const adminSupabase = createAdminClient();
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -165,7 +214,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
 
         // Correctly lookup or create customer_profile referencing auth_user_id
         if (user) {
-          const { data: profile } = await supabase
+          const { data: profile } = await adminSupabase
             .from("customer_profiles")
             .select("id")
             .eq("auth_user_id", user.id)
@@ -174,7 +223,7 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
           if (profile) {
             customerProfileId = profile.id;
           } else {
-            const { data: newProfile } = await supabase
+            const { data: newProfile } = await adminSupabase
               .from("customer_profiles")
               .insert({
                 auth_user_id: user.id,
@@ -191,8 +240,11 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
           }
         }
 
-        // Insert Order with access_token stored in notes
-        const { data: insertedOrder } = await supabase
+        fullOrderRecord.customer_id = customerProfileId;
+        saveOrderRecord(orderNumber, fullOrderRecord);
+
+        // Insert Order using privileged client (bypasses RLS)
+        const { data: insertedOrder } = await adminSupabase
           .from("orders")
           .insert({
             order_number: orderNumber,

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { getAllStoredOrders } from "@/lib/services/payments";
 
 // GET /api/admin/orders — Fetch orders with line items and customer details
 export async function GET(request: Request) {
@@ -73,26 +75,43 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, orders: sampleOrders, isFallback: true });
     }
 
-    let query = supabase
-      .from("orders")
-      .select("*, customer:customer_profiles(*), items:order_items(*)")
-      .order("created_at", { ascending: false });
+    const adminSupabase = createAdminClient();
+    const storedOrders = getAllStoredOrders();
 
-    if (status && status !== "all") {
-      query = query.eq("status", status);
+    let orders: any[] = [];
+    if (isLiveSupabaseConfigured()) {
+      let query = adminSupabase
+        .from("orders")
+        .select("*, customer:customer_profiles(*), items:order_items(*)")
+        .order("created_at", { ascending: false });
+
+      if (status && status !== "all") {
+        query = query.eq("status", status);
+      }
+
+      if (q) {
+        query = query.or(`order_number.ilike.%${q}%`);
+      }
+
+      const { data: dbOrders } = await query;
+      if (dbOrders) {
+        orders = dbOrders;
+      }
     }
 
-    if (q) {
-      query = query.or(`order_number.ilike.%${q}%`);
-    }
+    // Merge in any registered in-memory orders that aren't yet in the database
+    const dbOrderNumbers = new Set(orders.map((o) => o.order_number));
+    storedOrders.forEach((so) => {
+      if (!dbOrderNumbers.has(so.order_number)) {
+        if (!status || status === "all" || so.status === status) {
+          if (!q || so.order_number.toLowerCase().includes(q)) {
+            orders.unshift(so);
+          }
+        }
+      }
+    });
 
-    const { data: orders, error: ordErr } = await query;
-
-    if (ordErr) {
-      return NextResponse.json({ error: ordErr.message }, { status: 400 });
-    }
-
-    return NextResponse.json({ success: true, orders: orders || [] });
+    return NextResponse.json({ success: true, orders });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Error fetching orders";
     return NextResponse.json({ error: msg }, { status: 500 });

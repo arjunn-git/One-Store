@@ -40,6 +40,7 @@ export default function CheckoutPage() {
   const [paymentProvider, setPaymentProvider] = useState<"razorpay" | "stripe">(
     market === "IN" ? "razorpay" : "stripe"
   );
+  const [selectedPaymentTab, setSelectedPaymentTab] = useState<"upi" | "card" | "netbanking">("upi");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingTestOrder, setPendingTestOrder] = useState<{
@@ -304,42 +305,127 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Form inputs (2 cols) */}
               <div className="lg:col-span-2 space-y-8">
+                {/* Razorpay Standard Checkout Simulation Modal */}
                 {pendingTestOrder && (
-                  <div className="p-5 rounded-2xl bg-[#102A43]/80 border border-amber-500/50 space-y-3">
-                    <div className="flex items-start gap-2.5">
-                      <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <div className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                          Gateway Awaiting Configuration: Order {pendingTestOrder.orderNumber}
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+                    <div className="max-w-md w-full rounded-2xl bg-[#0c141e] border border-[#243447] overflow-hidden shadow-2xl space-y-0">
+                      {/* Razorpay Brand Header */}
+                      <div className="bg-[#102A43] p-5 border-b border-[#243447] flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center text-[#7DD3FC] font-black text-lg">
+                            1
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-[#FFFFFF]">Razorpay Checkout</div>
+                            <div className="text-[11px] font-mono text-[#7DD3FC]">Order {pendingTestOrder.orderNumber}</div>
+                          </div>
                         </div>
-                        <p className="text-xs text-[#FFFFFF] leading-relaxed">
-                          Your order has been recorded into the database in{" "}
-                          <span className="font-mono text-amber-300 font-bold">pending_payment</span>{" "}
-                          status.
-                        </p>
-                        <p className="text-[11px] text-[#9CAFC3] leading-relaxed">
-                          {pendingTestOrder.message ||
-                            "To process real payments via UPI or cards, configure NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your Vercel or .env.local dashboard."}
-                        </p>
+                        <div className="text-right">
+                          <div className="text-[10px] text-[#9CAFC3] uppercase tracking-wider">Amount Due</div>
+                          <div className="text-base font-extrabold text-[#FFFFFF] font-mono">{formatCurrency(total)}</div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={handleCompleteSandboxPayment}
-                        disabled={isLoading}
-                        className="px-4 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs transition-all shadow-md shadow-[#7DD3FC]/10"
-                      >
-                        {isLoading ? "Simulating..." : "Test Mode: Complete Sandbox Payment"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingTestOrder(null)}
-                        className="px-3.5 py-2 rounded-xl bg-[#080B10] border border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold"
-                      >
-                        Dismiss
-                      </button>
+                      {/* Modal Body */}
+                      <div className="p-6 space-y-5">
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-950/40 border border-blue-800/80 text-[11px] text-blue-200">
+                          <ShieldCheck className="h-4 w-4 text-[#7DD3FC] shrink-0" />
+                          <span>Test Sandbox Mode — Click below to verify and complete transaction</span>
+                        </div>
+
+                        {/* Payment Method Selector Tabs */}
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold text-[#9CAFC3] uppercase tracking-wider">Select Payment Option</div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPaymentTab("upi")}
+                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                selectedPaymentTab === "upi"
+                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                              }`}
+                            >
+                              UPI / QR
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPaymentTab("card")}
+                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                selectedPaymentTab === "card"
+                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                              }`}
+                            >
+                              Card
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPaymentTab("netbanking")}
+                              className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
+                                selectedPaymentTab === "netbanking"
+                                  ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                                  : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
+                              }`}
+                            >
+                              NetBanking
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Method Preview */}
+                        <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-2">
+                          {selectedPaymentTab === "upi" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">UPI (Google Pay, PhonePe, Paytm, BHIM)</div>
+                              <div className="text-[11px] font-mono text-[#7DD3FC]">{formData.phone || "9876543210"}@okhdfcbank</div>
+                            </div>
+                          )}
+                          {selectedPaymentTab === "card" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">Test Visa / Mastercard / RuPay</div>
+                              <div className="text-[11px] font-mono text-[#7DD3FC]">4111 •••• •••• 4242 (Expires 12/28)</div>
+                            </div>
+                          )}
+                          {selectedPaymentTab === "netbanking" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">HDFC / ICICI / SBI / Axis Bank</div>
+                              <div className="text-[11px] text-[#9CAFC3]">Instant NetBanking gateway settlement</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-2.5 pt-2">
+                          <button
+                            type="button"
+                            onClick={handleCompleteSandboxPayment}
+                            disabled={isLoading}
+                            className="w-full h-12 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#080B10] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                          >
+                            {isLoading ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Simulate Successful Payment: Pay {formatCurrency(total)}</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setPendingTestOrder(null)}
+                            className="w-full h-10 rounded-xl bg-[#080B10] hover:bg-[#102A43] border border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold transition-all"
+                          >
+                            Cancel Payment
+                          </button>
+                        </div>
+
+                        <div className="text-[10px] text-center text-[#9CAFC3]">
+                          Secured by Razorpay • 256-bit SSL encrypted • Sandbox Test Verification
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

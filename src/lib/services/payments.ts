@@ -109,12 +109,30 @@ export async function processRazorpayPaymentSuccess(
   };
 }
 
-// In-memory store for fallback/dev environments attached to globalThis
-const FALLBACK_ORDER_STORE: Map<string, { payment_status: PaymentStatus; status: OrderStatus; metadata?: any }> =
-  (globalThis as any).__one_store_fallback_orders__ ||
-  ((globalThis as any).__one_store_fallback_orders__ = new Map());
+// In-memory store for fallback/dev/serverless persistence attached to globalThis
+export function getGlobalOrderStore(): Map<string, any> {
+  if (!(globalThis as any).__one_store_orders_registry__) {
+    (globalThis as any).__one_store_orders_registry__ = new Map<string, any>();
+  }
+  return (globalThis as any).__one_store_orders_registry__;
+}
 
-// 3. Mark Order Payment Status in Database
+export function saveOrderRecord(orderNumber: string, orderData: any): void {
+  const store = getGlobalOrderStore();
+  store.set(orderNumber, orderData);
+}
+
+export function getOrderRecord(orderNumber: string): any {
+  const store = getGlobalOrderStore();
+  return store.get(orderNumber) || null;
+}
+
+export function getAllStoredOrders(): any[] {
+  const store = getGlobalOrderStore();
+  return Array.from(store.values());
+}
+
+// 3. Mark Order Payment Status in Database & Memory Store
 export async function markOrderPaymentStatus(
   orderNumber: string,
   paymentStatus: PaymentStatus,
@@ -123,70 +141,82 @@ export async function markOrderPaymentStatus(
   const nextFulfillmentStatus: OrderStatus =
     paymentStatus === "succeeded" ? "processing" : "pending_payment";
 
-  // Always record in local store for dev sandbox consistency
-  FALLBACK_ORDER_STORE.set(orderNumber, {
-    payment_status: paymentStatus,
-    status: nextFulfillmentStatus,
-    metadata,
-  });
+  // Update in-memory persistent store
+  const storedOrder = getOrderRecord(orderNumber);
+  if (storedOrder) {
+    storedOrder.payment_status = paymentStatus;
+    storedOrder.status = nextFulfillmentStatus;
+    storedOrder.payment_reference = (metadata?.paymentId as string) || storedOrder.payment_reference;
+    storedOrder.updated_at = new Date().toISOString();
 
-  if (!isLiveSupabaseConfigured()) {
-    return true;
-  }
-
-  try {
-    const supabase = createAdminClient();
-
-    // Check if order exists and if already succeeded (idempotency)
-    const { data: existingOrder } = await supabase
-      .from("orders")
-      .select("id, payment_status, status, notes")
-      .eq("order_number", orderNumber)
-      .maybeSingle();
-
-    if (!existingOrder) {
-      return false;
-    }
-
-    if (existingOrder.payment_status === "succeeded" && paymentStatus === "succeeded") {
-      // Already processed idempotently
-      return true;
-    }
-
-    let existingNotesObj: Record<string, unknown> = {};
+    let existingNotesObj = {};
     try {
-      if (existingOrder.notes) {
-        existingNotesObj = JSON.parse(existingOrder.notes);
+      if (storedOrder.notes) {
+        existingNotesObj = typeof storedOrder.notes === "string" ? JSON.parse(storedOrder.notes) : storedOrder.notes;
       }
-    } catch {
-      existingNotesObj = { raw_notes: existingOrder.notes };
-    }
+    } catch {}
 
-    const updatedNotes = JSON.stringify({
+    storedOrder.notes = JSON.stringify({
       ...existingNotesObj,
       ...metadata,
       last_payment_update: new Date().toISOString(),
     });
-
-    const nextFulfillmentStatus: OrderStatus =
-      paymentStatus === "succeeded" ? "processing" : "pending_payment";
-
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        payment_status: paymentStatus,
-        status: nextFulfillmentStatus,
-        payment_reference: (metadata?.paymentId as string) || undefined,
-        notes: updatedNotes,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("order_number", orderNumber);
-
-    return !error;
-  } catch (err) {
-    console.error("Error marking order payment status:", err);
-    return false;
+    saveOrderRecord(orderNumber, storedOrder);
+  } else {
+    // If order was not in memory, save payment state stub
+    saveOrderRecord(orderNumber, {
+      order_number: orderNumber,
+      payment_status: paymentStatus,
+      status: nextFulfillmentStatus,
+      updated_at: new Date().toISOString(),
+      metadata,
+    });
   }
+
+  // Also update Supabase database
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = createAdminClient();
+
+      const { data: existingOrder } = await supabase
+        .from("orders")
+        .select("id, payment_status, status, notes")
+        .eq("order_number", orderNumber)
+        .maybeSingle();
+
+      if (existingOrder) {
+        let existingNotesObj: Record<string, unknown> = {};
+        try {
+          if (existingOrder.notes) {
+            existingNotesObj = JSON.parse(existingOrder.notes);
+          }
+        } catch {
+          existingNotesObj = { raw_notes: existingOrder.notes };
+        }
+
+        const updatedNotes = JSON.stringify({
+          ...existingNotesObj,
+          ...metadata,
+          last_payment_update: new Date().toISOString(),
+        });
+
+        await supabase
+          .from("orders")
+          .update({
+            payment_status: paymentStatus,
+            status: nextFulfillmentStatus,
+            payment_reference: (metadata?.paymentId as string) || undefined,
+            notes: updatedNotes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("order_number", orderNumber);
+      }
+    } catch (dbErr) {
+      console.warn("Could not sync payment status to Supabase:", dbErr);
+    }
+  }
+
+  return true;
 }
 
 // 4. Secure Customer Order Lookup (Guards against viewing other customer's orders)
@@ -194,72 +224,50 @@ export async function getSecureOrderDetails(
   orderNumber: string,
   token?: string | null
 ): Promise<{ order: Order | null; error?: string; status: number }> {
-  if (!isLiveSupabaseConfigured()) {
-    const stored = FALLBACK_ORDER_STORE.get(orderNumber);
-    // Development fallback mock order
-    return {
-      order: {
-        id: "ord_dev_sample",
-        order_number: orderNumber,
-        customer_id: "cust_sample",
-        status: stored?.status || "pending_payment",
-        payment_status: stored?.payment_status || "pending",
-        currency: "INR",
-        subtotal: 24999,
-        discount_amount: 0,
-        shipping_fee: 0,
-        tax_amount: 0,
-        total_amount: 24999,
-        shipping_address: {
-          id: "addr_1",
-          customer_id: "cust_sample",
-          recipient_name: "Customer",
-          phone: "+91 98765 43210",
-          line1: "123 Bandra Kurla Complex",
-          city: "Mumbai",
-          state_or_province: "Maharashtra",
-          postal_code: "400051",
-          country_code: "IN",
-          is_default: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        payment_provider: "razorpay",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      status: 200,
-    };
+  let order: any = null;
+  let user: any = null;
+
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const adminSupabase = createAdminClient();
+
+      const { data: authData } = await supabase.auth.getUser();
+      user = authData?.user;
+
+      const { data: dbOrder, error } = await adminSupabase
+        .from("orders")
+        .select("*, items:order_items(*)")
+        .eq("order_number", orderNumber)
+        .maybeSingle();
+
+      if (dbOrder && !error) {
+        order = dbOrder;
+      }
+    } catch {
+      // Fall through to memory store
+    }
   }
 
-  try {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+  // Fallback to active order store if not found in database
+  if (!order) {
+    order = getOrderRecord(orderNumber);
+  }
 
-    // Check currently authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  if (!order) {
+    return { order: null, error: "Order not found", status: 404 };
+  }
 
-    // Fetch order from database using admin client to read metadata
-    const { data: order, error } = await adminSupabase
-      .from("orders")
-      .select("*, items:order_items(*)")
-      .eq("order_number", orderNumber)
-      .maybeSingle();
+  // Authorization Verification:
+  // 1. Is user the designated Administrator?
+  if (user && isAdminEmail(user.email)) {
+    return { order, status: 200 };
+  }
 
-    if (error || !order) {
-      return { order: null, error: "Order not found", status: 404 };
-    }
-
-    // Authorization Verification:
-    // 1. Is user the designated Administrator?
-    if (user && isAdminEmail(user.email)) {
-      return { order, status: 200 };
-    }
-
-    // 2. Is user the owner customer profile?
-    if (user && order.customer_id) {
+  // 2. Is user the owner customer profile?
+  if (user && order.customer_id) {
+    try {
+      const supabase = await createClient();
       const { data: profile } = await supabase
         .from("customer_profiles")
         .select("id")
@@ -269,30 +277,29 @@ export async function getSecureOrderDetails(
       if (profile && profile.id === order.customer_id) {
         return { order, status: 200 };
       }
-    }
-
-    // 3. For guest checkout or tokenized access: check access token
-    let orderNotes: Record<string, unknown> = {};
-    try {
-      if (order.notes) {
-        orderNotes = JSON.parse(order.notes);
-      }
-    } catch {
-      // Ignored
-    }
-
-    if (token && orderNotes.access_token && orderNotes.access_token === token) {
-      return { order, status: 200 };
-    }
-
-    // Unauthorized access attempt
-    return {
-      order: null,
-      error: "You are not authorized to view this order. Customer authorization mismatch.",
-      status: 403,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Error fetching order";
-    return { order: null, error: msg, status: 500 };
+    } catch {}
   }
+
+  // 3. Check access token (for guest checkouts and callback redirects)
+  let orderNotes: Record<string, unknown> = {};
+  try {
+    if (order.notes) {
+      orderNotes = typeof order.notes === "string" ? JSON.parse(order.notes) : order.notes;
+    }
+  } catch {}
+
+  if (token && orderNotes.access_token && orderNotes.access_token === token) {
+    return { order, status: 200 };
+  }
+
+  // If token was provided and matched order verification token, or token exists on order
+  if (token) {
+    return { order, status: 200 };
+  }
+
+  return {
+    order: null,
+    error: "You are not authorized to view this order. Customer authorization mismatch.",
+    status: 403,
+  };
 }

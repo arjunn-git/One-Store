@@ -2,7 +2,9 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
+import { getAllStoredOrders } from "@/lib/services/payments";
 import Link from "next/link";
 import {
   TrendingUp,
@@ -103,10 +105,10 @@ export default async function AdminDashboardPage() {
 
   if (isLiveSupabaseConfigured()) {
     try {
-      const supabase = await createClient();
+      const adminSupabase = createAdminClient();
 
       // 1. Fetch real orders with line items and customer profile
-      const { data: ordersData } = await supabase
+      const { data: ordersData } = await adminSupabase
         .from("orders")
         .select("*, customer:customer_profiles(*), items:order_items(*)")
         .order("created_at", { ascending: false });
@@ -132,13 +134,13 @@ export default async function AdminDashboardPage() {
       }
 
       // 2. Fetch real active registered customer accounts
-      const { count: customerCount } = await supabase
+      const { count: customerCount } = await adminSupabase
         .from("customer_profiles")
         .select("*", { count: "exact", head: true });
       activeCustomersCount = customerCount || 0;
 
       // 3. Fetch real products with variants for inventory monitor
-      const { data: prods } = await supabase
+      const { data: prods } = await adminSupabase
         .from("products")
         .select("*, variants:product_variants(*)")
         .eq("status", "active");
@@ -150,6 +152,29 @@ export default async function AdminDashboardPage() {
       console.error("Admin dashboard fetch error:", err);
     }
   }
+
+  // Merge any orders registered in active memory store
+  const storedOrders = getAllStoredOrders();
+  const dbOrderNumbers = new Set(liveOrders.map((o) => o.order_number));
+  storedOrders.forEach((so) => {
+    if (!dbOrderNumbers.has(so.order_number)) {
+      liveOrders.unshift(so);
+      if (so.payment_status === "succeeded") {
+        if (so.currency === "INR") {
+          grossVolumeInr += Number(so.total_amount) || 0;
+        } else {
+          grossVolumeGbp += Number(so.total_amount) || 0;
+        }
+      }
+      if (
+        so.status === "processing" ||
+        so.status === "pending_payment" ||
+        (so.payment_status === "succeeded" && so.status !== "delivered" && so.status !== "cancelled")
+      ) {
+        pendingFulfillmentCount++;
+      }
+    }
+  });
 
   if (catalogProducts.length === 0) {
     catalogProducts = FALLBACK_PRODUCTS;
