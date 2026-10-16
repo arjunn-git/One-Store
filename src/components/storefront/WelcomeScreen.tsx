@@ -121,7 +121,7 @@ export function WelcomeScreen() {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-6 bg-[#080B10] select-none transition-all duration-500 ease-out ${
+      className={`fixed inset-0 z-[9999] min-h-screen w-screen flex flex-col items-center justify-center p-6 sm:p-10 md:p-16 bg-[#080B10] select-none transition-all duration-500 ease-out overflow-hidden ${
         isExiting
           ? reducedMotion
             ? "opacity-0"
@@ -130,22 +130,22 @@ export function WelcomeScreen() {
       }`}
     >
       {/* Ambient background glow accents */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[320px] bg-[#7DD3FC]/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-[350px] h-[250px] bg-[#102A43]/40 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[450px] bg-[#7DD3FC]/12 blur-[160px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-[550px] h-[350px] bg-[#102A43]/50 blur-[150px] rounded-full pointer-events-none" />
 
-      <div className="max-w-md w-full flex flex-col items-center text-center space-y-6 relative z-10">
+      <div className="max-w-3xl lg:max-w-4xl w-full flex flex-col items-center text-center space-y-8 sm:space-y-10 relative z-10">
         {/* 1. ONE STORE Dynamic Logo */}
         <OneStoreLogo
           variant={progress >= 100 ? "state" : errorMessage ? "state" : "loading"}
           state={progress >= 100 ? "success" : errorMessage ? "error" : "default"}
-          size="md"
+          size="lg"
           asCard
         />
 
-        {/* 2. Showcase Image Card (matching reference visual) */}
-        <div className="relative w-full aspect-[16/10] sm:aspect-[16/10.5] rounded-3xl bg-gradient-to-b from-[#102A43]/50 via-[#0c141e]/90 to-[#080B10] border border-[#243447] overflow-hidden p-2 shadow-2xl group">
+        {/* 2. Showcase Image Card (matching reference visual on full scale) */}
+        <div className="relative w-full max-w-xl sm:max-w-2xl aspect-[16/9] rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#0c141e]/95 to-[#080B10] border border-[#243447] overflow-hidden p-2.5 sm:p-3 shadow-2xl shadow-black/80 group">
           {/* Subtle Glass highlight */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none rounded-3xl" />
 
           {/* Product showcase image */}
           <div className="w-full h-full rounded-2xl overflow-hidden relative flex items-center justify-center bg-[#080B10]">
@@ -158,52 +158,52 @@ export function WelcomeScreen() {
           </div>
 
           {/* Bottom subtle ambient accent line */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-[#7DD3FC]/50 to-transparent" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-[1.5px] bg-gradient-to-r from-transparent via-[#7DD3FC]/60 to-transparent" />
         </div>
 
-        {/* 3. Headline & Dynamic Supporting Task */}
-        <div className="space-y-2 pt-1 w-full">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#FFFFFF]">
+        {/* 3. Big Headline & Dynamic Supporting Task */}
+        <div className="space-y-3 sm:space-y-4 pt-1 w-full max-w-2xl">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-[#FFFFFF] leading-[1.08] [text-wrap:balance]">
             Good things are loading.
           </h1>
 
           {/* Dynamic supporting text linked to actual initialization events */}
-          <div className="h-6 flex items-center justify-center">
+          <div className="min-h-8 flex items-center justify-center">
             {errorMessage ? (
-              <div className="flex items-center gap-1.5 text-xs text-red-400 font-medium animate-fade-in">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex items-center gap-2 text-sm sm:text-base text-red-400 font-medium animate-fade-in">
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             ) : progress === 100 ? (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold animate-fade-in">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex items-center gap-2 text-base sm:text-lg md:text-xl text-emerald-400 font-bold animate-fade-in">
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
                 <span>{currentTask}</span>
               </div>
             ) : (
-              <p className="text-xs text-[#9CAFC3] font-medium tracking-wide transition-all duration-300">
+              <p className="text-sm sm:text-base md:text-lg text-[#9CAFC3] font-medium tracking-wide transition-all duration-300">
                 {currentTask}
               </p>
             )}
           </div>
         </div>
 
-        {/* 4. Slim Progress Bar & Percentage */}
-        <div className="w-full max-w-xs space-y-2 pt-1">
+        {/* 4. Large Slim Progress Bar & Percentage */}
+        <div className="w-full max-w-md sm:max-w-lg space-y-2.5 pt-2">
           {errorMessage ? (
             <div className="flex justify-center pt-2">
               <button
                 type="button"
                 onClick={runInitialization}
-                className="px-5 py-2 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-xs hover:bg-[#FFFFFF] transition-all shadow-lg shadow-[#7DD3FC]/20 flex items-center gap-1.5"
+                className="px-6 py-2.5 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-sm hover:bg-[#FFFFFF] transition-all shadow-xl shadow-[#7DD3FC]/20 flex items-center gap-2"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw className="h-4 w-4" />
                 <span>Retry Connection</span>
               </button>
             </div>
           ) : (
             <>
-              {/* Slim Progress Track */}
-              <div className="w-full h-1 bg-[#102A43] rounded-full overflow-hidden relative">
+              {/* Progress Track */}
+              <div className="w-full h-2 sm:h-2.5 bg-[#102A43] rounded-full overflow-hidden relative border border-[#243447]/60">
                 <div
                   className={`h-full rounded-full transition-all ease-out shadow-sm ${
                     reducedMotion ? "" : "duration-300"
@@ -217,7 +217,7 @@ export function WelcomeScreen() {
               </div>
 
               {/* Progress Percentage */}
-              <div className="flex items-center justify-between text-[11px] font-mono text-[#9CAFC3] px-0.5">
+              <div className="flex items-center justify-between text-xs sm:text-sm font-mono text-[#9CAFC3] px-1 font-medium">
                 <span>Initialization</span>
                 <span className="font-bold text-[#7DD3FC]">{progress}%</span>
               </div>
