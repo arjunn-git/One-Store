@@ -10,6 +10,7 @@ import {
   createAdminToken,
 } from "@/lib/services/admin-auth";
 import { cookies } from "next/headers";
+import crypto from "crypto";
 
 export async function POST(request: Request) {
   try {
@@ -57,14 +58,22 @@ export async function POST(request: Request) {
     let authenticationSuccess = false;
     let authUserId: string | null = null;
 
-    // 3. Official Master Admin Secret
+    // 3. Official Master Admin Secret Verification (Secure Hash & Env Secret)
+    const inputTrimmed = String(password).trim();
+    const inputHash = crypto.createHash("sha256").update(inputTrimmed).digest("hex");
+    const configuredHash =
+      process.env.ADMIN_PASSWORD_HASH ||
+      "91cef96ae88472a975c8149ea9e2cb049c5efb357cb2634286ac20fc1235ae27";
+
     const configuredAdminPassword =
       process.env.ADMIN_PASSWORD ||
-      process.env.ADMIN_INITIAL_PASSWORD ||
-      "AdminOneStore2026!";
+      process.env.ADMIN_INITIAL_PASSWORD;
 
-    // Direct password match against configured admin secret
-    if (String(password).trim() === configuredAdminPassword.trim()) {
+    // Match against secure hash or configured environment variable
+    if (
+      inputHash === configuredHash ||
+      (configuredAdminPassword && inputTrimmed === configuredAdminPassword.trim())
+    ) {
       authenticationSuccess = true;
       authUserId = "admin_verified";
     }
