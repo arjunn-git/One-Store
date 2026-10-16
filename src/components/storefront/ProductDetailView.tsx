@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
@@ -54,6 +55,14 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const isLowStock = currentStock > 0 && currentStock <= 5;
   const isAvailableInCurrentMarket =
     market === "IN" ? product.available_in_in !== false : product.available_in_gb !== false;
+
+  const router = useRouter();
+
+  const handleBuyNow = () => {
+    if (isOutOfStock || !isAvailableInCurrentMarket) return;
+    addItem(product, selectedVariant, quantity);
+    router.push("/checkout");
+  };
 
   const handleAddToCart = () => {
     if (isOutOfStock || !isAvailableInCurrentMarket) return;
@@ -276,7 +285,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock || !isAvailableInCurrentMarket}
-              className={`flex-1 w-full sm:w-auto min-h-[48px] px-8 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 w-full sm:w-auto min-h-[48px] px-6 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                 !isAvailableInCurrentMarket
                   ? "bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 cursor-not-allowed opacity-90"
                   : isOutOfStock
@@ -298,10 +307,21 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 "Sold Out"
               ) : (
                 <>
-                  <ShoppingBag className="h-4 w-4" /> Add to Shopping Cart
+                  <ShoppingBag className="h-4 w-4" /> Add to Cart
                 </>
               )}
             </button>
+
+            {/* Buy Now CTA */}
+            {!isOutOfStock && isAvailableInCurrentMarket && (
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="w-full sm:w-auto min-h-[48px] px-6 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-[#FFFFFF] text-[#080B10] hover:bg-[#7DD3FC] shadow-lg shadow-white/5"
+              >
+                <span>Buy Now</span>
+              </button>
+            )}
 
             {/* Wishlist Toggle Button */}
             <button

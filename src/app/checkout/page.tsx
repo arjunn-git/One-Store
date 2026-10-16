@@ -17,13 +17,46 @@ import {
   RefreshCw,
   AlertCircle,
   Check,
+  MapPin,
+  Plus,
+  Home,
+  Briefcase,
+  User,
+  ExternalLink,
 } from "lucide-react";
+import {
+  validatePostalCode,
+  validatePhoneNumber,
+  type ProfileValidationResult,
+} from "@/lib/services/profile-validation";
+
+interface SavedAddress {
+  id: string;
+  label?: string | null;
+  recipient_name: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state_or_province: string;
+  postal_code: string;
+  country_code: "IN" | "GB";
+  is_default: boolean;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, itemCount, subtotal, shippingFee, formattedSubtotal, formattedShippingFee, clearCart } =
     useCart();
   const { market } = useMarket();
+
+  // Authentication & Profile States
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("new");
+  const [profileCompletion, setProfileCompletion] = useState<ProfileValidationResult | null>(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -60,6 +93,117 @@ export default function CheckoutPage() {
   } | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
 
+  // Fetch authentication status, profile & saved addresses on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAccountData() {
+      setIsAuthChecking(true);
+      try {
+        const res = await fetch("/api/account/profile");
+        if (res.status === 401) {
+          if (isMounted) {
+            setIsAuthenticated(false);
+            setIsAuthChecking(false);
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (isMounted && data.success && data.profile) {
+          setIsAuthenticated(true);
+          setUserProfile(data.profile);
+          const addrs: SavedAddress[] = data.addresses || [];
+          setSavedAddresses(addrs);
+          setProfileCompletion(data.completion || null);
+
+          // Find default address or first address
+          const defAddr = addrs.find((a) => a.is_default) || addrs[0];
+
+          if (defAddr) {
+            setSelectedAddressId(defAddr.id);
+            setFormData({
+              recipientName: defAddr.recipient_name,
+              email: data.profile.email || "",
+              phone: defAddr.phone,
+              line1: defAddr.line1,
+              line2: defAddr.line2 || "",
+              city: defAddr.city,
+              stateOrProvince: defAddr.state_or_province,
+              postalCode: defAddr.postal_code,
+              countryCode: defAddr.country_code || market,
+            });
+          } else {
+            // Fill from profile direct fields if present
+            setSelectedAddressId("new");
+            setFormData({
+              recipientName: data.profile.full_name || "",
+              email: data.profile.email || "",
+              phone: data.profile.phone || "",
+              line1: data.profile.street_address
+                ? data.profile.apartment_unit
+                  ? `${data.profile.apartment_unit}, ${data.profile.street_address}`
+                  : data.profile.street_address
+                : "",
+              line2: "",
+              city: data.profile.city || "",
+              stateOrProvince: data.profile.state_or_province || "",
+              postalCode: data.profile.postal_code || "",
+              countryCode: data.profile.country || market,
+            });
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsAuthChecking(false);
+        }
+      }
+    }
+
+    loadAccountData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [market]);
+
+  // Handle switching between saved addresses
+  const handleSelectSavedAddress = (id: string | "new") => {
+    setSelectedAddressId(id);
+    if (id === "new") {
+      setFormData({
+        recipientName: userProfile?.full_name || "",
+        email: userProfile?.email || "",
+        phone: userProfile?.phone || "",
+        line1: "",
+        line2: "",
+        city: "",
+        stateOrProvince: "",
+        postalCode: "",
+        countryCode: market,
+      });
+    } else {
+      const selected = savedAddresses.find((a) => a.id === id);
+      if (selected) {
+        setFormData({
+          recipientName: selected.recipient_name,
+          email: userProfile?.email || formData.email,
+          phone: selected.phone,
+          line1: selected.line1,
+          line2: selected.line2 || "",
+          city: selected.city,
+          stateOrProvince: selected.state_or_province,
+          postalCode: selected.postal_code,
+          countryCode: selected.country_code || market,
+        });
+      }
+    }
+  };
+
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
     setPromoError(null);
@@ -71,7 +215,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // Dynamically keep payment provider and default method tab aligned with active market
+  // Dynamically keep payment provider aligned with active market
   useEffect(() => {
     if (market === "IN") {
       setPaymentProvider("razorpay");
@@ -131,15 +275,13 @@ export default function CheckoutPage() {
           localStorage.setItem(`one_store_order_${cleanOrderNumber}`, JSON.stringify(backupOrder));
           localStorage.setItem("one_store_last_order", JSON.stringify(backupOrder));
         } catch {
-          // Ignore storage errors
+          // Ignore
         }
 
         clearCart();
         const safeOrderNum = encodeURIComponent(cleanOrderNumber);
         const safeToken = encodeURIComponent(pendingTestOrder.accessToken || "");
-        router.push(
-          `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
-        );
+        router.push(`/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`);
       } else {
         setErrorMessage(data.error || "Sandbox completion failed.");
       }
@@ -181,8 +323,41 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!formData.recipientName || !formData.email || !formData.line1 || !formData.postalCode) {
-      setErrorMessage("Please fill in all mandatory shipping address fields.");
+    // 1. Mandatory Profile 100% check
+    if (profileCompletion && !profileCompletion.isComplete) {
+      setErrorMessage(
+        `Profile is ${profileCompletion.percentage}% complete. 100% profile completion is mandatory before checkout. Missing: ${profileCompletion.missingFields.join(", ")}.`
+      );
+      return;
+    }
+
+    // 2. Validate Address Fields
+    if (!formData.recipientName?.trim()) {
+      setErrorMessage("Recipient name is required.");
+      return;
+    }
+    if (!formData.line1?.trim()) {
+      setErrorMessage("Delivery street address is required.");
+      return;
+    }
+    if (!formData.city?.trim()) {
+      setErrorMessage("City or town is required.");
+      return;
+    }
+    if (!validatePhoneNumber(formData.phone, market)) {
+      setErrorMessage(
+        market === "IN"
+          ? "Please provide a valid 10-digit Indian mobile number."
+          : "Please provide a valid UK mobile number."
+      );
+      return;
+    }
+    if (!validatePostalCode(formData.postalCode, market)) {
+      setErrorMessage(
+        market === "IN"
+          ? "Please provide a valid 6-digit Indian PIN code."
+          : "Please provide a valid UK postcode (e.g. SW1A 1AA)."
+      );
       return;
     }
 
@@ -217,6 +392,26 @@ export default function CheckoutPage() {
       const data = await response.json();
       setIsLoading(false);
 
+      if (response.status === 401 || data.requireLogin) {
+        setErrorMessage("Authentication required. Redirecting to login without losing your cart...");
+        setTimeout(() => {
+          router.push("/login?next=/checkout");
+        }, 1500);
+        return;
+      }
+
+      if (response.status === 403 && data.profileIncomplete) {
+        setErrorMessage(data.error);
+        setProfileCompletion({
+          isComplete: false,
+          percentage: data.percentage || 0,
+          missingFields: data.missingFields || [],
+          fieldErrors: data.fieldErrors || {},
+          checklist: [],
+        });
+        return;
+      }
+
       if (!response.ok || !data.success) {
         setErrorMessage(data.error || "Order placement failed. Please verify your details.");
         return;
@@ -231,7 +426,6 @@ export default function CheckoutPage() {
 
       // 2. If Razorpay order is initialized with keys, open Razorpay Standard Checkout
       if (data.razorpayOrderId && data.razorpayKeyId) {
-        // Dynamically load Razorpay SDK if not present
         if (!("Razorpay" in window)) {
           const script = document.createElement("script");
           script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -253,35 +447,39 @@ export default function CheckoutPage() {
             contact: formData.phone,
           },
           theme: {
-            color: "#7DD3FC",
+            color: "#080B10",
           },
-          handler: async function (response: {
+          handler: async function (paymentResponse: {
             razorpay_order_id: string;
             razorpay_payment_id: string;
             razorpay_signature: string;
           }) {
+            setIsLoading(true);
             try {
-              setIsLoading(true);
               const verifyRes = await fetch("/api/payments/verify/razorpay", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   orderNumber: data.orderNumber,
                   accessToken: data.accessToken,
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
+                  razorpayOrderId: paymentResponse.razorpay_order_id,
+                  razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                  razorpaySignature: paymentResponse.razorpay_signature,
                 }),
               });
+
               const verifyData = await verifyRes.json();
               setIsLoading(false);
 
-              if (verifyData.success) {
+              if (verifyRes.ok && verifyData.success) {
                 const cleanOrderNumber = String(data.orderNumber).replace(/\s+/g, "").toUpperCase();
                 const backupOrder = {
                   order_number: cleanOrderNumber,
                   orderNumber: cleanOrderNumber,
-                  total_amount: total,
+                  subtotal,
+                  discount_amount: discountAmount,
+                  shipping_fee: shippingFee,
+                  total_amount: checkoutGrandTotal,
                   currency: market === "IN" ? "INR" : "GBP",
                   payment_status: "succeeded",
                   status: "processing",
@@ -308,15 +506,13 @@ export default function CheckoutPage() {
                   localStorage.setItem(`one_store_order_${cleanOrderNumber}`, JSON.stringify(backupOrder));
                   localStorage.setItem("one_store_last_order", JSON.stringify(backupOrder));
                 } catch {
-                  // Ignore storage errors
+                  // Ignore
                 }
 
                 clearCart();
                 const safeOrderNum = encodeURIComponent(cleanOrderNumber);
                 const safeToken = encodeURIComponent(data.accessToken || "");
-                router.push(
-                  `/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`
-                );
+                router.push(`/checkout/success?orderNumber=${safeOrderNum}&token=${safeToken}`);
               } else {
                 setErrorMessage(
                   verifyData.error || "Payment verification failed. Invalid cryptographic signature."
@@ -340,7 +536,7 @@ export default function CheckoutPage() {
                   }),
                 });
               } catch {
-                // Ignored
+                // Ignore
               }
               setErrorMessage(
                 "Payment was not completed. Your order has been preserved in pending payment state."
@@ -355,7 +551,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 3. If credentials are not yet configured, show honest setup guidance and sandbox option
+      // 3. Sandbox Gateway Mode
       if (data.requiresCredentials) {
         setPendingTestOrder({
           orderNumber: data.orderNumber,
@@ -365,9 +561,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 4. Default fallback
       setErrorMessage("Payment provider could not be initialized. Please try again.");
-    } catch (err: unknown) {
+    } catch {
       setIsLoading(false);
       setErrorMessage("Network error during checkout. Please try again.");
     }
@@ -384,22 +579,63 @@ export default function CheckoutPage() {
             <div>
               <div className="flex items-center gap-2 text-xs text-[#7DD3FC] mb-1 font-semibold uppercase tracking-wider">
                 <Lock className="h-3.5 w-3.5" />
-                <span>Secure 256-Bit Encrypted Checkout</span>
+                <span>Secure 256-Bit Encrypted Express Checkout</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                 Order Finalization
               </h1>
             </div>
 
-            <div className="text-xs text-[#9CAFC3]">
-              Active Market:{" "}
-              <strong className="text-[#FFFFFF]">
-                {market === "IN" ? "India (₹ INR)" : "United Kingdom (£ GBP)"}
-              </strong>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-[#9CAFC3]">
+                Market:{" "}
+                <strong className="text-[#FFFFFF]">
+                  {market === "IN" ? "India (₹ INR)" : "United Kingdom (£ GBP)"}
+                </strong>
+              </span>
+              {isAuthenticated && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Authenticated
+                </span>
+              )}
             </div>
           </div>
 
-          {items.length === 0 ? (
+          {/* Authentication Barrier for Guests */}
+          {isAuthChecking ? (
+            <div className="p-12 text-center rounded-2xl bg-[#102A43]/20 border border-[#243447] text-xs text-[#9CAFC3]">
+              Verifying customer authentication and profile completion...
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="p-10 text-center rounded-2xl bg-[#102A43]/30 border border-[#7DD3FC]/40 shadow-2xl space-y-4">
+              <div className="h-16 w-16 mx-auto rounded-2xl bg-[#080B10] border border-[#243447] flex items-center justify-center text-[#7DD3FC]">
+                <Lock className="h-8 w-8" />
+              </div>
+              <div className="max-w-md mx-auto space-y-2">
+                <h2 className="text-xl font-bold text-[#FFFFFF]">Sign in Required for Checkout</h2>
+                <p className="text-xs text-[#9CAFC3] leading-relaxed">
+                  To protect your orders and guarantee verified delivery across India and the UK, you must be signed in with a 100% complete profile before completing purchase.
+                </p>
+                <p className="text-[11px] text-emerald-400 font-medium">
+                  Your cart items ({itemCount}) are safely preserved.
+                </p>
+              </div>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/login?next=/checkout"
+                  className="w-full sm:w-auto px-8 py-3 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-xs hover:bg-[#FFFFFF] transition-all shadow-lg shadow-[#7DD3FC]/10"
+                >
+                  Sign In to Continue &rarr;
+                </Link>
+                <Link
+                  href="/signup?next=/checkout"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#080B10] text-[#FFFFFF] border border-[#243447] text-xs font-semibold hover:border-[#7DD3FC]"
+                >
+                  Create Customer Account
+                </Link>
+              </div>
+            </div>
+          ) : items.length === 0 ? (
             <div className="p-12 text-center rounded-2xl bg-[#102A43]/20 border border-[#243447]">
               <h2 className="text-lg font-bold text-[#FFFFFF]">Your cart is empty</h2>
               <p className="text-xs text-[#9CAFC3] mt-1">
@@ -416,6 +652,49 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Form inputs (2 cols) */}
               <div className="lg:col-span-2 space-y-8">
+                {/* 100% Profile Completion Requirement Card */}
+                {profileCompletion && !profileCompletion.isComplete && (
+                  <div className="p-6 rounded-2xl bg-amber-950/20 border border-amber-800/80 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                            100% Profile Completion Mandatory Before Order Placement
+                          </div>
+                          <div className="text-xs text-[#9CAFC3]">
+                            Current profile progress:{" "}
+                            <strong className="text-[#FFFFFF]">{profileCompletion.percentage}%</strong>. Checkout is paused until all mandatory dispatch fields are verified.
+                          </div>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/account?complete=1"
+                        className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#080B10] font-bold text-xs flex items-center gap-1.5 transition-all shrink-0"
+                      >
+                        <span>Complete Profile Now</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-2 rounded-full bg-[#080B10] border border-[#243447] overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-500 to-[#7DD3FC] transition-all duration-500"
+                        style={{ width: `${profileCompletion.percentage}%` }}
+                      />
+                    </div>
+
+                    <div className="text-[11px] text-[#9CAFC3]">
+                      Missing fields:{" "}
+                      <span className="text-amber-300 font-semibold">
+                        {profileCompletion.missingFields.join(", ")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Dynamic Regional Payment Modal (Razorpay for India vs Stripe for UK) */}
                 {pendingTestOrder && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -449,104 +728,20 @@ export default function CheckoutPage() {
                           <ShieldCheck className="h-4 w-4 text-[#7DD3FC] shrink-0" />
                           <span>
                             {market === "IN"
-                              ? "Test Sandbox Mode — Verify instant INR payment via Razorpay"
-                              : "Test Sandbox Mode — Verify instant GBP payment via Stripe UK"}
+                              ? "Razorpay Sandbox Gateway: RBI 2FA Verified Test Mode"
+                              : "Stripe Sandbox Gateway: UK FCA & 3DS2 Verified Test Mode"}
                           </span>
                         </div>
 
-                        {/* Payment Method Selector Tabs */}
-                        <div className="space-y-2">
-                          <div className="text-xs font-semibold text-[#9CAFC3] uppercase tracking-wider">
-                            {market === "IN"
-                              ? "Select Indian Payment Option (₹)"
-                              : "Select UK Payment Option (£)"}
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {market === "IN" ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("upi")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "upi"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  UPI / QR
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("card")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "card"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  Card
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("netbanking")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "netbanking"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  NetBanking
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("card")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "card"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  UK Card
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("applepay")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "applepay"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  Apple / Google
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPaymentTab("klarna")}
-                                  className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all ${
-                                    selectedPaymentTab === "klarna"
-                                      ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
-                                      : "bg-[#080B10] border-[#243447] text-[#9CAFC3]"
-                                  }`}
-                                >
-                                  Klarna Pay
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Method Preview */}
-                        <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-2">
+                        {/* Selected Method Details */}
+                        <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-3">
                           {market === "IN" ? (
                             <>
                               {selectedPaymentTab === "upi" && (
                                 <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">UPI (Google Pay, PhonePe, Paytm, BHIM)</div>
-                                  <div className="text-[11px] font-mono text-[#7DD3FC]">
-                                    {formData.phone ? `${formData.phone}@okhdfcbank` : "9876543210@okhdfcbank"}
+                                  <div className="font-semibold text-[#FFFFFF]">Unified Payments Interface (UPI)</div>
+                                  <div className="text-[11px] font-mono text-emerald-400">
+                                    onestore.auth@okhdfcbank
                                   </div>
                                   <div className="text-[10px] text-[#9CAFC3]">
                                     Instant UPI intent or dynamic QR settlement
@@ -626,12 +821,6 @@ export default function CheckoutPage() {
                             Cancel Payment
                           </button>
                         </div>
-
-                        <div className="text-[10px] text-center text-[#9CAFC3]">
-                          {market === "IN"
-                            ? "Secured by Razorpay • 256-bit SSL encrypted • RBI Compliant"
-                            : "Secured by Stripe • 256-bit SSL encrypted • UK FCA & PCI-DSS Level 1 Compliant"}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -660,10 +849,9 @@ export default function CheckoutPage() {
                         type="email"
                         name="email"
                         required
+                        disabled
                         value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="you@example.com"
-                        className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                        className="w-full h-11 px-3.5 rounded-xl bg-[#080B10]/60 border border-[#243447] text-sm text-[#9CAFC3] cursor-not-allowed"
                       />
                     </div>
 
@@ -684,108 +872,190 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Section 2: Shipping Address */}
+                {/* Section 2: Saved Delivery Address Picker */}
                 <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4">
-                  <h2 className="text-base font-bold text-[#FFFFFF] flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center text-xs font-mono">
-                      2
-                    </span>
-                    <span>Shipping Destination ({market === "IN" ? "India" : "United Kingdom"})</span>
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-bold text-[#FFFFFF] flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center text-xs font-mono">
+                        2
+                      </span>
+                      <span>Delivery Destination ({market === "IN" ? "India" : "United Kingdom"})</span>
+                    </h2>
 
-                  <div className="space-y-4 text-xs">
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-[#FFFFFF]">Recipient Full Name *</label>
-                      <input
-                        type="text"
-                        name="recipientName"
-                        required
-                        value={formData.recipientName}
-                        onChange={handleInputChange}
-                        placeholder="Recipient Name"
-                        className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-[#FFFFFF]">Address Line 1 *</label>
-                      <input
-                        type="text"
-                        name="line1"
-                        required
-                        value={formData.line1}
-                        onChange={handleInputChange}
-                        placeholder="House / Flat / Building & Street"
-                        className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-[#FFFFFF]">Address Line 2 (Optional)</label>
-                      <input
-                        type="text"
-                        name="line2"
-                        value={formData.line2}
-                        onChange={handleInputChange}
-                        placeholder="Apartment, suite, unit, etc."
-                        className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="font-semibold text-[#FFFFFF]">City *</label>
-                        <input
-                          type="text"
-                          name="city"
-                          required
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          placeholder={market === "IN" ? "Mumbai / Delhi" : "London / Manchester"}
-                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="font-semibold text-[#FFFFFF]">
-                          {market === "IN" ? "State *" : "County / Region *"}
-                        </label>
-                        <input
-                          type="text"
-                          name="stateOrProvince"
-                          required
-                          value={formData.stateOrProvince}
-                          onChange={handleInputChange}
-                          placeholder={market === "IN" ? "Maharashtra" : "Greater London"}
-                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="font-semibold text-[#FFFFFF]">
-                          {market === "IN" ? "PIN Code *" : "Postcode *"}
-                        </label>
-                        <input
-                          type="text"
-                          name="postalCode"
-                          required
-                          value={formData.postalCode}
-                          onChange={handleInputChange}
-                          placeholder={market === "IN" ? "400001" : "SW1A 1AA"}
-                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
-                        />
-                      </div>
-                    </div>
+                    <Link
+                      href="/account?tab=addresses"
+                      className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] flex items-center gap-1"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      <span>Manage Address Book</span>
+                    </Link>
                   </div>
+
+                  {/* Saved addresses selector */}
+                  {savedAddresses.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-[#9CAFC3] block">
+                        Select from your saved addresses:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {savedAddresses.map((addr) => {
+                          const isSelected = selectedAddressId === addr.id;
+                          return (
+                            <div
+                              key={addr.id}
+                              onClick={() => handleSelectSavedAddress(addr.id)}
+                              className={`p-4 rounded-xl border cursor-pointer transition-all space-y-1 text-xs relative ${
+                                isSelected
+                                  ? "bg-[#102A43] border-[#7DD3FC] shadow-md shadow-[#7DD3FC]/10"
+                                  : "bg-[#080B10] border-[#243447] hover:border-[#243447]/90"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 font-bold text-[#FFFFFF]">
+                                  {addr.label === "Work" ? (
+                                    <Briefcase className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                                  ) : (
+                                    <Home className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                                  )}
+                                  <span>{addr.label || "Home"}</span>
+                                  {addr.is_default && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#7DD3FC]/20 text-[#7DD3FC]">
+                                      Default
+                                    </span>
+                                  )}
+                                </div>
+                                <div
+                                  className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                    isSelected
+                                      ? "border-[#7DD3FC] bg-[#7DD3FC] text-[#080B10]"
+                                      : "border-[#243447]"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="h-3 w-3" />}
+                                </div>
+                              </div>
+                              <div className="font-semibold text-[#FFFFFF]">{addr.recipient_name}</div>
+                              <div className="text-[#9CAFC3] truncate">{addr.line1}</div>
+                              <div className="text-[#9CAFC3]">
+                                {addr.city}, {addr.state_or_province} - {addr.postal_code}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <div
+                          onClick={() => handleSelectSavedAddress("new")}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2 text-xs font-semibold ${
+                            selectedAddressId === "new"
+                              ? "bg-[#102A43] border-[#7DD3FC] text-[#FFFFFF]"
+                              : "bg-[#080B10] border-dashed border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF]"
+                          }`}
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Deliver to a New Address</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Address input fields */}
+                  {(selectedAddressId === "new" || savedAddresses.length === 0) && (
+                    <div className="space-y-4 text-xs pt-2">
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-[#FFFFFF]">Recipient Full Name *</label>
+                        <input
+                          type="text"
+                          name="recipientName"
+                          required
+                          value={formData.recipientName}
+                          onChange={handleInputChange}
+                          placeholder="Full legal recipient name"
+                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-[#FFFFFF]">
+                          Street Address (Line 1: Apartment, House No &amp; Street) *
+                        </label>
+                        <input
+                          type="text"
+                          name="line1"
+                          required
+                          value={formData.line1}
+                          onChange={handleInputChange}
+                          placeholder="Flat 402, Skyline Residency, Bandra West"
+                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-[#FFFFFF]">
+                          Locality / Landmark (Line 2 - Optional)
+                        </label>
+                        <input
+                          type="text"
+                          name="line2"
+                          value={formData.line2}
+                          onChange={handleInputChange}
+                          placeholder="Near Linking Road / Landmark"
+                          className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="font-semibold text-[#FFFFFF]">City / Town *</label>
+                          <input
+                            type="text"
+                            name="city"
+                            required
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            placeholder={market === "IN" ? "Mumbai" : "London"}
+                            className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="font-semibold text-[#FFFFFF]">State / Region *</label>
+                          <input
+                            type="text"
+                            name="stateOrProvince"
+                            required
+                            value={formData.stateOrProvince}
+                            onChange={handleInputChange}
+                            placeholder={market === "IN" ? "Maharashtra" : "Greater London"}
+                            className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="font-semibold text-[#FFFFFF]">
+                            {market === "IN" ? "PIN Code (6 Digits) *" : "Postcode (UK format) *"}
+                          </label>
+                          <input
+                            type="text"
+                            name="postalCode"
+                            required
+                            value={formData.postalCode}
+                            onChange={handleInputChange}
+                            placeholder={market === "IN" ? "400050" : "SW1A 1AA"}
+                            className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] font-mono focus:outline-none focus:border-[#7DD3FC]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Section 3: Dual Payment Integration */}
+                {/* Section 3: Payment Gateway Selector */}
                 <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4">
                   <h2 className="text-base font-bold text-[#FFFFFF] flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center text-xs font-mono">
                       3
                     </span>
-                    <span>Payment Gateway &amp; Methods</span>
+                    <span>Payment Gateway</span>
                   </h2>
 
                   {market === "IN" ? (
@@ -926,11 +1196,13 @@ export default function CheckoutPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
-                    className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 transition-all disabled:opacity-50"
+                    disabled={isLoading || (profileCompletion ? !profileCompletion.isComplete : false)}
+                    className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : profileCompletion && !profileCompletion.isComplete ? (
+                      <span>Complete Profile (100%) to Enable Checkout</span>
                     ) : (
                       <>
                         <span>Place Order &amp; Pay</span>

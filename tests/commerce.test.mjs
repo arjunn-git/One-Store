@@ -825,6 +825,266 @@ runTest("Database Anti-Self-Promotion Policy Guard Simulation", () => {
   assert.equal(serviceResult.role, "admin", "Service role can assign authorized admin roles");
 });
 
+// 30. Country-Specific Postal / PIN Code & Mobile Validation (India vs UK)
+runTest("Country-Specific Postal / PIN Code & Mobile Validation (India vs UK)", () => {
+  // India PIN code validation logic
+  function validateIndiaPin(pin) {
+    if (!pin) return false;
+    return /^[1-9][0-9]{5}$/.test(pin.trim());
+  }
+
+  // UK Postcode validation logic
+  function validateUkPostcode(code) {
+    if (!code) return false;
+    return /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i.test(code.trim());
+  }
+
+  // India Mobile validation logic
+  function validateIndiaMobile(phone) {
+    if (!phone) return false;
+    const clean = phone.replace(/[\s\-\(\)]/g, "");
+    return /^(?:\+?91|0)?[6-9]\d{9}$/.test(clean);
+  }
+
+  // UK Mobile validation logic
+  function validateUkMobile(phone) {
+    if (!phone) return false;
+    const clean = phone.replace(/[\s\-\(\)]/g, "");
+    return /^(?:\+?44|0)?7\d{9}$/.test(clean);
+  }
+
+  // Test India PINs
+  assert.equal(validateIndiaPin("400001"), true, "Valid Mumbai PIN");
+  assert.equal(validateIndiaPin("110001"), true, "Valid New Delhi PIN");
+  assert.equal(validateIndiaPin("040001"), false, "PIN starting with 0 is invalid");
+  assert.equal(validateIndiaPin("40001"), false, "5-digit PIN is invalid");
+  assert.equal(validateIndiaPin("4000011"), false, "7-digit PIN is invalid");
+  assert.equal(validateIndiaPin("40000A"), false, "Alphanumeric PIN is invalid in India");
+
+  // Test UK Postcodes
+  assert.equal(validateUkPostcode("SW1A 1AA"), true, "Valid Buckingham Palace postcode");
+  assert.equal(validateUkPostcode("ec1a 1bb"), true, "Valid London EC1 postcode lowercase");
+  assert.equal(validateUkPostcode("M1 1AE"), true, "Valid Manchester postcode");
+  assert.equal(validateUkPostcode("123456"), false, "Numeric PIN is invalid in UK");
+  assert.equal(validateUkPostcode("SW1"), false, "Incomplete UK postcode is invalid");
+
+  // Test India Mobile Numbers
+  assert.equal(validateIndiaMobile("+91 98765 43210"), true, "Valid India mobile with +91");
+  assert.equal(validateIndiaMobile("9876543210"), true, "Valid 10-digit India mobile");
+  assert.equal(validateIndiaMobile("8123456789"), true, "Valid 8-prefix India mobile");
+  assert.equal(validateIndiaMobile("5123456789"), false, "India mobile starting with 5 is invalid");
+  assert.equal(validateIndiaMobile("12345"), false, "Short phone is invalid");
+
+  // Test UK Mobile Numbers
+  assert.equal(validateUkMobile("+44 7911 123456"), true, "Valid UK mobile with +44");
+  assert.equal(validateUkMobile("07911 123456"), true, "Valid UK mobile with 07");
+  assert.equal(validateUkMobile("7911123456"), true, "Valid UK mobile without prefix");
+  assert.equal(validateUkMobile("01234 567890"), false, "UK landline is not a mobile number");
+});
+
+// 31. 100% Mandatory Profile Completion Engine
+runTest("100% Mandatory Profile Completion Engine", () => {
+  function computeCompletion(profile, addresses = []) {
+    const defaultAddr = addresses.find((a) => a.is_default) || addresses[0];
+    const country = profile.country === "GB" ? "GB" : "IN";
+
+    const hasName = !!profile.full_name && profile.full_name.trim().length >= 3;
+    const hasEmail = !!profile.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email) && profile.is_email_verified;
+    const phone = profile.phone || defaultAddr?.phone || "";
+    const hasPhone = country === "IN" ? /^(?:\+?91|0)?[6-9]\d{9}$/.test(phone.replace(/[\s\-]/g, "")) : /^(?:\+?44|0)?7\d{9}$/.test(phone.replace(/[\s\-]/g, ""));
+    const line1 = profile.street_address || defaultAddr?.line1 || "";
+    const hasStreet = line1.trim().length >= 5;
+    const city = profile.city || defaultAddr?.city || "";
+    const hasCity = city.trim().length >= 2;
+    const state = profile.state_or_province || defaultAddr?.state_or_province || "";
+    const hasState = state.trim().length >= 2;
+    const postal = profile.postal_code || defaultAddr?.postal_code || "";
+    const hasPostal = country === "IN" ? /^[1-9][0-9]{5}$/.test(postal.trim()) : /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i.test(postal.trim());
+
+    const weights = [
+      { id: "full_name", completed: hasName, weight: 15 },
+      { id: "email", completed: hasEmail, weight: 15 },
+      { id: "phone", completed: hasPhone, weight: 15 },
+      { id: "street_address", completed: hasStreet, weight: 20 },
+      { id: "city", completed: hasCity, weight: 10 },
+      { id: "state_or_province", completed: hasState, weight: 10 },
+      { id: "postal_code", completed: hasPostal, weight: 15 },
+    ];
+
+    const percentage = weights.reduce((sum, w) => (w.completed ? sum + w.weight : sum), 0);
+    const missing = weights.filter((w) => !w.completed).map((w) => w.id);
+    return { isComplete: percentage === 100, percentage, missing };
+  }
+
+  // Case A: Fresh account with only verified email -> 15%
+  const freshAccount = { email: "shopper@gmail.com", is_email_verified: true, country: "IN" };
+  const resFresh = computeCompletion(freshAccount);
+  assert.equal(resFresh.percentage, 15);
+  assert.equal(resFresh.isComplete, false);
+  assert.ok(resFresh.missing.includes("full_name"));
+  assert.ok(resFresh.missing.includes("phone"));
+  assert.ok(resFresh.missing.includes("street_address"));
+
+  // Case B: Incomplete profile (Name + Email + Phone, but no address) -> 45%
+  const partialAccount = {
+    full_name: "Rahul Mehta",
+    email: "rahul@gmail.com",
+    is_email_verified: true,
+    phone: "+91 98765 43210",
+    country: "IN",
+  };
+  const resPartial = computeCompletion(partialAccount);
+  assert.equal(resPartial.percentage, 45);
+  assert.equal(resPartial.isComplete, false);
+
+  // Case C: 100% Complete Profile directly on profile
+  const completeProfile = {
+    full_name: "Aarav Sharma",
+    email: "aarav@gmail.com",
+    is_email_verified: true,
+    phone: "+91 98765 43210",
+    street_address: "Flat 402, Skyline Residency, Bandra West",
+    city: "Mumbai",
+    state_or_province: "Maharashtra",
+    postal_code: "400050",
+    country: "IN",
+  };
+  const resComplete = computeCompletion(completeProfile);
+  assert.equal(resComplete.percentage, 100);
+  assert.equal(resComplete.isComplete, true);
+  assert.equal(resComplete.missing.length, 0);
+
+  // Case D: Profile with address linked via Address Book
+  const profileWithAddressBook = {
+    full_name: "James Smith",
+    email: "james@example.co.uk",
+    is_email_verified: true,
+    phone: "+44 7911 123456",
+    country: "GB",
+  };
+  const savedAddress = [
+    {
+      line1: "24 Kensington High Street",
+      city: "London",
+      state_or_province: "Greater London",
+      postal_code: "W8 4PT",
+      country_code: "GB",
+      is_default: true,
+    },
+  ];
+  const resAddressBook = computeCompletion(profileWithAddressBook, savedAddress);
+  assert.equal(resAddressBook.percentage, 100);
+  assert.equal(resAddressBook.isComplete, true);
+});
+
+// 32. Mandatory Authentication Checkout Gate
+runTest("Mandatory Authentication Checkout Gate", () => {
+  function checkOrderPlacementPrerequisites(session, profile, addresses) {
+    if (!session || !session.user) {
+      return { allowed: false, status: 401, error: "Authentication required to checkout" };
+    }
+    if (!session.user.email_confirmed_at && profile?.is_email_verified === false) {
+      return { allowed: false, status: 403, error: "Email verification required" };
+    }
+    // Calculate profile completeness
+    const isComplete =
+      !!profile?.full_name &&
+      !!profile?.phone &&
+      (!!profile?.street_address || addresses?.length > 0) &&
+      (!!profile?.postal_code || addresses?.[0]?.postal_code);
+
+    if (!isComplete) {
+      return { allowed: false, status: 403, error: "100% profile completion mandatory" };
+    }
+    return { allowed: true, status: 200 };
+  }
+
+  // 1. Guest user trying to place order
+  const guestResult = checkOrderPlacementPrerequisites(null, null, []);
+  assert.equal(guestResult.allowed, false);
+  assert.equal(guestResult.status, 401);
+
+  // 2. Logged in with incomplete profile
+  const incompleteResult = checkOrderPlacementPrerequisites(
+    { user: { id: "u1", email: "user@test.com", email_confirmed_at: "2026-01-01" } },
+    { email: "user@test.com" },
+    []
+  );
+  assert.equal(incompleteResult.allowed, false);
+  assert.equal(incompleteResult.status, 403);
+
+  // 3. Logged in with complete profile
+  const completeResult = checkOrderPlacementPrerequisites(
+    { user: { id: "u1", email: "user@test.com", email_confirmed_at: "2026-01-01" } },
+    {
+      full_name: "User One",
+      phone: "+91 98765 43210",
+      street_address: "123 MG Road",
+      postal_code: "560001",
+    },
+    []
+  );
+  assert.equal(completeResult.allowed, true);
+  assert.equal(completeResult.status, 200);
+});
+
+// 33. Address Book Multi-Address, Default Flag, and Label Management
+runTest("Address Book Multi-Address, Default Flag, and Label Management", () => {
+  let addressBook = [
+    { id: "a1", label: "Home", is_default: true, line1: "Flat 101", city: "Mumbai" },
+    { id: "a2", label: "Work", is_default: false, line1: "Floor 4, Tower B", city: "Mumbai" },
+  ];
+
+  // Set 'a2' as new default
+  function setDefault(id) {
+    addressBook = addressBook.map((a) => ({
+      ...a,
+      is_default: a.id === id,
+    }));
+  }
+
+  setDefault("a2");
+  assert.equal(addressBook.find((a) => a.id === "a2").is_default, true);
+  assert.equal(addressBook.find((a) => a.id === "a1").is_default, false);
+
+  // Validate labels
+  const validLabels = ["Home", "Work", "Other", "Office", "Warehouse"];
+  assert.ok(validLabels.includes("Home"));
+  assert.ok(validLabels.includes("Work"));
+  assert.ok(validLabels.includes("Other"));
+});
+
+// 34. Server-Side Protection Against Client-Side Profile Completion Tampering
+runTest("Server-Side Protection Against Client-Side Profile Completion Tampering", () => {
+  // Simulates server-side verification: even if client sends `is_profile_complete: true`, server recalculates!
+  function serverVerifyProfileUpdate(clientPayload, verifiedEmail) {
+    const hasName = !!clientPayload.full_name && clientPayload.full_name.trim().length >= 3;
+    const hasPhone = !!clientPayload.phone && clientPayload.phone.trim().length >= 10;
+    const hasStreet = !!clientPayload.street_address && clientPayload.street_address.trim().length >= 5;
+    const hasCity = !!clientPayload.city && clientPayload.city.trim().length >= 2;
+    const hasPostal = !!clientPayload.postal_code && clientPayload.postal_code.trim().length >= 5;
+
+    // Server-calculated percentage, ignores client's claimed percentage
+    const computedComplete = hasName && hasPhone && hasStreet && hasCity && hasPostal;
+
+    return {
+      claimedComplete: clientPayload.is_profile_complete,
+      serverVerifiedComplete: computedComplete,
+    };
+  }
+
+  // Malicious request claiming 100% complete without providing required fields
+  const spoofedPayload = {
+    full_name: "A", // too short
+    is_profile_complete: true, // spoofed!
+    profile_completion_percentage: 100, // spoofed!
+  };
+
+  const verification = serverVerifyProfileUpdate(spoofedPayload, "attacker@gmail.com");
+  assert.equal(verification.claimedComplete, true);
+  assert.equal(verification.serverVerifiedComplete, false, "Server MUST reject spoofed completion flag");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

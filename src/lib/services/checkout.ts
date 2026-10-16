@@ -44,14 +44,39 @@ export interface OrderResult {
   error?: string;
 }
 
-export async function processCheckout(payload: CheckoutPayload): Promise<OrderResult> {
+import { validatePostalCode, validatePhoneNumber } from "./profile-validation";
+
+export async function processCheckout(
+  payload: CheckoutPayload,
+  authUser?: any,
+  userProfile?: any
+): Promise<OrderResult> {
   try {
     if (!payload.items || payload.items.length === 0) {
       return { success: false, error: "Cannot process an empty cart." };
     }
 
-    // Enforce strict server-side market, currency, and regional payment gateway isolation
+    // Validate phone and postal code for target country
     const validatedMarket: "IN" | "GB" = payload.market === "GB" ? "GB" : "IN";
+    if (payload.postalCode && !validatePostalCode(payload.postalCode, validatedMarket)) {
+      return {
+        success: false,
+        error:
+          validatedMarket === "IN"
+            ? "Invalid 6-digit Indian PIN code."
+            : "Invalid UK postcode format (e.g. SW1A 1AA).",
+      };
+    }
+
+    if (payload.phone && !validatePhoneNumber(payload.phone, validatedMarket)) {
+      return {
+        success: false,
+        error:
+          validatedMarket === "IN"
+            ? "Invalid 10-digit Indian mobile number."
+            : "Invalid UK mobile number (e.g. +44 7911 123456).",
+      };
+    }
     const validatedCurrency: "INR" | "GBP" = validatedMarket === "GB" ? "GBP" : "INR";
     const validatedProvider: "razorpay" | "stripe" = validatedMarket === "GB" ? "stripe" : "razorpay";
 
@@ -211,14 +236,12 @@ export async function processCheckout(payload: CheckoutPayload): Promise<OrderRe
     if (supabase) {
       try {
         const adminSupabase = createAdminClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const user = authUser || (await supabase.auth.getUser()).data.user;
 
-        let customerProfileId = null;
+        let customerProfileId = userProfile?.id || null;
 
         // Correctly lookup or create customer_profile referencing auth_user_id
-        if (user) {
+        if (user && !customerProfileId) {
           const { data: profile } = await adminSupabase
             .from("customer_profiles")
             .select("id")

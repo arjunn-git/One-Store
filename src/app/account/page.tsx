@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
@@ -108,12 +109,14 @@ export default async function AccountPage() {
       <Header />
 
       <main className="flex-1 py-12 px-4 md:px-8">
-        <UserProfileClient
-          initialProfile={userProfile}
-          initialOrders={orders}
-          initialAddresses={addresses}
-          isAdmin={isAdmin}
-        />
+        <Suspense fallback={<div className="text-center text-xs text-[#9CAFC3] py-20">Loading account profile...</div>}>
+          <UserProfileClient
+            initialProfile={userProfile}
+            initialOrders={orders}
+            initialAddresses={addresses}
+            isAdmin={isAdmin}
+          />
+        </Suspense>
       </main>
 
       <Footer />

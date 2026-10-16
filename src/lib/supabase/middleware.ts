@@ -137,5 +137,24 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // 6. Mandatory Authentication for Checkout & Orders
+  if (pathname === "/checkout" || pathname === "/checkout/") {
+    if (!authenticatedEmail && !request.cookies.get("one_store_user_email")?.value) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", "/checkout");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (pathname.startsWith("/orders")) {
+    if (!authenticatedEmail && !request.cookies.get("one_store_user_email")?.value) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
