@@ -43,8 +43,8 @@ export default async function Home() {
               <span>Use code <strong className="font-mono text-[#FFFFFF] bg-[#080B10] px-2 py-0.5 rounded border border-[#7DD3FC]/30">LAUNCH10</strong> for 10% off</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#FFFFFF] max-w-4xl leading-[1.15]">
-              Engineered Lifestyle. <br />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#FFFFFF] max-w-5xl leading-tight">
+              Engineered Lifestyle.{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFFFFF] via-[#7DD3FC] to-[#FFFFFF]">
                 Precision &amp; Craft.
               </span>
