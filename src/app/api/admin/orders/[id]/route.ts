@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { recordActivity } from "@/lib/services/activity";
+import { getOrderRecord, getAllStoredOrders } from "@/lib/services/payments";
 import type { ActivityEventType } from "@/lib/types/database";
 
 // GET /api/admin/orders/[id] — View single order
@@ -17,19 +18,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
     const { id } = await context.params;
 
+    const storedOrder = getOrderRecord(id) || getAllStoredOrders().find((o) => o.id === id || o.order_number === id);
+    if (storedOrder) {
+      return NextResponse.json({ success: true, order: storedOrder });
+    }
+
     if (!isLiveSupabaseConfigured()) {
-      return NextResponse.json({
-        success: true,
-        order: {
-          id,
-          order_number: "OS-2026-IN-9812",
-          customer_email: "customer@example.com",
-          status: "processing",
-          payment_status: "succeeded",
-          total_amount: 24999,
-          currency: "INR",
-        },
-      });
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     const { data: order, error } = await supabase

@@ -30,39 +30,6 @@ export default async function OrdersPage() {
     }
   }
 
-  // Demonstration sample orders when user has not yet completed a live checkout
-  const sampleOrders: TrackedOrder[] = [
-    {
-      id: "ord_sample_01",
-      order_number: "OS-2026-IN-4891",
-      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-      status: "shipped",
-      payment_status: "succeeded",
-      currency: "INR",
-      total_amount: 24999.0,
-      payment_provider: "razorpay",
-      shipping_address: {
-        recipientName: "Customer Account",
-        city: "Mumbai",
-        stateOrProvince: "Maharashtra",
-        postalCode: "400001",
-        countryCode: "IN",
-      },
-      items: [
-        {
-          product_name: "One Acoustic Pro Wireless",
-          variant_name: "Obsidian Black",
-          quantity: 1,
-          unit_price: 24999.0,
-        },
-      ],
-      tracking_number: "BLUEDART-EXP-992819",
-      carrier: "Blue Dart Air Express",
-    },
-  ];
-
-  const displayOrders = orders.length > 0 ? orders : sampleOrders;
-
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
       <Header />
@@ -90,7 +57,7 @@ export default async function OrdersPage() {
           </div>
 
           {/* Interactive Order Tracker & History */}
-          <OrderTrackerClient initialOrders={displayOrders} />
+          <OrderTrackerClient initialOrders={orders} />
         </div>
       </main>
 
