@@ -10,7 +10,7 @@ BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.customer_profiles
     WHERE auth_user_id = auth.uid()
-    AND (role IN ('admin', 'owner') OR email = 'arjuntaneja204@gmail.com')
+    AND (role IN ('admin', 'owner') OR email = 'onestore.auth@gmail.com')
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

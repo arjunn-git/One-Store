@@ -72,7 +72,7 @@ export default async function AdminDashboardPage() {
             <div>
               <h1 className="text-xl font-bold text-[#FFFFFF]">Restricted Access Area</h1>
               <p className="text-xs text-[#9CAFC3] mt-2">
-                This operations portal requires System Administrator privileges. Only designated administrative accounts (such as <span className="text-[#7DD3FC] font-mono font-bold">arjuntaneja204@gmail.com</span>) can view financial data, inventory controls, and order dispatch workflows.
+                This operations portal requires System Administrator privileges. Only designated administrative accounts can view financial data, inventory controls, and order dispatch workflows.
               </p>
             </div>
             <div className="pt-2 flex flex-col gap-3">

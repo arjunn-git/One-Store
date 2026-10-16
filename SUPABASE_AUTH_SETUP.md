@@ -164,5 +164,5 @@ Upon successful verification:
     { onConflict: "auth_user_id" }
   );
   ```
-- If the authenticated user is the designated system administrator (`arjuntaneja204@gmail.com`), they are automatically directed to `/admin`.
+- If the authenticated user is the designated system administrator (matching `ADMIN_EMAIL`), they are automatically directed to `/admin`.
 - Normal customers are directed to `/account` (or their checkout destination).

@@ -127,7 +127,7 @@ runTest("Email Privacy Masking (No PII leak)", () => {
     return `${user[0]}***${user[user.length - 1]}@${domain}`;
   }
 
-  assert.equal(maskEmail("arjuntaneja204@gmail.com"), "a***4@gmail.com");
+  assert.equal(maskEmail("customer99@gmail.com"), "c***9@gmail.com");
   assert.equal(maskEmail("oliver@domain.co.uk"), "o***r@domain.co.uk");
 });
 

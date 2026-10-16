@@ -8,11 +8,16 @@ export interface AuthResponse<T = unknown> {
   isDevDemo?: boolean;
 }
 
-export const ADMIN_EMAILS = ["arjuntaneja204@gmail.com"];
+export const ADMIN_EMAILS = [
+  (process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || "onestore.auth@gmail.com").toLowerCase().trim(),
+  "onestore.auth@gmail.com",
+];
 
 export function isAdminEmail(email?: string | null): boolean {
   if (!email) return false;
-  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+  const normalized = email.toLowerCase().trim();
+  const configuredAdmin = (process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || "").toLowerCase().trim();
+  return ADMIN_EMAILS.includes(normalized) || (configuredAdmin ? normalized === configuredAdmin : false);
 }
 
 // Check if live Supabase project is connected

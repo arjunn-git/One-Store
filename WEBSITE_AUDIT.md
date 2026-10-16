@@ -3,7 +3,7 @@
 **Auditor:** Senior Full-Stack, Auth, Security & Deployment Engineering Team  
 **Repository:** `https://github.com/arjunn-git/One-Store.git` (`main` branch)  
 **Live Production URL:** `https://one-store-gray.vercel.app/`  
-**Administrator Account:** `arjuntaneja204@gmail.com`  
+**Administrator Account:** `onestore.auth@gmail.com` (configurable via `ADMIN_EMAIL`)  
 
 ---
 
@@ -116,7 +116,7 @@ While the storefront visual design, responsiveness, 3D card tilt, cart drawer, a
    * Dual key support (`NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`).
    * Dynamic cookie handling in `src/lib/supabase/client.ts`, `server.ts`, and `middleware.ts`.
 2. **Strict Route Protection:**
-   * Middleware strictly isolates `/admin` to `arjuntaneja204@gmail.com` and auto-forwards any `?code=` query param to `/auth/callback`.
+   * Middleware strictly isolates `/admin` to designated administrator accounts (`ADMIN_EMAIL` / `onestore.auth@gmail.com`) and auto-forwards any `?code=` query param to `/auth/callback`.
 3. **Customer Profile & Address Management ([`/account`](file:///c:/One%20Store/src/app/account/page.tsx)):**
    * Live updating of name, phone, and preferred market via `/api/account/profile`.
    * Live address creation, listing, and deletion via `/api/account/addresses`.

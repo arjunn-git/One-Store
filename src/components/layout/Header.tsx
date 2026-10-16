@@ -24,7 +24,7 @@ import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CountrySelector } from "@/components/layout/CountrySelector";
-import { signOutUser } from "@/lib/services/auth";
+import { signOutUser, isAdminEmail } from "@/lib/services/auth";
 
 export function Header() {
   const pathname = usePathname();
@@ -71,23 +71,15 @@ export function Header() {
 
       const emailCookie = document.cookie.includes("one_store_user_email");
       const session = localStorage.getItem("one_store_session");
-      const hasAdminCookie =
-        document.cookie.includes("arjuntaneja204%40gmail.com") ||
-        document.cookie.includes("arjuntaneja204@gmail.com") ||
-        (session && session.includes("arjuntaneja204@gmail.com"));
+      const match = document.cookie.match(/one_store_user_email=([^;]+)/);
+      const userEmail = match && match[1] ? decodeURIComponent(match[1]).toLowerCase().trim() : "";
+      const hasAdmin = isAdminEmail(userEmail) || (session ? isAdminEmail(session) : false);
 
       if (emailCookie || session) {
         if (isMounted) {
           setIsLoggedIn(true);
-          setIsAdmin(!!hasAdminCookie);
-          if (hasAdminCookie) {
-            setUserName("Arjun Taneja");
-          } else {
-            const match = document.cookie.match(/one_store_user_email=([^;]+)/);
-            if (match && match[1]) {
-              setUserName(decodeURIComponent(match[1]).split("@")[0]);
-            }
-          }
+          setIsAdmin(hasAdmin);
+          setUserName(hasAdmin ? "Store Admin" : (userEmail.split("@")[0] || "Customer"));
         }
       }
 
@@ -99,11 +91,11 @@ export function Header() {
         if (data?.user?.email && isMounted) {
           setIsLoggedIn(true);
           const email = data.user.email.toLowerCase().trim();
-          const adminCheck = email === "arjuntaneja204@gmail.com";
+          const adminCheck = isAdminEmail(email);
           setIsAdmin(adminCheck);
           const name =
             data.user.user_metadata?.full_name ||
-            (adminCheck ? "Arjun Taneja" : email.split("@")[0]);
+            (adminCheck ? "Store Admin" : email.split("@")[0]);
           setUserName(name);
         } else if (!emailCookie && !session && isMounted) {
           setIsLoggedIn(false);
@@ -248,7 +240,7 @@ export function Header() {
             <Link
               href="/admin"
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/50 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
-              title="Admin Command Dashboard (Arjun Taneja Only)"
+              title="Admin Command Dashboard"
             >
               <Shield className="h-3.5 w-3.5" />
               <span>Admin</span>

@@ -67,7 +67,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Protect admin routes: strictly restricted to arjuntaneja204@gmail.com
+  // Protect admin routes: strictly restricted to authorized administrator accounts
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated) {
       const url = request.nextUrl.clone();

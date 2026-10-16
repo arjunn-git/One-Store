@@ -262,7 +262,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'Customer'),
     NEW.email_confirmed_at IS NOT NULL,
     CASE 
-      WHEN LOWER(NEW.email) = 'arjuntaneja204@gmail.com' THEN 'owner'::user_role
+      WHEN LOWER(NEW.email) = 'onestore.auth@gmail.com' THEN 'owner'::user_role
       ELSE 'customer'::user_role
     END
   )
@@ -271,7 +271,7 @@ BEGIN
     email = EXCLUDED.email,
     is_email_verified = EXCLUDED.is_email_verified,
     role = CASE 
-      WHEN LOWER(EXCLUDED.email) = 'arjuntaneja204@gmail.com' THEN 'owner'::user_role
+      WHEN LOWER(EXCLUDED.email) = 'onestore.auth@gmail.com' THEN 'owner'::user_role
       ELSE customer_profiles.role
     END,
     updated_at = NOW();

@@ -59,7 +59,7 @@ export async function GET(request: Request) {
             variant_sku: "OAP-BLK-001-A",
             change_amount: 24,
             reason: "Initial baseline stock intake",
-            performed_by: "arjuntaneja204@gmail.com",
+            performed_by: "admin@onestore.com",
             created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
           },
           {

@@ -84,7 +84,7 @@ Engineered for rich search engine presence and indexing:
 ---
 
 ### 6. Real-Time Admin Command Center (`/admin`)
-- **Restricted Access:** Strictly protected and accessible to authorized administrative accounts (`arjuntaneja204@gmail.com`).
+- **Restricted Access:** Strictly protected and accessible to authorized administrative accounts (configured via `ADMIN_EMAIL` / `onestore.auth@gmail.com`).
 - **Live Activity Monitor:** Real-time event streaming for customer checkouts, cart additions, inventory reservations, support inquiries, and market changes.
 - **Inventory Control:** Live stock adjustments, low-stock threshold alerts, and UK test catalog status badges.
 
