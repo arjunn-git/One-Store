@@ -6,11 +6,61 @@ import { getCategoryBySlug, getProducts } from "@/lib/services/products";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, PackageOpen } from "lucide-react";
+import type { Metadata } from "next";
 
 interface CategoryPageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+const baseUrl = "https://one-store-gray.vercel.app";
+
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const category = await getCategoryBySlug(slug);
+
+  if (!category) {
+    return {
+      title: "Category Not Found",
+    };
+  }
+
+  const title = `${category.name} — Curated Collection | One Store`;
+  const description =
+    category.description ||
+    `Explore premium ${category.name} at One Store. Engineered lifestyle, studio acoustics, and minimalist gear for India & the UK.`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/categories/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/categories/${slug}`,
+      type: "website",
+      siteName: "One Store",
+      images: [
+        {
+          url:
+            category.image_url ||
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=630&q=80",
+          width: 1200,
+          height: 630,
+          alt: category.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [category.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=630&q=80"],
+    },
+  };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
@@ -27,8 +77,58 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   const products = await getProducts({ categorySlug: slug, market });
 
+  const categoryJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: category.name,
+    description: category.description,
+    url: `${baseUrl}/categories/${slug}`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: products.map((prod, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        url: `${baseUrl}/products/${prod.slug}`,
+        name: prod.name,
+      })),
+    },
+  };
+
+  const breadcrumbsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Categories",
+        item: `${baseUrl}/categories`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: category.name,
+        item: `${baseUrl}/categories/${slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(categoryJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
+      />
       <Header />
 
       <main className="flex-1 py-12 px-4 md:px-8">

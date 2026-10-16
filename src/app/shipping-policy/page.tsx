@@ -1,6 +1,22 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Truck, ShieldCheck, Clock, Globe } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Shipping & Fulfillment Policy — India & UK Express Delivery",
+  description:
+    "Comprehensive dual-market shipping policy for One Store. Expedited air transit via Blue Dart in India and Royal Mail / DPD in the United Kingdom.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/shipping-policy",
+  },
+  openGraph: {
+    title: "Shipping & Fulfillment Policy — One Store",
+    description: "Insured express delivery terms across India and the United Kingdom.",
+    url: "https://one-store-gray.vercel.app/shipping-policy",
+    type: "website",
+  },
+};
 
 export default function ShippingPolicyPage() {
   return (

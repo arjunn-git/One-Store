@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles, Heart } from "lucide-react";
 import { PriceDisplay } from "./PriceDisplay";
@@ -16,11 +16,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const rafId = useRef<number | null>(null);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isFav = isInWishlist(product.id);
-  const [transform, setTransform] = useState<string>("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
-  const [glare, setGlare] = useState<{ x: number; y: number; opacity: number }>({ x: 50, y: 50, opacity: 0 });
-  const [isHovered, setIsHovered] = useState(false);
 
   // Compute overall inventory from variants or product
   const totalStock = product.variants?.reduce((sum, v) => sum + v.inventory_count, 0) ?? 10;
@@ -38,23 +36,33 @@ export function ProductCard({ product }: ProductCardProps) {
     // Subtle luxury 3D tilt: max 8 degrees
     const rotateX = ((y - centerY) / centerY) * -8;
     const rotateY = ((x - centerX) / centerX) * 8;
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
 
-    setTransform(`perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.025, 1.025, 1.025)`);
-    setGlare({
-      x: (x / rect.width) * 100,
-      y: (y / rect.height) * 100,
-      opacity: 0.22,
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      if (cardRef.current) {
+        cardRef.current.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.025, 1.025, 1.025)`;
+        cardRef.current.style.setProperty("--glare-x", `${glareX.toFixed(1)}%`);
+        cardRef.current.style.setProperty("--glare-y", `${glareY.toFixed(1)}%`);
+        cardRef.current.style.setProperty("--glare-op", "0.22");
+      }
     });
   };
 
   const handleMouseEnter = () => {
-    setIsHovered(true);
+    if (cardRef.current) {
+      cardRef.current.style.transition = "transform 0.1s ease-out";
+    }
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
-    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
-    setGlare((prev) => ({ ...prev, opacity: 0 }));
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    if (cardRef.current) {
+      cardRef.current.style.transition = "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
+      cardRef.current.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+      cardRef.current.style.setProperty("--glare-op", "0");
+    }
   };
 
   return (
@@ -64,9 +72,7 @@ export function ProductCard({ product }: ProductCardProps) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform,
         transformStyle: "preserve-3d",
-        transition: isHovered ? "transform 0.1s ease-out" : "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)",
       }}
       className="group relative flex flex-col rounded-2xl bg-[#102A43]/50 border border-[#243447] hover:border-[#7DD3FC]/80 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-[#7DD3FC]/10 will-change-transform"
     >
@@ -74,13 +80,14 @@ export function ProductCard({ product }: ProductCardProps) {
       <div
         className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-300 rounded-2xl"
         style={{
-          background: `radial-gradient(circle 350px at ${glare.x}% ${glare.y}%, rgba(125, 211, 252, ${glare.opacity}) 0%, transparent 80%)`,
+          background:
+            "radial-gradient(circle 350px at var(--glare-x, 50%) var(--glare-y, 50%), rgba(125, 211, 252, var(--glare-op, 0)) 0%, transparent 80%)",
         }}
       />
 
       {/* Product Image Stage with 3D Depth */}
       <div
-        style={{ transform: isHovered ? "translateZ(15px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
+        style={{ transformStyle: "preserve-3d" }}
         className="relative aspect-square w-full bg-[#080B10] flex items-center justify-center p-6 overflow-hidden border-b border-[#243447]"
       >
         {/* Subtle geometric backdrop */}
@@ -89,25 +96,19 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Product Image Stage with 3D Depth */}
         {product.images && product.images[0] ? (
           <div
-            style={{
-              transform: isHovered ? "translateZ(24px) scale(1.06)" : "translateZ(0px) scale(1)",
-              transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            }}
-            className="relative z-10 w-full h-full flex items-center justify-center p-2"
+            className="relative z-10 w-full h-full flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300"
           >
             <img
               src={product.images[0]}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover rounded-xl shadow-lg border border-[#243447]/60"
             />
           </div>
         ) : (
           <div
-            style={{
-              transform: isHovered ? "translateZ(30px) scale(1.08)" : "translateZ(0px) scale(1)",
-              transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            }}
-            className="relative z-10 flex flex-col items-center justify-center text-center p-4"
+            className="relative z-10 flex flex-col items-center justify-center text-center p-4 group-hover:scale-105 transition-transform duration-300"
           >
             <div className="w-20 h-20 rounded-2xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#7DD3FC] group-hover:border-[#7DD3FC] group-hover:shadow-lg group-hover:shadow-[#7DD3FC]/20 transition-all duration-300 shadow-inner">
               <span className="font-mono text-2xl font-black">1</span>
@@ -121,15 +122,13 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Featured or Test Data badge (3D Popped) */}
         {product.is_test_data ? (
           <div
-            style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
-            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1"
+            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200"
           >
             <span>UK TEST DATA</span>
           </div>
         ) : product.is_featured ? (
           <div
-            style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
-            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1"
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200"
           >
             <Sparkles className="h-3 w-3" />
             <span>Featured</span>
@@ -138,8 +137,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Stock status badge */}
         <div
-          style={{ transform: isHovered ? "translateZ(25px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
-          className="absolute top-3 right-3"
+          className="absolute top-3 right-3 group-hover:scale-105 transition-transform duration-200"
         >
           {isOutOfStock ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-red-950/80 text-red-400 border border-red-800">
@@ -159,8 +157,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Content details with 3D Depth */}
       <div
-        style={{ transform: isHovered ? "translateZ(18px)" : "translateZ(0px)", transition: "transform 0.3s ease" }}
-        className="flex flex-col flex-1 p-5"
+        className="flex flex-col flex-1 p-5 group-hover:translate-y-[-2px] transition-transform duration-200"
       >
         {/* Category tag */}
         {product.category && (

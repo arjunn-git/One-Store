@@ -1,6 +1,22 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ShieldCheck, Lock, Eye } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy & Data Protection (GDPR / DPDP) — One Store",
+  description:
+    "Learn how One Store protects customer data across India (DPDP Act) and the UK (UK-GDPR). Zero telemetry tracking without consent, bank-grade encrypted checkout.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy — One Store",
+    description: "Data security and privacy commitments for India and the UK.",
+    url: "https://one-store-gray.vercel.app/privacy",
+    type: "website",
+  },
+};
 
 export default function PrivacyPage() {
   return (

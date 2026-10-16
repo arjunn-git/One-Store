@@ -4,6 +4,22 @@ import { Footer } from "@/components/layout/Footer";
 import { getCategories, getProducts } from "@/lib/services/products";
 import Link from "next/link";
 import { ArrowRight, Layers } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Curated Departments & Collections",
+  description:
+    "Discover One Store collections: Precision Audio, Minimalist Carry, Horology, and Workspace Gear curated for India and the UK.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/categories",
+  },
+  openGraph: {
+    title: "Curated Departments — One Store",
+    description: "Explore collections organized by functional department.",
+    url: "https://one-store-gray.vercel.app/categories",
+    type: "website",
+  },
+};
 
 export default async function CategoriesPage() {
   const cookieStore = await cookies();

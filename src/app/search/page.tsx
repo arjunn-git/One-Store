@@ -6,6 +6,17 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { getProducts } from "@/lib/services/products";
 import { Search as SearchIcon, PackageX } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Search Catalog — One Store",
+  description:
+    "Search curated audio gear, minimalist carry, and precision timepieces across India & the UK.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 interface SearchPageProps {
   searchParams: Promise<{

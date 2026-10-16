@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { ShieldCheck, Truck, RotateCcw, Sparkles, Check, Gift } from "lucide-react";
 import Link from "next/link";
 import { useMarket } from "@/lib/context/MarketContext";
@@ -8,8 +8,8 @@ import { useMarket } from "@/lib/context/MarketContext";
 export function Hero3DStage() {
   const { market, setMarket } = useMarket();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rotate, setRotate] = useState({ x: 8, y: -6 });
-  const [isHovered, setIsHovered] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const rafId = useRef<number | null>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -22,30 +22,45 @@ export function Hero3DStage() {
     const rotX = ((y - centerY) / centerY) * -14;
     const rotY = ((x - centerX) / centerX) * 16;
 
-    setRotate({ x: rotX, y: rotY });
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      if (stageRef.current) {
+        stageRef.current.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+      }
+    });
+  };
+
+  const handleMouseEnter = () => {
+    if (stageRef.current) {
+      stageRef.current.style.transition = "transform 0.12s ease-out";
+    }
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
-    setRotate({ x: 6, y: -4 });
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    if (stageRef.current) {
+      stageRef.current.style.transition = "transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)";
+      stageRef.current.style.transform = "rotateX(6deg) rotateY(-4deg)";
+    }
   };
 
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="relative w-full max-w-4xl mx-auto my-10 py-6 px-4 perspective-1000 select-none cursor-pointer"
     >
       {/* 3D Parallax Main Stage */}
       <div
+        ref={stageRef}
         style={{
-          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+          transform: "rotateX(6deg) rotateY(-4deg)",
           transformStyle: "preserve-3d",
-          transition: isHovered ? "transform 0.12s ease-out" : "transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
+          transition: "transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
-        className="relative w-full min-h-[340px] md:min-h-[380px] rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#080B10]/90 to-[#102A43]/40 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-8 overflow-hidden backdrop-blur-md"
+        className="relative w-full min-h-[340px] md:min-h-[380px] rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#080B10]/90 to-[#102A43]/40 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-8 overflow-hidden backdrop-blur-md will-change-transform"
       >
         {/* 3D Background Glowing Depth Rings */}
         <div

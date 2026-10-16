@@ -1,5 +1,21 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions — One Store",
+  description:
+    "Legal terms and commercial conditions governing orders, guarantees, returns, and digital services across India and the United Kingdom.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/terms",
+  },
+  openGraph: {
+    title: "Terms & Conditions — One Store",
+    description: "Terms of service and digital sales agreements for One Store.",
+    url: "https://one-store-gray.vercel.app/terms",
+    type: "website",
+  },
+};
 
 export default function TermsPage() {
   return (

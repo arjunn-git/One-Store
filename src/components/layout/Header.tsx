@@ -171,6 +171,7 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#9CAFC3]">
           <Link
             href="/products"
+            prefetch={true}
             className={`hover:text-[#FFFFFF] transition-colors ${
               pathname === "/products" ? "text-[#7DD3FC] font-semibold" : ""
             }`}
@@ -179,6 +180,7 @@ export function Header() {
           </Link>
           <Link
             href="/categories"
+            prefetch={true}
             className={`hover:text-[#FFFFFF] transition-colors ${
               pathname === "/categories" ? "text-[#7DD3FC] font-semibold" : ""
             }`}
@@ -187,6 +189,7 @@ export function Header() {
           </Link>
           <Link
             href="/offers"
+            prefetch={true}
             className={`hover:text-[#FFFFFF] transition-colors ${
               pathname === "/offers" ? "text-[#7DD3FC] font-semibold" : ""
             }`}
@@ -195,6 +198,7 @@ export function Header() {
           </Link>
           <Link
             href="/about"
+            prefetch={true}
             className={`hover:text-[#FFFFFF] transition-colors ${
               pathname === "/about" ? "text-[#7DD3FC] font-semibold" : ""
             }`}
@@ -203,6 +207,7 @@ export function Header() {
           </Link>
           <Link
             href="/support"
+            prefetch={true}
             className={`hover:text-[#FFFFFF] transition-colors ${
               pathname === "/support" ? "text-[#7DD3FC] font-semibold" : ""
             }`}
@@ -215,6 +220,7 @@ export function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/search"
+            prefetch={true}
             aria-label="Search"
             className="flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
           >
@@ -224,6 +230,7 @@ export function Header() {
           {/* Wishlist Link */}
           <Link
             href="/wishlist"
+            prefetch={true}
             aria-label="Wishlist"
             title="Saved Essentials"
             className="relative flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"

@@ -2,6 +2,22 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { Sparkles, Shield, Compass, ArrowRight } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About One Store — Engineered Lifestyle, Precision & Craft",
+  description:
+    "Learn about One Store's vision: studio-grade acoustics, CNC-machined workspace tools, and surgical steel horology curated for customers in India and the UK.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/about",
+  },
+  openGraph: {
+    title: "About One Store — Engineered Lifestyle, Precision & Craft",
+    description: "Curated dual-market commerce connecting India and the United Kingdom.",
+    url: "https://one-store-gray.vercel.app/about",
+    type: "website",
+  },
+};
 
 export default function AboutPage() {
   return (

@@ -174,3 +174,25 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #7DD3FC;
 }
+
+/* Fast UI Actioning & Instant Tap Responsiveness */
+button,
+a,
+[role="button"],
+input[type="submit"] {
+  touch-action: manipulation;
+}
+
+button:active:not(:disabled),
+a:active:not(.no-tap-effect),
+[role="button"]:active:not(:disabled) {
+  transform: scale(0.97);
+  transition: transform 0.05s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+/* Hardware accelerated layer promotions for 60fps interaction */
+.will-change-transform {
+  will-change: transform;
+  transform: translateZ(0);
+}
+

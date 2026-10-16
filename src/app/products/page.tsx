@@ -6,6 +6,23 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { getProducts, getCategories } from "@/lib/services/products";
 import Link from "next/link";
 import { PackageOpen } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "All Products — Curated Lifestyle, Audio & Minimalist Gear",
+  description:
+    "Explore our complete dual-market catalogue: studio acoustics, minimalist carry, and precision timepieces with fast tracked shipping to India & the UK.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/products",
+  },
+  openGraph: {
+    title: "All Products — One Store Curated Commerce",
+    description:
+      "Browse curated studio audio, daily minimalist carry, and precision chronographs with dual-market pricing in INR (₹) and GBP (£).",
+    url: "https://one-store-gray.vercel.app/products",
+    type: "website",
+  },
+};
 
 interface ProductsPageProps {
   searchParams: Promise<{

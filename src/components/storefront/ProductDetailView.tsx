@@ -31,7 +31,7 @@ interface ProductDetailViewProps {
 
 export function ProductDetailView({ product }: ProductDetailViewProps) {
   const { market, setMarket } = useMarket();
-  const { addItem } = useCart();
+  const { addItem, setIsOpen } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isFav = isInWishlist(product.id);
 
@@ -59,6 +59,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     if (isOutOfStock || !isAvailableInCurrentMarket) return;
     addItem(product, selectedVariant, quantity);
     setAddedToCart(true);
+    setIsOpen(true);
     setTimeout(() => {
       setAddedToCart(false);
     }, 2500);
@@ -75,6 +76,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               <img
                 src={product.images[activeImageIndex] || product.images[0]}
                 alt={product.name}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover rounded-xl"
               />
             ) : (

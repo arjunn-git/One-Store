@@ -6,6 +6,20 @@ import { Hero3DStage } from "@/components/storefront/Hero3DStage";
 import { getProducts } from "@/lib/services/products";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "One Store — Curated Commerce for India & the UK",
+  description:
+    "Engineered lifestyle, studio acoustics, minimalist carry, and precision chronographs. Dual-market checkout in INR (₹) and GBP (£) with fully insured express delivery.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app",
+    languages: {
+      "en-IN": "https://one-store-gray.vercel.app/?country=IN",
+      "en-GB": "https://one-store-gray.vercel.app/?country=UK",
+    },
+  },
+};
 
 export default async function Home() {
   const cookieStore = await cookies();

@@ -2,6 +2,22 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { RotateCcw, ShieldCheck, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "14-Day Returns & Refund Policy — One Store",
+  description:
+    "Risk-free shopping with 14-day hassle-free returns across India and the United Kingdom. Simple prepaid returns and 1-year product warranty.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/returns-policy",
+  },
+  openGraph: {
+    title: "14-Day Returns & Refund Policy — One Store",
+    description: "Hassle-free return guarantees in India and the UK.",
+    url: "https://one-store-gray.vercel.app/returns-policy",
+    type: "website",
+  },
+};
 
 export default function ReturnsPolicyPage() {
   return (

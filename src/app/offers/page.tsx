@@ -2,6 +2,22 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { Tag, Sparkles, ArrowRight, Truck, Percent, Gift } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Exclusive Offers & Launch Discounts (LAUNCH10)",
+  description:
+    "Unlock special promotional discounts and complimentary express air delivery in India (INR) and the UK (GBP). Use code LAUNCH10 at checkout.",
+  alternates: {
+    canonical: "https://one-store-gray.vercel.app/offers",
+  },
+  openGraph: {
+    title: "Exclusive Offers & Launch Perks — One Store",
+    description: "Get 10% off with promo code LAUNCH10 plus free shipping above ₹2,999 / £40.",
+    url: "https://one-store-gray.vercel.app/offers",
+    type: "website",
+  },
+};
 
 export default function OffersPage() {
   return (
