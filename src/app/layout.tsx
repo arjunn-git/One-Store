@@ -129,6 +129,7 @@ import { MarketProvider } from "@/lib/context/MarketContext";
 import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { WelcomeScreen } from "@/components/storefront/WelcomeScreen";
 
 export default function RootLayout({
   children,
@@ -145,7 +146,10 @@ export default function RootLayout({
         <GoogleAnalytics />
         <MarketProvider>
           <CartProvider>
-            <WishlistProvider>{children}</WishlistProvider>
+            <WishlistProvider>
+              <WelcomeScreen />
+              {children}
+            </WishlistProvider>
           </CartProvider>
         </MarketProvider>
       </body>

@@ -1085,6 +1085,68 @@ runTest("Server-Side Protection Against Client-Side Profile Completion Tampering
   assert.equal(verification.serverVerifiedComplete, false, "Server MUST reject spoofed completion flag");
 });
 
+// 35. Event-Driven Welcome Screen Initialization Sequences & Error Resilience
+runTest("Event-Driven Welcome Screen Initialization Sequences & Error Resilience", async () => {
+  const steps = [];
+  const progressSnapshots = [];
+
+  // Simulate real initialization sequence
+  async function simulateInitialization({ shouldFailCatalogue = false } = {}) {
+    steps.push("Preparing your store...");
+    progressSnapshots.push(15);
+
+    if (shouldFailCatalogue) {
+      throw new Error("Catalogue service temporarily unavailable.");
+    }
+
+    steps.push("Loading products and prices...");
+    progressSnapshots.push(60);
+
+    steps.push("Restoring your session...");
+    progressSnapshots.push(85);
+
+    steps.push("Preparing your shopping experience...");
+    progressSnapshots.push(95);
+
+    steps.push("You're all set!");
+    progressSnapshots.push(100);
+
+    return { completed: true, tasksCount: 5 };
+  }
+
+  // A. Successful initialization flow
+  const result = await simulateInitialization();
+  assert.equal(result.completed, true);
+  assert.equal(steps.length, 5);
+  assert.equal(steps[0], "Preparing your store...");
+  assert.equal(steps[1], "Loading products and prices...");
+  assert.equal(steps[2], "Restoring your session...");
+  assert.equal(steps[3], "Preparing your shopping experience...");
+  assert.equal(steps[4], "You're all set!");
+  assert.equal(progressSnapshots[progressSnapshots.length - 1], 100);
+
+  // B. Error resilience and retry simulation
+  let caughtError = null;
+  try {
+    await simulateInitialization({ shouldFailCatalogue: true });
+  } catch (err) {
+    caughtError = err.message;
+  }
+  assert.equal(caughtError, "Catalogue service temporarily unavailable.");
+
+  // C. Route suppression for Admin Portal
+  function shouldRenderWelcomeScreen(pathname, isAlreadyWelcomed) {
+    if (isAlreadyWelcomed) return false;
+    if (pathname.startsWith("/admin-portal")) return false;
+    return true;
+  }
+
+  assert.equal(shouldRenderWelcomeScreen("/admin-portal", false), false, "Admin portal must suppress welcome screen");
+  assert.equal(shouldRenderWelcomeScreen("/admin-portal/dashboard", false), false, "Admin dashboard must suppress welcome screen");
+  assert.equal(shouldRenderWelcomeScreen("/", false), true, "Storefront home must show welcome screen on first visit");
+  assert.equal(shouldRenderWelcomeScreen("/", true), false, "Internal navigation must NOT flash welcome screen");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

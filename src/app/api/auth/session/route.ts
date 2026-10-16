@@ -1,6 +1,43 @@
 import { NextResponse } from "next/server";
-import { isAdminEmail } from "@/lib/services/auth";
+import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+
+export async function GET() {
+  try {
+    let email: string | null = null;
+    let role: string = "customer";
+
+    if (isLiveSupabaseConfigured()) {
+      try {
+        const supabase = await createClient();
+        const { data } = await supabase.auth.getUser();
+        if (data.user?.email) {
+          email = data.user.email.toLowerCase().trim();
+        }
+      } catch {
+        // Fallback to cookies
+      }
+    }
+
+    if (!email) {
+      const cookieStore = await cookies();
+      email = cookieStore.get("one_store_user_email")?.value || null;
+      role = cookieStore.get("one_store_user_role")?.value || "customer";
+    }
+
+    const isAdmin = email ? isAdminEmail(email) : false;
+
+    return NextResponse.json({
+      success: true,
+      authenticated: !!email,
+      user: email ? { email, role: isAdmin ? "owner" : role, isAdmin } : null,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Error reading session";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
