@@ -958,9 +958,9 @@ export function UserProfileClient({
                     onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
                     className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   >
-                    <option value="Home">Home</option>
-                    <option value="Work">Work / Office</option>
-                    <option value="Other">Other</option>
+                    <option value="Home" className="bg-[#080B10] text-[#FFFFFF]">Home</option>
+                    <option value="Work" className="bg-[#080B10] text-[#FFFFFF]">Work / Office</option>
+                    <option value="Other" className="bg-[#080B10] text-[#FFFFFF]">Other</option>
                   </select>
                 </div>
 
@@ -976,8 +976,8 @@ export function UserProfileClient({
                     }
                     className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   >
-                    <option value="IN">India (₹ INR)</option>
-                    <option value="GB">United Kingdom (£ GBP)</option>
+                    <option value="IN" className="bg-[#080B10] text-[#FFFFFF]">India (₹ INR)</option>
+                    <option value="GB" className="bg-[#080B10] text-[#FFFFFF]">United Kingdom (£ GBP)</option>
                   </select>
                 </div>
 
@@ -1325,8 +1325,12 @@ export function UserProfileClient({
                   onChange={(e) => handleMarketChange(e.target.value as "IN" | "GB")}
                   className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 >
-                  <option value="IN">India (₹ INR - Razorpay &amp; Express Domestic Dispatch)</option>
-                  <option value="GB">United Kingdom (£ GBP - Stripe &amp; Royal Mail Tracked)</option>
+                  <option value="IN" className="bg-[#080B10] text-[#FFFFFF]">
+                    India (₹ INR - Razorpay &amp; Express Domestic Dispatch)
+                  </option>
+                  <option value="GB" className="bg-[#080B10] text-[#FFFFFF]">
+                    United Kingdom (£ GBP - Stripe &amp; Royal Mail Tracked)
+                  </option>
                 </select>
                 <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
               </div>
