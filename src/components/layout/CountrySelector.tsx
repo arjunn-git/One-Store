@@ -49,22 +49,6 @@ export function CountrySelector({ compact = false, className = "" }: CountrySele
   const selectMarket = (code: MarketCode) => {
     setIsOpen(false);
     if (code === market) return;
-    try {
-      fetch("/api/activity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "MARKET_SWITCH",
-          action: `Switched store to ${code === "GB" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}`,
-          market: code,
-          currency: code === "GB" ? "GBP" : "INR",
-          resourceType: "storefront",
-          details: { previousMarket: market, newMarket: code },
-        }),
-      }).catch(() => {});
-    } catch {
-      // Ignored
-    }
     setMarket(code);
   };
 

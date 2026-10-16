@@ -86,7 +86,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (typeof window !== "undefined") {
-      window.location.reload();
+      window.dispatchEvent(new CustomEvent("one_store_market_change", { detail: { market: newMarket } }));
     }
   };
 

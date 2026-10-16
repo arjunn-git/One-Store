@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLiveSupabaseConfigured } from "./auth";
 import type { ActivityEvent, ActivityEventType } from "@/lib/types/database";
@@ -16,10 +18,28 @@ export interface ActiveSessionRecord {
   lastActiveAt: number;
 }
 
+const ACTIVITY_FILE = path.join(process.cwd(), ".system_activity_stream.json");
+
+function loadPersistedActivities(): ActivityEvent[] {
+  try {
+    if (fs.existsSync(ACTIVITY_FILE)) {
+      const data = fs.readFileSync(ACTIVITY_FILE, "utf-8");
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+}
+
+function persistActivities(events: ActivityEvent[]) {
+  try {
+    fs.writeFileSync(ACTIVITY_FILE, JSON.stringify(events.slice(0, 200)), "utf-8");
+  } catch {}
+}
+
 function getActivityStream(): ActivityEvent[] {
   if (!globalThis.__one_store_activity_stream__) {
-    // Genuine live activity stream starts completely empty with zero fake/mocked entries
-    globalThis.__one_store_activity_stream__ = [];
+    globalThis.__one_store_activity_stream__ = loadPersistedActivities();
   }
   return globalThis.__one_store_activity_stream__;
 }
@@ -153,6 +173,7 @@ export async function recordActivity(event: {
   if (stream.length > 200) {
     stream.length = 200;
   }
+  persistActivities(stream);
 
   // Also persist to Supabase activity_events & audit_logs in background if configured
   if (isLiveSupabaseConfigured()) {
@@ -204,6 +225,7 @@ export async function getRecentActivities(options?: {
   market?: "IN" | "GB";
 }): Promise<ActivityEvent[]> {
   const limit = Math.min(options?.limit || 50, 100);
+  const dbEvents: ActivityEvent[] = [];
 
   // 1. Try querying Supabase activity_events table if configured
   if (isLiveSupabaseConfigured()) {
@@ -226,31 +248,44 @@ export async function getRecentActivities(options?: {
       }
 
       const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((row) => ({
-          id: row.id,
-          type: row.type as ActivityEventType,
-          action: row.action,
-          actor: row.actor,
-          authUserId: row.auth_user_id || undefined,
-          anonymousSessionId: row.anonymous_session_id || undefined,
-          market: row.market,
-          currency: row.currency,
-          resourceType: row.resource_type,
-          resourceId: row.resource_id || undefined,
-          details: row.details || {},
-          ipAddress: row.ip_address || undefined,
-          timestamp: row.created_at,
-        }));
+      if (!error && Array.isArray(data)) {
+        data.forEach((row) => {
+          dbEvents.push({
+            id: row.id,
+            type: row.type as ActivityEventType,
+            action: row.action,
+            actor: row.actor,
+            authUserId: row.auth_user_id || undefined,
+            anonymousSessionId: row.anonymous_session_id || undefined,
+            market: row.market,
+            currency: row.currency,
+            resourceType: row.resource_type,
+            resourceId: row.resource_id || undefined,
+            details: row.details || {},
+            ipAddress: row.ip_address || undefined,
+            timestamp: row.created_at,
+          });
+        });
       }
     } catch {
-      // Fall through to memory buffer
+      // Fall through to file/memory buffer
     }
   }
 
-  // 2. Query in-memory ring buffer
+  // 2. Query file-backed in-memory ring buffer
   const stream = getActivityStream();
-  let filtered = [...stream];
+
+  // Combine and deduplicate
+  const seenIds = new Set<string>();
+  const combined: ActivityEvent[] = [];
+  for (const e of [...dbEvents, ...stream]) {
+    if (!seenIds.has(e.id)) {
+      seenIds.add(e.id);
+      combined.push(e);
+    }
+  }
+
+  let filtered = combined;
 
   if (options?.type && options.type !== "ALL") {
     filtered = filtered.filter((e) => e.type === options.type);
@@ -267,5 +302,6 @@ export async function getRecentActivities(options?: {
     }
   }
 
+  filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return filtered.slice(0, limit);
 }

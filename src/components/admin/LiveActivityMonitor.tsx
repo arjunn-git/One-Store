@@ -27,8 +27,31 @@ interface LiveActivityMonitorProps {
 
 type ConnectionState = "connecting" | "connected" | "paused" | "reconnecting" | "error";
 
+interface ActivityCounts {
+  total: number;
+  orders: number;
+  payments: number;
+  cart: number;
+  marketSwitches: number;
+  auth: number;
+  support: number;
+  product: number;
+}
+
+const FILTER_LABELS: Record<string, string> = {
+  ALL: "All Activities",
+  ORDERS: "Orders",
+  PAYMENTS: "Payments",
+  SUPPORT: "Support Inquiries",
+  CART: "Cart Changes",
+  MARKET: "Market Switches",
+  AUTH: "Logins / Signups",
+  BROWSING: "Browsing & Searches",
+};
+
 export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivityMonitorProps) {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const [counts, setCounts] = useState<ActivityCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLivePolling, setIsLivePolling] = useState(true);
   const [connectionState, setConnectionState] = useState<ConnectionState>("connecting");
@@ -36,6 +59,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
   const [activeShoppers, setActiveShoppers] = useState<number | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [newEventsCount, setNewEventsCount] = useState(0);
+  const [testingEvent, setTestingEvent] = useState(false);
   const [, setTick] = useState(0);
 
   const previousActivitiesRef = useRef<Set<string>>(new Set());
@@ -83,6 +107,9 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
         }
 
         setActivities(data.activities);
+        if (data.counts) {
+          setCounts(data.counts);
+        }
         setActiveShoppers(typeof data.activeShoppersCount === "number" ? data.activeShoppersCount : 0);
         setLastRefreshed(new Date());
         setConnectionState(isLivePolling ? "connected" : "paused");
@@ -316,13 +343,34 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         {[
           { id: "ALL", label: `All (${activities.length})` },
-          { id: "ORDERS", label: "Orders" },
-          { id: "PAYMENTS", label: "Payments" },
-          { id: "SUPPORT", label: "Support Inquiries" },
-          { id: "CART", label: "Cart Changes" },
-          { id: "MARKET", label: "Market Switches" },
-          { id: "AUTH", label: "Logins / Signups" },
-          { id: "BROWSING", label: "Browsing & Searches" },
+          {
+            id: "ORDERS",
+            label: `Orders (${counts?.orders ?? activities.filter((a) => ["ORDER_CREATED", "ORDER_STATUS_CHANGED", "ORDER_FULFILLED", "ORDER_CANCELLED", "ORDER_REFUNDED"].includes(a.type)).length})`,
+          },
+          {
+            id: "PAYMENTS",
+            label: `Payments (${counts?.payments ?? activities.filter((a) => ["PAYMENT_SUCCESS", "PAYMENT_FAILED", "PAYMENT_PENDING", "PAYMENT_REFUNDED"].includes(a.type)).length})`,
+          },
+          {
+            id: "SUPPORT",
+            label: `Support Inquiries (${counts?.support ?? activities.filter((a) => a.type === "SUPPORT_INQUIRY").length})`,
+          },
+          {
+            id: "CART",
+            label: `Cart Changes (${counts?.cart ?? activities.filter((a) => ["CART_ADD", "CART_REMOVE", "CART_UPDATED", "CART_CLEARED"].includes(a.type)).length})`,
+          },
+          {
+            id: "MARKET",
+            label: `Market Switches (${counts?.marketSwitches ?? activities.filter((a) => a.type === "MARKET_SWITCH").length})`,
+          },
+          {
+            id: "AUTH",
+            label: `Logins / Signups (${counts?.auth ?? activities.filter((a) => ["CUSTOMER_LOGIN", "CUSTOMER_SIGNUP", "CUSTOMER_LOGOUT"].includes(a.type)).length})`,
+          },
+          {
+            id: "BROWSING",
+            label: `Browsing & Searches (${counts?.product ?? activities.filter((a) => a.type === "PRODUCT_VIEW" || a.type === "SEARCH_QUERY").length})`,
+          },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -360,18 +408,60 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
             </button>
           </div>
         ) : filteredActivities.length === 0 ? (
-          <div className="py-12 text-center text-xs bg-[#080B10]/40 rounded-xl border border-[#243447] p-8 space-y-2">
+          <div className="py-12 text-center text-xs bg-[#080B10]/40 rounded-xl border border-[#243447] p-8 space-y-3">
             <Activity className="h-8 w-8 text-[#9CAFC3]/40 mx-auto" />
             <div className="text-sm font-bold text-[#FFFFFF]">
               {selectedFilter === "ALL"
                 ? "No live storefront activity recorded yet"
-                : `No activity found under "${selectedFilter}"`}
+                : `No activity found under "${FILTER_LABELS[selectedFilter] || selectedFilter}"`}
             </div>
             <p className="text-xs text-[#9CAFC3] max-w-md mx-auto">
               {selectedFilter === "ALL"
                 ? "Genuine live events will stream here automatically as shoppers browse, add items to cart, switch currencies between India (₹) and the UK (£), or complete checkouts."
-                : "Switch filters or clear filter to view all store events."}
+                : `Genuine ${FILTER_LABELS[selectedFilter] || selectedFilter} events will stream here automatically when shoppers perform this action on the store.`}
             </p>
+            <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
+              {selectedFilter !== "ALL" && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedFilter("ALL")}
+                  className="px-3 py-1.5 rounded-lg bg-[#080B10] border border-[#243447] text-[#7DD3FC] hover:bg-[#102A43] text-xs font-semibold transition-all"
+                >
+                  View All Store Events ({activities.length})
+                </button>
+              )}
+              {selectedFilter === "MARKET" && (
+                <button
+                  type="button"
+                  disabled={testingEvent}
+                  onClick={async () => {
+                    setTestingEvent(true);
+                    try {
+                      await fetch("/api/activity", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          type: "MARKET_SWITCH",
+                          action: "Market Switched to United Kingdom (£ GBP)",
+                          actor: "Admin Operator (onestore.auth@gmail.com)",
+                          market: "GB",
+                          currency: "GBP",
+                          resourceType: "storefront",
+                          details: { previousMarket: "IN", newMarket: "GB", currency: "GBP (£)" },
+                        }),
+                      });
+                      await fetchActivities(true);
+                    } finally {
+                      setTestingEvent(false);
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-lg shadow-[#7DD3FC]/10"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>{testingEvent ? "Emitting..." : "Test Market Switch Event (IN ⇄ GB)"}</span>
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           filteredActivities.map((act) => {
