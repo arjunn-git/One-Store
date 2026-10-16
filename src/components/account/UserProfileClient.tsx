@@ -36,6 +36,9 @@ import {
   validatePhoneNumber,
   type ProfileValidationResult,
 } from "@/lib/services/profile-validation";
+import { AddressAutocompleteInput } from "@/components/account/AddressAutocompleteInput";
+import { PostalCodeLookupInput } from "@/components/account/PostalCodeLookupInput";
+import { type AddressSuggestion } from "@/app/api/address/autocomplete/route";
 
 export interface ProfileData {
   id: string;
@@ -123,9 +126,169 @@ export function UserProfileClient({
   const [deliveryInstructions, setDeliveryInstructions] = useState(initialProfile.delivery_instructions || "");
   const [marketingConsent, setMarketingConsent] = useState(initialProfile.marketing_consent || false);
 
+  // Intelligent Address & Autocomplete State
+  const [selectedLocality, setSelectedLocality] = useState<string>("");
+  const [manuallyEditedCity, setManuallyEditedCity] = useState(!!initialProfile.city);
+  const [manuallyEditedState, setManuallyEditedState] = useState(!!initialProfile.state_or_province);
+  const [marketSwitchNotice, setMarketSwitchNotice] = useState<string | null>(null);
+
+  // Address modal lookup state
+  const [addressFormLocality, setAddressFormLocality] = useState<string>("");
+  const [manuallyEditedAddressCity, setManuallyEditedAddressCity] = useState(false);
+  const [manuallyEditedAddressState, setManuallyEditedAddressState] = useState(false);
+
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
+
+  const handleMarketChange = (newCountry: "IN" | "GB") => {
+    if (newCountry === country) return;
+
+    setCountry(newCountry);
+    setPreferredCurrency(newCountry === "GB" ? "GBP" : "INR");
+    setSelectedLocality("");
+
+    // Validate if current postal code matches new country rules
+    const isPostalValidForNew = validatePostalCode(postalCode, newCountry);
+    if (!isPostalValidForNew && postalCode.trim()) {
+      setPostalCode("");
+      setCity("");
+      setStateOrProvince("");
+      setManuallyEditedCity(false);
+      setManuallyEditedState(false);
+      setMarketSwitchNotice(
+        newCountry === "GB"
+          ? "Market switched to United Kingdom (£ GBP). Incompatible Indian address details reset. Please enter your UK postcode."
+          : "Market switched to India (₹ INR). Incompatible UK address details reset. Please enter your 6-digit Indian PIN code."
+      );
+    } else {
+      setMarketSwitchNotice(
+        newCountry === "GB"
+          ? "Market switched to United Kingdom (£ GBP). Please verify your address and mobile phone for Royal Mail dispatch."
+          : "Market switched to India (₹ INR). Please verify your address and mobile phone for domestic express dispatch."
+      );
+    }
+
+    // Check phone compatibility
+    const isPhoneValidForNew = validatePhoneNumber(phone, newCountry);
+    if (!isPhoneValidForNew && phone.trim()) {
+      setPhone("");
+    }
+  };
+
+  const handlePostalResolved = (data: {
+    city?: string;
+    state?: string;
+    district?: string;
+    localities?: string[];
+    selectedLocality?: string;
+    postalCode?: string;
+  }) => {
+    if (data.city && (!manuallyEditedCity || !city)) {
+      setCity(data.city);
+    }
+    if (data.state && (!manuallyEditedState || !stateOrProvince)) {
+      setStateOrProvince(data.state);
+    }
+    if (data.selectedLocality) {
+      setSelectedLocality(data.selectedLocality);
+    }
+    if (data.postalCode) {
+      setPostalCode(data.postalCode);
+    }
+  };
+
+  const handleSelectLocality = (loc: string) => {
+    setSelectedLocality(loc);
+    if (loc && !streetAddress.includes(loc)) {
+      setStreetAddress((prev) => (prev.trim() ? `${prev.trim()}, ${loc}` : loc));
+    }
+  };
+
+  const handleAutocompleteSelect = (suggestion: AddressSuggestion) => {
+    if (suggestion.street) {
+      setStreetAddress(suggestion.street);
+    } else if (suggestion.label) {
+      setStreetAddress(suggestion.label.split(",")[0]);
+    }
+
+    if (suggestion.locality) {
+      setSelectedLocality(suggestion.locality);
+    }
+
+    if (suggestion.city && (!manuallyEditedCity || !city)) {
+      setCity(suggestion.city);
+    }
+
+    if (suggestion.state && (!manuallyEditedState || !stateOrProvince)) {
+      setStateOrProvince(suggestion.state);
+    }
+
+    if (
+      suggestion.postalCode &&
+      (!postalCode || !validatePostalCode(postalCode, country as "IN" | "GB"))
+    ) {
+      setPostalCode(suggestion.postalCode);
+    }
+  };
+
+  const handleAddressModalMarketChange = (newCountry: "IN" | "GB") => {
+    const isPostalValid = validatePostalCode(addressForm.postal_code, newCountry);
+    const isPhoneValid = validatePhoneNumber(addressForm.phone, newCountry);
+
+    setAddressForm({
+      ...addressForm,
+      country_code: newCountry,
+      postal_code: isPostalValid ? addressForm.postal_code : "",
+      city: isPostalValid ? addressForm.city : "",
+      state_or_province: isPostalValid ? addressForm.state_or_province : "",
+      phone: isPhoneValid ? addressForm.phone : "",
+    });
+    setAddressFormLocality("");
+    setManuallyEditedAddressCity(false);
+    setManuallyEditedAddressState(false);
+  };
+
+  const handleAddressModalPostalResolved = (data: {
+    city?: string;
+    state?: string;
+    district?: string;
+    localities?: string[];
+    selectedLocality?: string;
+    postalCode?: string;
+  }) => {
+    setAddressForm((prev) => ({
+      ...prev,
+      city: data.city && (!manuallyEditedAddressCity || !prev.city) ? data.city : prev.city,
+      state_or_province:
+        data.state && (!manuallyEditedAddressState || !prev.state_or_province)
+          ? data.state
+          : prev.state_or_province,
+      postal_code: data.postalCode || prev.postal_code,
+    }));
+    if (data.selectedLocality) {
+      setAddressFormLocality(data.selectedLocality);
+    }
+  };
+
+  const handleAddressModalAutocompleteSelect = (suggestion: AddressSuggestion) => {
+    setAddressForm((prev) => ({
+      ...prev,
+      line1: suggestion.street || (suggestion.label ? suggestion.label.split(",")[0] : prev.line1),
+      line2: suggestion.locality || prev.line2,
+      city: suggestion.city && (!manuallyEditedAddressCity || !prev.city) ? suggestion.city : prev.city,
+      state_or_province:
+        suggestion.state && (!manuallyEditedAddressState || !prev.state_or_province)
+          ? suggestion.state
+          : prev.state_or_province,
+      postal_code:
+        suggestion.postalCode &&
+        (!prev.postal_code ||
+          !validatePostalCode(prev.postal_code, prev.country_code as "IN" | "GB"))
+          ? suggestion.postalCode
+          : prev.postal_code,
+    }));
+  };
 
   useEffect(() => {
     if (isAdmin) {
@@ -809,10 +972,7 @@ export function UserProfileClient({
                   <select
                     value={addressForm.country_code}
                     onChange={(e) =>
-                      setAddressForm({
-                        ...addressForm,
-                        country_code: e.target.value as "IN" | "GB",
-                      })
+                      handleAddressModalMarketChange(e.target.value as "IN" | "GB")
                     }
                     className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   >
@@ -854,16 +1014,20 @@ export function UserProfileClient({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                    Street Address (Line 1: Apartment, Flat, Unit, House No &amp; Street)
-                  </label>
-                  <input
-                    type="text"
-                    required
+                  <AddressAutocompleteInput
+                    id="address-modal-line1"
+                    label="Street Address (Line 1: Apartment, House No & Street)"
                     value={addressForm.line1}
-                    onChange={(e) => setAddressForm({ ...addressForm, line1: e.target.value })}
-                    placeholder="Flat 402, Skyline Residency, Bandra West"
-                    className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
+                    onChange={(val) => setAddressForm({ ...addressForm, line1: val })}
+                    onSelectSuggestion={handleAddressModalAutocompleteSelect}
+                    country={addressForm.country_code === "GB" ? "GB" : "IN"}
+                    placeholder={
+                      addressForm.country_code === "IN"
+                        ? "e.g. Flat 402, Skyline Residency, Bandra West"
+                        : "e.g. 10 Downing Street, Westminster"
+                    }
+                    required={true}
+                    helperText="Type 3 or more characters to see instant address suggestions."
                   />
                 </div>
 
@@ -881,6 +1045,25 @@ export function UserProfileClient({
                 </div>
 
                 <div>
+                  <PostalCodeLookupInput
+                    id="address-modal-postal"
+                    value={addressForm.postal_code}
+                    onChange={(val) => setAddressForm({ ...addressForm, postal_code: val })}
+                    onResolved={handleAddressModalPostalResolved}
+                    country={addressForm.country_code === "GB" ? "GB" : "IN"}
+                    selectedLocality={addressFormLocality}
+                    onSelectLocality={(loc) => {
+                      setAddressFormLocality(loc);
+                      setAddressForm((prev) => ({
+                        ...prev,
+                        line2: prev.line2 ? `${prev.line2}, ${loc}` : loc,
+                      }));
+                    }}
+                    required={true}
+                  />
+                </div>
+
+                <div>
                   <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
                     City / Town
                   </label>
@@ -888,7 +1071,10 @@ export function UserProfileClient({
                     type="text"
                     required
                     value={addressForm.city}
-                    onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, city: e.target.value });
+                      setManuallyEditedAddressCity(true);
+                    }}
                     placeholder={addressForm.country_code === "IN" ? "Mumbai" : "London"}
                     className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   />
@@ -902,26 +1088,11 @@ export function UserProfileClient({
                     type="text"
                     required
                     value={addressForm.state_or_province}
-                    onChange={(e) =>
-                      setAddressForm({ ...addressForm, state_or_province: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, state_or_province: e.target.value });
+                      setManuallyEditedAddressState(true);
+                    }}
                     placeholder={addressForm.country_code === "IN" ? "Maharashtra" : "Greater London"}
-                    className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                    {addressForm.country_code === "IN" ? "PIN Code (6 Digits)" : "Postcode (UK format)"}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.postal_code}
-                    onChange={(e) =>
-                      setAddressForm({ ...addressForm, postal_code: e.target.value })
-                    }
-                    placeholder={addressForm.country_code === "IN" ? "400050" : "SW1A 1AA"}
                     className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   />
                 </div>
@@ -1151,11 +1322,7 @@ export function UserProfileClient({
               <div className="relative">
                 <select
                   value={country}
-                  onChange={(e) => {
-                    const c = e.target.value;
-                    setCountry(c);
-                    setPreferredCurrency(c === "GB" ? "GBP" : "INR");
-                  }}
+                  onChange={(e) => handleMarketChange(e.target.value as "IN" | "GB")}
                   className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 >
                   <option value="IN">India (₹ INR - Razorpay &amp; Express Domestic Dispatch)</option>
@@ -1164,6 +1331,23 @@ export function UserProfileClient({
                 <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
               </div>
             </div>
+
+            {/* Market Switching Notification */}
+            {marketSwitchNotice && (
+              <div className="sm:col-span-2 p-3 rounded-xl bg-[#102A43]/60 border border-[#7DD3FC]/40 text-xs text-[#7DD3FC] flex items-center justify-between gap-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2.5">
+                  <Globe className="h-4 w-4 shrink-0 text-[#7DD3FC]" />
+                  <span>{marketSwitchNotice}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMarketSwitchNotice(null)}
+                  className="text-[#9CAFC3] hover:text-[#FFFFFF] p-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
 
             {/* Contact Mobile Phone Number */}
             <div className="space-y-1.5">
@@ -1204,31 +1388,59 @@ export function UserProfileClient({
               />
             </div>
 
-            {/* Street and Locality */}
-            <div className="space-y-1.5">
-              <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
-                Street Address and Locality *
-              </label>
-              <input
-                type="text"
-                required
+            {/* Street Address and Locality (With Intelligent Autocomplete) */}
+            <div className="space-y-1.5 sm:col-span-2">
+              <AddressAutocompleteInput
+                id="profile-street-address"
+                label="Street Address and Locality"
                 value={streetAddress}
-                onChange={(e) => setStreetAddress(e.target.value)}
-                placeholder="e.g. Skyline Residency, Bandra West"
-                className="w-full h-11 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
+                onChange={(val) => setStreetAddress(val)}
+                onSelectSuggestion={handleAutocompleteSelect}
+                country={country === "GB" ? "GB" : "IN"}
+                placeholder={
+                  country === "IN"
+                    ? "e.g. Skyline Residency, Bandra West, Mumbai"
+                    : "e.g. 10 Downing Street, Westminster, London"
+                }
+                required={true}
+                helperText="Type 3 or more characters to see instant address & locality suggestions from OpenStreetMap."
+              />
+            </div>
+
+            {/* Postal or PIN Code (With Intelligent Auto-Lookup & Locality Selector) */}
+            <div className="space-y-1.5">
+              <PostalCodeLookupInput
+                id="profile-postal-code"
+                value={postalCode}
+                onChange={(val) => setPostalCode(val)}
+                onResolved={handlePostalResolved}
+                country={country === "GB" ? "GB" : "IN"}
+                selectedLocality={selectedLocality}
+                onSelectLocality={handleSelectLocality}
+                required={true}
               />
             </div>
 
             {/* City or Town */}
             <div className="space-y-1.5">
-              <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
-                City or Town *
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
+                  City or Town *
+                </label>
+                {city && (
+                  <span className="text-[10px] text-[#7DD3FC]">
+                    {manuallyEditedCity ? "Customized" : "Auto-filled"}
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 required
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  setManuallyEditedCity(true);
+                }}
                 placeholder={country === "IN" ? "e.g. Mumbai" : "e.g. London"}
                 className="w-full h-11 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
               />
@@ -1236,38 +1448,26 @@ export function UserProfileClient({
 
             {/* State, Province, or Region */}
             <div className="space-y-1.5">
-              <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
-                State, Province, or Region *
-              </label>
-              <input
-                type="text"
-                required
-                value={stateOrProvince}
-                onChange={(e) => setStateOrProvince(e.target.value)}
-                placeholder={country === "IN" ? "e.g. Maharashtra" : "e.g. Greater London"}
-                className="w-full h-11 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-              />
-            </div>
-
-            {/* Postal or PIN Code */}
-            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
-                  {country === "IN" ? "PIN Code (6 digits) *" : "UK Postcode *"}
+                  State, Province, or Region *
                 </label>
-                {validatePostalCode(postalCode, country === "GB" ? "GB" : "IN") && (
-                  <span className="text-[10px] text-emerald-400 flex items-center gap-0.5">
-                    <Check className="h-3 w-3" /> Valid format
+                {stateOrProvince && (
+                  <span className="text-[10px] text-[#7DD3FC]">
+                    {manuallyEditedState ? "Customized" : "Auto-filled"}
                   </span>
                 )}
               </div>
               <input
                 type="text"
                 required
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                placeholder={country === "IN" ? "e.g. 400050" : "e.g. SW1A 1AA"}
-                className="w-full h-11 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] font-mono focus:outline-none focus:border-[#7DD3FC]"
+                value={stateOrProvince}
+                onChange={(e) => {
+                  setStateOrProvince(e.target.value);
+                  setManuallyEditedState(true);
+                }}
+                placeholder={country === "IN" ? "e.g. Maharashtra" : "e.g. Greater London"}
+                className="w-full h-11 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
               />
             </div>
 

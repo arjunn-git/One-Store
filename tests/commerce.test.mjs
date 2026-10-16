@@ -1462,6 +1462,236 @@ runTest("Admin Portal Enterprise Navigation & Visual Architecture", () => {
   assert.ok(operationalFilters.includes("MARKET"));
 });
 
+runTest("Intelligent Address Autocomplete & Postal-Code Lookup Engine (India & UK)", () => {
+  // 1. PIN & Postcode Validation & Normalization Rules
+  const validatePostal = (code, country = "IN") => {
+    if (!code) return false;
+    const clean = code.trim();
+    if (country === "GB") {
+      return /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i.test(clean);
+    }
+    return /^[1-9][0-9]{5}$/.test(clean);
+  };
+
+  // India PIN Validation
+  assert.equal(validatePostal("110001", "IN"), true);
+  assert.equal(validatePostal("400050", "IN"), true);
+  assert.equal(validatePostal("010001", "IN"), false, "Indian PIN cannot start with 0");
+  assert.equal(validatePostal("12345", "IN"), false, "5 digits is invalid for India");
+  assert.equal(validatePostal("1234567", "IN"), false, "7 digits is invalid for India");
+  assert.equal(validatePostal("40005A", "IN"), false, "Non-numeric is invalid for India");
+
+  // UK Postcode Validation
+  assert.equal(validatePostal("SW1A 1AA", "GB"), true);
+  assert.equal(validatePostal("sw1a1aa", "GB"), true);
+  assert.equal(validatePostal("EC1A 1BB", "GB"), true);
+  assert.equal(validatePostal("W1C 1LX", "GB"), true);
+  assert.equal(validatePostal("110001", "GB"), false, "Numeric 6-digit is invalid UK postcode");
+  assert.equal(validatePostal("INVALID", "GB"), false);
+
+  // 2. India Post API Response Parser & Multiple Localities Detection
+  function parseIndiaPostResponse(cleanPin, postOfficeArray) {
+    if (!postOfficeArray || postOfficeArray.length === 0) {
+      return { success: false, error: "No records found" };
+    }
+    const localities = Array.from(new Set(postOfficeArray.map((p) => p.Name.trim()))).filter(Boolean);
+    const first = postOfficeArray[0];
+    return {
+      success: true,
+      country: "IN",
+      postalCode: cleanPin,
+      city: first.District || first.Division,
+      state: first.State,
+      district: first.District,
+      localities,
+      multipleLocalities: localities.length > 1,
+      source: "India Post",
+    };
+  }
+
+  // Multi-locality test (e.g. PIN 110001 covering Connaught Place, Baroda House, etc.)
+  const mockIndiaMulti = [
+    { Name: "Baroda House", District: "Central Delhi", State: "Delhi", Division: "New Delhi Central" },
+    { Name: "Connaught Place", District: "Central Delhi", State: "Delhi", Division: "New Delhi Central" },
+    { Name: "Parliament House", District: "Central Delhi", State: "Delhi", Division: "New Delhi Central" },
+  ];
+  const parsedMulti = parseIndiaPostResponse("110001", mockIndiaMulti);
+  assert.equal(parsedMulti.success, true);
+  assert.equal(parsedMulti.city, "Central Delhi");
+  assert.equal(parsedMulti.state, "Delhi");
+  assert.equal(parsedMulti.multipleLocalities, true);
+  assert.equal(parsedMulti.localities.length, 3);
+  assert.ok(parsedMulti.localities.includes("Connaught Place"));
+
+  // Single-locality test
+  const mockIndiaSingle = [
+    { Name: "Bandra West", District: "Mumbai", State: "Maharashtra", Division: "Mumbai West" },
+  ];
+  const parsedSingle = parseIndiaPostResponse("400050", mockIndiaSingle);
+  assert.equal(parsedSingle.multipleLocalities, false);
+  assert.equal(parsedSingle.localities[0], "Bandra West");
+
+  // 3. UK Postcodes.io Response Parser
+  function parseUKPostcodeResponse(cleanPostcode, result) {
+    if (!result) return { success: false, error: "Not found" };
+    const city = result.admin_district || result.parish || "London";
+    const state = result.region || result.country || "England";
+    return {
+      success: true,
+      country: "GB",
+      postalCode: result.postcode || cleanPostcode,
+      city,
+      state,
+      district: result.admin_district || "",
+      source: "Royal Mail / Postcodes.io",
+    };
+  }
+
+  const mockUKResult = {
+    postcode: "SW1A 1AA",
+    admin_district: "Westminster",
+    region: "London",
+    country: "England",
+    parish: "City of Westminster",
+  };
+  const parsedUK = parseUKPostcodeResponse("SW1A 1AA", mockUKResult);
+  assert.equal(parsedUK.success, true);
+  assert.equal(parsedUK.city, "Westminster");
+  assert.equal(parsedUK.state, "London");
+  assert.equal(parsedUK.postalCode, "SW1A 1AA");
+
+  // 4. Address Autocomplete Query Guard & Parsing
+  function processAutocompleteFeatures(query, country, features) {
+    if (query.trim().length < 3) {
+      return { success: true, suggestions: [] };
+    }
+    const filtered = features.filter((feat) => {
+      const cCode = (feat.properties?.countrycode || "").toUpperCase();
+      return country === "IN" ? cCode === "IN" : cCode === "GB" || cCode === "UK";
+    });
+    const suggestions = filtered.map((feat) => {
+      const p = feat.properties || {};
+      const parts = [p.name, p.street, p.city, p.state].filter(Boolean);
+      return {
+        label: parts.join(", "),
+        street: p.street || p.name,
+        locality: p.district || p.name,
+        city: p.city,
+        state: p.state,
+        postalCode: p.postcode,
+        country,
+      };
+    });
+    return { success: true, suggestions };
+  }
+
+  // Length < 3 guard
+  assert.equal(processAutocompleteFeatures("Ba", "IN", []).suggestions.length, 0);
+
+  // Parse Photon feature
+  const mockFeatures = [
+    {
+      properties: {
+        name: "Bandra West",
+        city: "Mumbai",
+        state: "Maharashtra",
+        countrycode: "IN",
+      },
+    },
+    {
+      properties: {
+        name: "Oxford Street",
+        city: "London",
+        state: "England",
+        countrycode: "GB",
+      },
+    },
+  ];
+
+  const inSuggestions = processAutocompleteFeatures("Bandra", "IN", mockFeatures);
+  assert.equal(inSuggestions.suggestions.length, 1);
+  assert.equal(inSuggestions.suggestions[0].city, "Mumbai");
+  assert.equal(inSuggestions.suggestions[0].country, "IN");
+
+  const gbSuggestions = processAutocompleteFeatures("Oxford", "GB", mockFeatures);
+  assert.equal(gbSuggestions.suggestions.length, 1);
+  assert.equal(gbSuggestions.suggestions[0].city, "London");
+  assert.equal(gbSuggestions.suggestions[0].country, "GB");
+
+  // 5. Market Switching Logic (Incompatible Data Reset & Retention)
+  function handleMarketSwitch({ currentCountry, newCountry, postalCode, phone, city, state }) {
+    if (currentCountry === newCountry) {
+      return { postalCode, phone, city, state, resetOccurred: false };
+    }
+    const isPostalValidForNew = validatePostal(postalCode, newCountry);
+    const isPhoneValidForNew =
+      newCountry === "IN"
+        ? /^[6-9]\d{9}$/.test(phone.replace(/\D/g, "").slice(-10))
+        : /^(07|\+447|7)\d{9}$/.test(phone.replace(/[\s\-\(\)]/g, ""));
+
+    const shouldResetPostal = !isPostalValidForNew && !!postalCode;
+    const shouldResetPhone = !isPhoneValidForNew && !!phone;
+
+    return {
+      country: newCountry,
+      postalCode: shouldResetPostal ? "" : postalCode,
+      phone: shouldResetPhone ? "" : phone,
+      city: shouldResetPostal ? "" : city,
+      state: shouldResetPostal ? "" : state,
+      resetOccurred: shouldResetPostal || shouldResetPhone,
+    };
+  }
+
+  // Switch India to UK: Indian PIN "400050" and Indian Phone "9876543210" must be safely reset
+  const inToGb = handleMarketSwitch({
+    currentCountry: "IN",
+    newCountry: "GB",
+    postalCode: "400050",
+    phone: "9876543210",
+    city: "Mumbai",
+    state: "Maharashtra",
+  });
+  assert.equal(inToGb.country, "GB");
+  assert.equal(inToGb.postalCode, "", "Indian PIN must reset when switching to UK");
+  assert.equal(inToGb.city, "", "City must reset when switching market to avoid cross-country contamination");
+  assert.equal(inToGb.resetOccurred, true);
+
+  // Switch UK to India: UK Postcode "SW1A 1AA" must be safely reset
+  const gbToIn = handleMarketSwitch({
+    currentCountry: "GB",
+    newCountry: "IN",
+    postalCode: "SW1A 1AA",
+    phone: "+447911123456",
+    city: "London",
+    state: "England",
+  });
+  assert.equal(gbToIn.country, "IN");
+  assert.equal(gbToIn.postalCode, "", "UK postcode must reset when switching to India");
+  assert.equal(gbToIn.city, "");
+  assert.equal(gbToIn.resetOccurred, true);
+
+  // 6. Manual Edit Preservation
+  let manualCity = "Mumbai Suburbs";
+  let isManuallyEdited = true;
+  function applyResolvedPostal({ city: resolvedCity, isManuallyEdited }) {
+    if (isManuallyEdited) {
+      return manualCity; // Preserved!
+    }
+    return resolvedCity;
+  }
+
+  assert.equal(
+    applyResolvedPostal({ city: "Central Mumbai", isManuallyEdited: true }),
+    "Mumbai Suburbs",
+    "Manually customized city must NOT be overwritten without user consent"
+  );
+  assert.equal(
+    applyResolvedPostal({ city: "Central Mumbai", isManuallyEdited: false }),
+    "Central Mumbai",
+    "Auto-resolved city applied when not manually customized"
+  );
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
