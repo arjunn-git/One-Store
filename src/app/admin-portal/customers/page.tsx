@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -181,123 +181,258 @@ export default function AdminPortalCustomersPage() {
                   const hasAddress = c.street_address || c.city || c.postal_code;
 
                   return (
-                    <tr key={c.id} className="hover:bg-[#102A43]/30 transition-colors">
-                      {/* Customer Name & Role */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-[#FFFFFF] text-sm flex items-center gap-2">
-                          <span>{c.full_name || "Guest Account"}</span>
-                          {c.role === "admin" && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#7DD3FC]/15 text-[#7DD3FC] border border-[#7DD3FC]/30">
-                              ADMIN
-                            </span>
+                    <Fragment key={c.id}>
+                      <tr className={`hover:bg-[#102A43]/30 transition-colors ${isExpanded ? "bg-[#102A43]/20" : ""}`}>
+                        {/* Customer Name & Role */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-[#FFFFFF] text-sm flex items-center gap-2">
+                            <span>{c.full_name || "Guest Account"}</span>
+                            {c.role === "admin" && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#7DD3FC]/15 text-[#7DD3FC] border border-[#7DD3FC]/30">
+                                ADMIN
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono text-[11px] text-[#9CAFC3] mt-0.5">
+                            ID: {c.auth_user_id ? `${c.auth_user_id.slice(0, 10)}...` : c.id}
+                          </div>
+                          <div className="text-[10px] text-[#9CAFC3] flex items-center gap-1 mt-0.5">
+                            <Clock className="h-3 w-3" />
+                            <span>Joined {new Date(c.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </td>
+
+                        {/* Contact Info */}
+                        <td className="py-4 px-4 space-y-1">
+                          <div className="flex items-center gap-1.5 text-[#FFFFFF]">
+                            <Mail className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                            <span className="font-medium">{c.email}</span>
+                          </div>
+                          {c.phone_number ? (
+                            <div className="flex items-center gap-1.5 text-xs text-[#9CAFC3]">
+                              <Phone className="h-3 w-3 text-emerald-400" />
+                              <span className="font-mono">{c.phone_number}</span>
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-amber-400">Phone missing</div>
                           )}
-                        </div>
-                        <div className="font-mono text-[11px] text-[#9CAFC3] mt-0.5">
-                          ID: {c.auth_user_id ? `${c.auth_user_id.slice(0, 10)}...` : c.id}
-                        </div>
-                        <div className="text-[10px] text-[#9CAFC3] flex items-center gap-1 mt-0.5">
-                          <Clock className="h-3 w-3" />
-                          <span>Joined {new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Contact Info */}
-                      <td className="py-4 px-4 space-y-1">
-                        <div className="flex items-center gap-1.5 text-[#FFFFFF]">
-                          <Mail className="h-3.5 w-3.5 text-[#7DD3FC]" />
-                          <span className="font-medium">{c.email}</span>
-                        </div>
-                        {c.phone_number ? (
-                          <div className="flex items-center gap-1.5 text-xs text-[#9CAFC3]">
-                            <Phone className="h-3 w-3 text-emerald-400" />
-                            <span className="font-mono">{c.phone_number}</span>
-                          </div>
-                        ) : (
-                          <div className="text-[11px] text-amber-400">Phone missing</div>
-                        )}
-                      </td>
-
-                      {/* Profile Status */}
-                      <td className="py-4 px-4">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="font-semibold text-[#FFFFFF]">
-                              {c.is_profile_complete ? "100% Complete" : `${c.profile_completion_percentage || 0}%`}
-                            </span>
-                            {c.is_profile_complete ? (
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                            ) : (
-                              <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
-                            )}
-                          </div>
-                          <div className="h-1.5 w-28 bg-[#080B10] rounded-full overflow-hidden border border-[#243447]">
-                            <div
-                              className={`h-full transition-all rounded-full ${
-                                c.is_profile_complete ? "bg-emerald-400" : "bg-amber-400"
-                              }`}
-                              style={{ width: `${Math.min(100, Math.max(10, c.profile_completion_percentage || 0))}%` }}
-                            />
-                          </div>
-                          <div className="text-[10px] text-[#9CAFC3]">
-                            {c.is_profile_complete ? "Eligible for checkout" : "Profile incomplete"}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Primary Address */}
-                      <td className="py-4 px-4 max-w-xs">
-                        {hasAddress ? (
-                          <div className="space-y-0.5 text-xs">
-                            <div className="text-[#FFFFFF] font-medium truncate">
-                              {[c.apartment_unit, c.street_address].filter(Boolean).join(", ")}
+                        {/* Profile Status */}
+                        <td className="py-4 px-4">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-semibold text-[#FFFFFF]">
+                                {c.is_profile_complete ? "100% Complete" : `${c.profile_completion_percentage || 0}%`}
+                              </span>
+                              {c.is_profile_complete ? (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
+                              )}
                             </div>
-                            <div className="text-[#9CAFC3] text-[11px]">
-                              {[c.city, c.state_or_province, c.postal_code].filter(Boolean).join(", ")}
+                            <div className="h-1.5 w-28 bg-[#080B10] rounded-full overflow-hidden border border-[#243447]">
+                              <div
+                                className={`h-full transition-all rounded-full ${
+                                  c.is_profile_complete ? "bg-emerald-400" : "bg-amber-400"
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(10, c.profile_completion_percentage || 0))}%` }}
+                              />
                             </div>
-                            {c.delivery_instructions && (
-                              <div className="text-[10px] text-[#7DD3FC] italic truncate">
-                                Note: {c.delivery_instructions}
+                            <div className="text-[10px] text-[#9CAFC3]">
+                              {c.is_profile_complete ? "Eligible for checkout" : "Profile incomplete"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Primary Address */}
+                        <td className="py-4 px-4 max-w-xs">
+                          {hasAddress ? (
+                            <div className="space-y-0.5 text-xs">
+                              <div className="text-[#FFFFFF] font-medium truncate">
+                                {[c.apartment_unit, c.street_address].filter(Boolean).join(", ")}
                               </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-[#9CAFC3] italic">No address on file</span>
-                        )}
-                      </td>
+                              <div className="text-[#9CAFC3] text-[11px]">
+                                {[c.city, c.state_or_province, c.postal_code].filter(Boolean).join(", ")}
+                              </div>
+                              {c.delivery_instructions && (
+                                <div className="text-[10px] text-[#7DD3FC] italic truncate">
+                                  Note: {c.delivery_instructions}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-[#9CAFC3] italic">No address on file</span>
+                          )}
+                        </td>
 
-                      {/* Orders & Lifetime Spend */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-[#FFFFFF] flex items-center gap-1.5">
-                          <ShoppingBag className="h-3.5 w-3.5 text-[#7DD3FC]" />
-                          <span>{c.orders_count || 0} order(s)</span>
-                        </div>
-                        {c.total_spent_inr > 0 && (
-                          <div className="text-[11px] text-emerald-400 font-semibold">
-                            ₹{c.total_spent_inr.toLocaleString("en-IN")}
+                        {/* Orders & Lifetime Spend */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-[#FFFFFF] flex items-center gap-1.5">
+                            <ShoppingBag className="h-3.5 w-3.5 text-[#7DD3FC]" />
+                            <span>{c.orders_count || 0} order(s)</span>
                           </div>
-                        )}
-                        {c.total_spent_gbp > 0 && (
-                          <div className="text-[11px] text-emerald-400 font-semibold">
-                            £{c.total_spent_gbp.toFixed(2)}
-                          </div>
-                        )}
-                        {c.total_spent_inr === 0 && c.total_spent_gbp === 0 && (
-                          <div className="text-[10px] text-[#9CAFC3]">No spend yet</div>
-                        )}
-                      </td>
+                          {c.total_spent_inr > 0 && (
+                            <div className="text-[11px] text-emerald-400 font-semibold">
+                              ₹{c.total_spent_inr.toLocaleString("en-IN")}
+                            </div>
+                          )}
+                          {c.total_spent_gbp > 0 && (
+                            <div className="text-[11px] text-emerald-400 font-semibold">
+                              £{c.total_spent_gbp.toFixed(2)}
+                            </div>
+                          )}
+                          {c.total_spent_inr === 0 && c.total_spent_gbp === 0 && (
+                            <div className="text-[10px] text-[#9CAFC3]">No spend yet</div>
+                          )}
+                        </td>
 
-                      {/* Actions */}
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                          className="px-2.5 py-1.5 rounded-lg bg-[#080B10] hover:bg-[#102A43] border border-[#243447] text-[#7DD3FC] text-xs font-semibold inline-flex items-center gap-1 transition-all"
-                        >
-                          <span>{isExpanded ? "Hide" : "Details"}</span>
-                          {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                        </button>
-                      </td>
-                    </tr>
+                        {/* Actions */}
+                        <td className="py-4 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#080B10] hover:bg-[#102A43] border border-[#243447] text-[#7DD3FC] text-xs font-semibold inline-flex items-center gap-1 transition-all"
+                          >
+                            <span>{isExpanded ? "Hide" : "Details"}</span>
+                            {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Expanded Details Row */}
+                      {isExpanded && (
+                        <tr className="bg-[#0b131e] border-y border-[#243447]">
+                          <td colSpan={6} className="p-4 sm:p-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                              {/* 1. Profile & Verification Details */}
+                              <div className="rounded-xl border border-[#243447] bg-[#102A43]/20 p-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-[#FFFFFF] border-b border-[#243447] pb-2">
+                                  <Users className="h-4 w-4 text-[#7DD3FC]" />
+                                  <span>Customer Profile</span>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[11px] text-[#9CAFC3]">Full Legal Name</div>
+                                  <div className="font-semibold text-[#FFFFFF]">{c.full_name || "Guest Account"}</div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[11px] text-[#9CAFC3]">Auth Email</div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[#FFFFFF] truncate">{c.email}</span>
+                                    <a
+                                      href={`mailto:${c.email}`}
+                                      className="text-[11px] text-[#7DD3FC] hover:underline"
+                                    >
+                                      Contact
+                                    </a>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[11px] text-[#9CAFC3]">Phone Number</div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[#FFFFFF]">{c.phone_number || "Not provided"}</span>
+                                    {c.phone_verified ? (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                        Verified
+                                      </span>
+                                    ) : c.phone_number ? (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                        Unverified
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[11px] text-[#9CAFC3]">Account / User ID</div>
+                                  <div className="font-mono text-[10px] text-[#9CAFC3] break-all bg-[#080B10] p-1.5 rounded border border-[#243447]">
+                                    {c.auth_user_id || c.id}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 2. Primary Shipping & Delivery Instructions */}
+                              <div className="rounded-xl border border-[#243447] bg-[#102A43]/20 p-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-[#FFFFFF] border-b border-[#243447] pb-2">
+                                  <MapPin className="h-4 w-4 text-[#7DD3FC]" />
+                                  <span>Delivery Address &amp; Instructions</span>
+                                </div>
+                                {hasAddress ? (
+                                  <div className="space-y-2">
+                                    {c.apartment_unit && (
+                                      <div>
+                                        <span className="text-[11px] text-[#9CAFC3]">Unit / Flat / Suite: </span>
+                                        <span className="font-medium text-[#FFFFFF]">{c.apartment_unit}</span>
+                                      </div>
+                                    )}
+                                    {c.street_address && (
+                                      <div>
+                                        <span className="text-[11px] text-[#9CAFC3]">Street: </span>
+                                        <span className="font-medium text-[#FFFFFF]">{c.street_address}</span>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="text-[11px] text-[#9CAFC3]">City &amp; Postal: </span>
+                                      <span className="font-medium text-[#FFFFFF]">
+                                        {[c.city, c.state_or_province, c.postal_code].filter(Boolean).join(", ")}
+                                      </span>
+                                    </div>
+                                    {c.delivery_instructions && (
+                                      <div className="mt-2 p-2 rounded-lg bg-[#080B10] border border-[#243447]">
+                                        <div className="text-[10px] uppercase font-bold text-[#7DD3FC] mb-0.5">
+                                          Delivery Gate Instructions
+                                        </div>
+                                        <div className="text-xs text-[#9CAFC3] italic">"{c.delivery_instructions}"</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="text-[#9CAFC3] italic py-2">
+                                    No shipping address registered yet. Address will be recorded during initial checkout.
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 3. Account Status & Lifetime Value */}
+                              <div className="rounded-xl border border-[#243447] bg-[#102A43]/20 p-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-[#FFFFFF] border-b border-[#243447] pb-2">
+                                  <ShoppingBag className="h-4 w-4 text-[#7DD3FC]" />
+                                  <span>Orders &amp; Account Health</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-[#080B10] p-2.5 rounded-lg border border-[#243447]">
+                                    <div className="text-[10px] text-[#9CAFC3]">Total Orders</div>
+                                    <div className="text-base font-bold text-[#FFFFFF]">{c.orders_count || 0}</div>
+                                  </div>
+                                  <div className="bg-[#080B10] p-2.5 rounded-lg border border-[#243447]">
+                                    <div className="text-[10px] text-[#9CAFC3]">Profile Setup</div>
+                                    <div className="text-base font-bold text-emerald-400">
+                                      {c.profile_completion_percentage || (c.is_profile_complete ? 100 : 50)}%
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[11px] text-[#9CAFC3]">Total Lifetime Spend:</div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-bold text-[#FFFFFF]">₹{c.total_spent_inr.toLocaleString("en-IN")}</span>
+                                    <span className="text-[#9CAFC3]">|</span>
+                                    <span className="font-bold text-[#FFFFFF]">£{c.total_spent_gbp.toFixed(2)}</span>
+                                  </div>
+                                </div>
+                                <div className="pt-1">
+                                  <Link
+                                    href={`/admin-portal/orders?q=${encodeURIComponent(c.email)}`}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#7DD3FC]/10 hover:bg-[#7DD3FC]/20 border border-[#7DD3FC]/30 text-[#7DD3FC] text-xs font-semibold transition-all"
+                                  >
+                                    <ShoppingBag className="h-3.5 w-3.5" />
+                                    <span>View Customer Orders</span>
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>
