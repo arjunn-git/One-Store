@@ -66,11 +66,23 @@ export async function POST(request: Request) {
       httpOnly: false,
     });
 
-    // Record genuine customer login event (masked email for privacy)
+    const fullName = (body.name || body.fullName || "").trim();
+    if (fullName) {
+      cookieStore.set("one_store_user_name", fullName, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+        httpOnly: false,
+      });
+    }
+
+    const actorDisplay = fullName ? `${fullName} (${email})` : `${email.split("@")[0]} (${email})`;
+
+    // Record genuine customer login event
     await recordActivity({
       type: "CUSTOMER_LOGIN",
       action: isAdmin ? "Admin Authenticated" : "Customer Authenticated",
-      actor: `${maskEmail(email)} (${role})`,
+      actor: actorDisplay,
       market: "IN",
       currency: "INR",
       resourceType: "auth",
@@ -84,6 +96,7 @@ export async function POST(request: Request) {
       success: true,
       user: {
         email,
+        name: fullName || undefined,
         role,
         isAdmin,
       },
@@ -96,14 +109,17 @@ export async function POST(request: Request) {
 export async function DELETE() {
   const cookieStore = await cookies();
   const email = cookieStore.get("one_store_user_email")?.value || null;
+  const name = cookieStore.get("one_store_user_name")?.value || null;
   cookieStore.delete("one_store_user_email");
+  cookieStore.delete("one_store_user_name");
   cookieStore.delete("one_store_user_role");
 
-  if (email) {
+  if (email || name) {
+    const actorLabel = name && email ? `${name} (${email})` : name || email || "User";
     await recordActivity({
       type: "CUSTOMER_LOGOUT",
       action: "User Signed Out",
-      actor: maskEmail(email),
+      actor: actorLabel,
       market: "IN",
       currency: "INR",
       resourceType: "auth",

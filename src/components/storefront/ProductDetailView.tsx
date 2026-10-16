@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
-import { getOrCreateAnonymousSessionId } from "@/lib/services/session";
+import { getOrCreateAnonymousSessionId, getClientActor } from "@/lib/services/session";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
@@ -64,6 +64,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     if (!product?.id) return;
     try {
       const sessionId = getOrCreateAnonymousSessionId();
+      const realActor = getClientActor(market);
       fetch("/api/activity", {
         method: "POST",
         headers: {
@@ -73,6 +74,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
         body: JSON.stringify({
           type: "PRODUCT_VIEW",
           action: `Viewed Product: ${product.name}`,
+          actor: realActor,
           market,
           currency: market === "GB" ? "GBP" : "INR",
           resourceType: "products",

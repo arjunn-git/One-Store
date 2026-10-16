@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { recordActivity, recordSessionHeartbeat } from "@/lib/services/activity";
+import { createClient } from "@/lib/supabase/server";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import type { ActivityEventType } from "@/lib/types/database";
 
 // Only non-privileged storefront events may be emitted from browser clients.
@@ -48,15 +50,74 @@ export async function POST(request: Request) {
 
     const safeMarket = market === "GB" ? "GB" : "IN";
 
+    // 1. Resolve Genuine Customer Identity (Real Full Name & Email)
+    let resolvedActor = actor && typeof actor === "string" && actor.trim() !== "Guest Shopper"
+      ? actor.trim()
+      : "";
+    let authUserId: string | undefined = undefined;
+
+    // Check Supabase Auth for authenticated customer
+    if (isLiveSupabaseConfigured()) {
+      try {
+        const supabase = await createClient();
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          authUserId = authData.user.id;
+          const userEmail = authData.user.email?.toLowerCase().trim();
+
+          const { data: profile } = await supabase
+            .from("customer_profiles")
+            .select("full_name")
+            .eq("auth_user_id", authData.user.id)
+            .maybeSingle();
+
+          const realName =
+            profile?.full_name?.trim() ||
+            authData.user.user_metadata?.full_name?.trim() ||
+            (userEmail ? userEmail.split("@")[0] : "");
+
+          if (realName && userEmail) {
+            resolvedActor = `${realName} (${userEmail})`;
+          } else if (userEmail) {
+            resolvedActor = `${userEmail.split("@")[0]} (${userEmail})`;
+          }
+        }
+      } catch {
+        // Fallback to cookie detection
+      }
+    }
+
+    // Check request cookies if Supabase user was not resolved
+    if (!resolvedActor) {
+      const cookieHeader = request.headers.get("cookie") || "";
+      const nameMatch = cookieHeader.match(/one_store_user_name=([^;]+)/);
+      const emailMatch = cookieHeader.match(/one_store_user_email=([^;]+)/);
+      const cookieName = nameMatch ? decodeURIComponent(nameMatch[1]).trim() : "";
+      const cookieEmail = emailMatch ? decodeURIComponent(emailMatch[1]).trim() : "";
+
+      if (cookieName && cookieEmail) {
+        resolvedActor = `${cookieName} (${cookieEmail})`;
+      } else if (cookieName) {
+        resolvedActor = `${cookieName} (Customer)`;
+      } else if (cookieEmail) {
+        resolvedActor = `${cookieEmail.split("@")[0]} (${cookieEmail})`;
+      } else {
+        const shortId = (sessionId || "").slice(-5);
+        const marketLabel = safeMarket === "GB" ? "UK" : "India";
+        resolvedActor = shortId ? `${marketLabel} Shopper (#${shortId})` : `${marketLabel} Shopper`;
+      }
+    }
+
     // Handle lightweight active visitor session heartbeat
     if (type === "SESSION_ACTIVE") {
       if (sessionId) {
         await recordSessionHeartbeat({
           sessionId,
           market: safeMarket,
+          authUserId,
         });
       }
-      return NextResponse.json({ success: true, sessionActive: true });
+      return NextResponse.json({ success: true, sessionActive: true, actor: resolvedActor });
     }
 
     if (!action || !resourceType) {
@@ -81,7 +142,8 @@ export async function POST(request: Request) {
     const event = await recordActivity({
       type: type as ActivityEventType,
       action: String(action).slice(0, 200),
-      actor: actor ? String(actor).slice(0, 100) : "Guest Shopper",
+      actor: resolvedActor.slice(0, 100),
+      authUserId,
       anonymousSessionId: sessionId,
       market: safeMarket,
       currency: currency === "GBP" ? "GBP" : "INR",

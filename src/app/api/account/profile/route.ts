@@ -168,11 +168,21 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       profile: updatedProfile,
       completion,
     });
+
+    if (candidateProfile.full_name) {
+      response.cookies.set("one_store_user_name", candidateProfile.full_name, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    }
+
+    return response;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

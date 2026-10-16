@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useMarket } from "./MarketContext";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
-import { getOrCreateAnonymousSessionId } from "@/lib/services/session";
+import { getOrCreateAnonymousSessionId, getClientActor } from "@/lib/services/session";
 import type { Product, ProductVariant } from "@/lib/types/database";
 
 export interface CartLineItem {
@@ -125,6 +125,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // Report storefront activity to real-time admin telemetry
     try {
       const sessionId = getOrCreateAnonymousSessionId();
+      const realActor = getClientActor(market);
       fetch("/api/activity", {
         method: "POST",
         headers: {
@@ -134,6 +135,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({
           type: "CART_ADD",
           action: `Added to cart: ${product.name}`,
+          actor: realActor,
           market,
           currency: market === "GB" ? "GBP" : "INR",
           resourceType: "cart",
@@ -161,6 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (targetItem) {
       try {
         const sessionId = getOrCreateAnonymousSessionId();
+        const realActor = getClientActor(market);
         fetch("/api/activity", {
           method: "POST",
           headers: {
@@ -170,6 +173,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             type: "CART_REMOVE",
             action: `Removed from cart: ${targetItem.productName}`,
+            actor: realActor,
             market,
             currency: market === "GB" ? "GBP" : "INR",
             resourceType: "cart",
@@ -201,6 +205,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (targetItem) {
       try {
         const sessionId = getOrCreateAnonymousSessionId();
+        const realActor = getClientActor(market);
         fetch("/api/activity", {
           method: "POST",
           headers: {
@@ -210,6 +215,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             type: "CART_UPDATED",
             action: `Updated cart quantity: ${targetItem.productName} (${quantity})`,
+            actor: realActor,
             market,
             currency: market === "GB" ? "GBP" : "INR",
             resourceType: "cart",
@@ -234,6 +240,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (countBeforeClear > 0) {
       try {
         const sessionId = getOrCreateAnonymousSessionId();
+        const realActor = getClientActor(market);
         fetch("/api/activity", {
           method: "POST",
           headers: {
@@ -243,6 +250,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             type: "CART_CLEARED",
             action: "Cart emptied",
+            actor: realActor,
             market,
             currency: market === "GB" ? "GBP" : "INR",
             resourceType: "cart",

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { BRAND, type SupportedMarket, type SupportedCurrency } from "@/lib/constants/brand";
-import { getOrCreateAnonymousSessionId, pingSessionHeartbeat } from "@/lib/services/session";
+import { getOrCreateAnonymousSessionId, pingSessionHeartbeat, getClientActor } from "@/lib/services/session";
 
 interface MarketContextValue {
   market: SupportedMarket;
@@ -58,6 +58,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
     // Emit genuine MARKET_SWITCH activity event
     try {
       const sessionId = getOrCreateAnonymousSessionId();
+      const realActor = getClientActor(newMarket);
       fetch("/api/activity", {
         method: "POST",
         headers: {
@@ -67,6 +68,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({
           type: "MARKET_SWITCH",
           action: `Market Switched to ${newMarket === "GB" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}`,
+          actor: realActor,
           market: newMarket,
           currency: newMarket === "GB" ? "GBP" : "INR",
           resourceType: "storefront",
