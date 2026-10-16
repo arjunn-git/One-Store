@@ -83,12 +83,13 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <div className="relative aspect-square w-full rounded-2xl bg-[#080B10] border border-[#243447] flex items-center justify-center p-4 overflow-hidden shadow-2xl">
             {product.images && product.images.length > 0 ? (
               <img
+                key={activeImageIndex}
                 src={product.images[activeImageIndex] || product.images[0]}
-                alt={product.name}
+                alt={`${product.name} — ${selectedVariant?.name || "View"}`}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-xl transition-all duration-300 animate-in fade-in zoom-in-95"
               />
             ) : (
               <div className="relative z-10 flex flex-col items-center justify-center text-center">
@@ -120,7 +121,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setActiveImageIndex(idx)}
+                  onClick={() => {
+                    setActiveImageIndex(idx);
+                    if (product.variants && product.variants[idx]) {
+                      setSelectedVariant(product.variants[idx]);
+                    }
+                  }}
                   className={`h-16 w-16 shrink-0 rounded-xl border overflow-hidden transition-all ${
                     activeImageIndex === idx
                       ? "border-[#7DD3FC] ring-2 ring-[#7DD3FC]/40 scale-105"
@@ -210,10 +216,22 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               <VariantSelector
                 variants={product.variants}
                 selectedVariant={selectedVariant}
-                onSelectVariant={(v) => {
+                images={product.images}
+                onSelectVariant={(v, idx) => {
                   setSelectedVariant(v);
                   if (quantity > v.inventory_count && v.inventory_count > 0) {
                     setQuantity(v.inventory_count);
+                  }
+                  // Dynamically switch product photo to match selected variant
+                  if (product.images && product.images.length > 0) {
+                    const targetIdx =
+                      idx !== undefined && idx < product.images.length
+                        ? idx
+                        : product.variants.findIndex((x) => x.id === v.id);
+
+                    if (targetIdx >= 0 && targetIdx < product.images.length) {
+                      setActiveImageIndex(targetIdx);
+                    }
                   }
                 }}
               />
