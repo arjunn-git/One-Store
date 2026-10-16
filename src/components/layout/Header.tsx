@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +17,9 @@ import {
   HelpCircle,
   Package,
   ChevronRight,
+  ChevronDown,
+  MapPin,
+  Settings,
   Heart,
 } from "lucide-react";
 import { useMarket } from "@/lib/context/MarketContext";
@@ -36,11 +39,29 @@ export function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
   }, [pathname]);
+
+  // Click outside to close profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileMenuOpen]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -54,16 +75,30 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
-  // Escape key closes mobile menu
+  // Escape key closes menus
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && mobileMenuOpen) {
+      if (e.key === "Escape") {
         setMobileMenuOpen(false);
+        setProfileMenuOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, profileMenuOpen]);
+
+  // Listen for client profile updates
+  useEffect(() => {
+    const handleProfileUpdate = (e: any) => {
+      if (e?.detail?.full_name) {
+        setUserName(e.detail.full_name);
+      }
+    };
+    window.addEventListener("user_profile_updated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("user_profile_updated", handleProfileUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,12 +110,13 @@ export function Header() {
       const match = document.cookie.match(/one_store_user_email=([^;]+)/);
       const userEmail = match && match[1] ? decodeURIComponent(match[1]).toLowerCase().trim() : "";
       const hasAdmin = isAdminEmail(userEmail) || (session ? isAdminEmail(session) : false);
+      const savedName = localStorage.getItem("one_store_user_name");
 
       if (emailCookie || session) {
         if (isMounted) {
           setIsLoggedIn(true);
           setIsAdmin(hasAdmin);
-          setUserName(hasAdmin ? "Store Admin" : (userEmail.split("@")[0] || "Customer"));
+          setUserName(hasAdmin ? "Store Admin" : (savedName || null));
         }
       }
 
@@ -94,10 +130,32 @@ export function Header() {
           const email = data.user.email.toLowerCase().trim();
           const adminCheck = isAdminEmail(email);
           setIsAdmin(adminCheck);
-          const name =
-            data.user.user_metadata?.full_name ||
-            (adminCheck ? "Store Admin" : email.split("@")[0]);
-          setUserName(name);
+
+          let name = data.user.user_metadata?.full_name?.trim() || null;
+          if (!name) {
+            try {
+              const { data: profile } = await supabase
+                .from("customer_profiles")
+                .select("full_name")
+                .eq("auth_user_id", data.user.id)
+                .maybeSingle();
+              if (profile?.full_name?.trim()) {
+                name = profile.full_name.trim();
+              }
+            } catch {
+              // Ignore profile fetch failure
+            }
+          }
+          if (!name && savedName) {
+            name = savedName.trim();
+          }
+          if (!name && adminCheck) {
+            name = "Store Admin";
+          }
+          setUserName(name || null);
+          if (name) {
+            localStorage.setItem("one_store_user_name", name);
+          }
         } else if (!emailCookie && !session && isMounted) {
           setIsLoggedIn(false);
           setIsAdmin(false);
@@ -115,6 +173,12 @@ export function Header() {
   }, []);
 
   const handleSignOut = async () => {
+    try {
+      localStorage.removeItem("one_store_user_name");
+      localStorage.removeItem("one_store_session");
+    } catch {
+      // Ignore storage errors
+    }
     await signOutUser();
     window.location.href = "/";
   };
@@ -233,31 +297,120 @@ export function Header() {
 
           {/* User Account or Sign In */}
           {isLoggedIn ? (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/account"
-                aria-label="My Account"
-                title="My Profile & Orders"
-                className="group flex items-center gap-2.5 px-3 py-1.5 h-10 rounded-xl bg-[#0c131c] hover:bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] text-xs font-medium transition-all shadow-sm"
-              >
-                <div className="h-6 w-6 rounded-full bg-[#7DD3FC] text-[#080B10] flex items-center justify-center text-[11px] font-extrabold shrink-0 shadow-sm transition-transform group-hover:scale-105">
-                  {(userName || "U").charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden md:inline font-semibold max-w-[120px] truncate text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
-                  {userName || "Account"}
-                </span>
-              </Link>
-
+            <div className="relative" ref={profileMenuRef}>
               <button
                 type="button"
-                onClick={handleSignOut}
-                aria-label="Sign Out"
-                title="Sign Out (Browse as guest shopper)"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-[#080B10] hover:bg-rose-950/40 text-[#9CAFC3] hover:text-rose-300 border border-[#243447] hover:border-rose-500/40 text-xs font-medium transition-all"
+                onClick={() => setProfileMenuOpen((prev) => !prev)}
+                aria-expanded={profileMenuOpen}
+                aria-haspopup="menu"
+                aria-label="User account menu"
+                className="group flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-transparent hover:bg-[#102A43]/50 border border-transparent hover:border-[#243447]/80 text-[#FFFFFF] hover:text-[#7DD3FC] text-sm font-medium transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC]/50"
               >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="max-w-[130px] sm:max-w-[160px] truncate text-sm font-medium text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
+                  {userName || "My Account"}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-transform duration-200 shrink-0 ${
+                    profileMenuOpen ? "rotate-180 text-[#7DD3FC]" : ""
+                  }`}
+                />
               </button>
+
+              {/* Premium Dropdown Menu */}
+              {profileMenuOpen && (
+                <div
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="user-menu-button"
+                  className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-[#080B10]/98 backdrop-blur-2xl border border-[#243447] shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 focus:outline-none"
+                >
+                  {/* Account Header */}
+                  <div className="px-3 py-2.5 mb-1.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
+                    <p className="text-sm font-semibold text-[#FFFFFF] truncate">
+                      {userName || "My Account"}
+                    </p>
+                    <Link
+                      href="/account"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] transition-colors inline-block mt-0.5"
+                    >
+                      View your profile
+                    </Link>
+                  </div>
+
+                  {/* Navigation Menu Options */}
+                  <div className="space-y-0.5" role="none">
+                    <Link
+                      href="/account"
+                      role="menuitem"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/60 transition-colors focus:outline-none focus:bg-[#102A43]/60 focus:text-[#7DD3FC]"
+                    >
+                      <User className="h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-colors shrink-0" />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/orders"
+                      role="menuitem"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/60 transition-colors focus:outline-none focus:bg-[#102A43]/60 focus:text-[#7DD3FC]"
+                    >
+                      <Package className="h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-colors shrink-0" />
+                      <span>My Orders</span>
+                    </Link>
+
+                    <Link
+                      href="/account/addresses"
+                      role="menuitem"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/60 transition-colors focus:outline-none focus:bg-[#102A43]/60 focus:text-[#7DD3FC]"
+                    >
+                      <MapPin className="h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-colors shrink-0" />
+                      <span>Saved Addresses</span>
+                    </Link>
+
+                    <Link
+                      href="/account?tab=settings"
+                      role="menuitem"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/60 transition-colors focus:outline-none focus:bg-[#102A43]/60 focus:text-[#7DD3FC]"
+                    >
+                      <Settings className="h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-colors shrink-0" />
+                      <span>Settings</span>
+                    </Link>
+
+                    {isAdmin && (
+                      <Link
+                        href="/admin-portal/dashboard"
+                        role="menuitem"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/20 transition-colors focus:outline-none focus:bg-amber-950/20"
+                      >
+                        <Shield className="h-4 w-4 text-amber-400 group-hover:text-amber-300 transition-colors shrink-0" />
+                        <span>Admin Portal</span>
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Subtle Divider */}
+                  <div className="my-1.5 border-t border-[#243447]/60" />
+
+                  {/* Sign Out Action */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      handleSignOut();
+                    }}
+                    className="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-300 hover:text-rose-200 hover:bg-rose-950/30 transition-colors text-left focus:outline-none focus:bg-rose-950/30"
+                  >
+                    <LogOut className="h-4 w-4 text-rose-400 group-hover:text-rose-300 transition-colors shrink-0" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <Link
@@ -421,38 +574,75 @@ export function Header() {
               </div>
 
               {isLoggedIn ? (
-                <div className="p-3.5 rounded-xl bg-[#102A43]/40 border border-[#243447] space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#7DD3FC] text-[#080B10] flex items-center justify-center font-extrabold text-base shadow-md shrink-0">
-                      {(userName || "U").charAt(0).toUpperCase()}
+                <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447] space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[#FFFFFF]">
+                      {userName || "My Account"}
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-[#FFFFFF]">
-                        {userName || "Valued Customer"}
-                      </div>
-                      <div className="text-[11px] text-[#9CAFC3]">
-                        {isAdmin ? "Verified Store Administrator" : "Active Shopper Profile"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
                     <Link
                       href="/account"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] text-xs font-semibold text-center hover:border-[#7DD3FC] transition-all"
+                      className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] transition-colors inline-block mt-0.5"
                     >
-                      View Profile
+                      View your profile
                     </Link>
+                  </div>
+
+                  <div className="space-y-1 pt-1.5 border-t border-[#243447]/60">
+                    <Link
+                      href="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/50 transition-colors"
+                    >
+                      <User className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />
+                      <span>My Profile</span>
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/50 transition-colors"
+                    >
+                      <Package className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />
+                      <span>My Orders</span>
+                    </Link>
+                    <Link
+                      href="/account/addresses"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/50 transition-colors"
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />
+                      <span>Saved Addresses</span>
+                    </Link>
+                    <Link
+                      href="/account?tab=settings"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[#FFFFFF] hover:text-[#7DD3FC] hover:bg-[#102A43]/50 transition-colors"
+                    >
+                      <Settings className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />
+                      <span>Settings</span>
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin-portal/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/20 transition-colors"
+                      >
+                        <Shield className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        <span>Admin Portal</span>
+                      </Link>
+                    )}
+                  </div>
+
+                  <div className="pt-1.5 border-t border-[#243447]/60">
                     <button
                       type="button"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         handleSignOut();
                       }}
-                      className="px-3 py-2 rounded-lg bg-[#080B10] text-red-400 border border-red-900/40 text-xs font-semibold text-center hover:bg-red-950/40 transition-all flex items-center justify-center gap-1.5"
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-rose-300 hover:text-rose-200 hover:bg-rose-950/30 transition-colors text-left"
                     >
-                      <LogOut className="h-3.5 w-3.5" />
+                      <LogOut className="h-3.5 w-3.5 text-rose-400 shrink-0" />
                       <span>Sign Out</span>
                     </button>
                   </div>

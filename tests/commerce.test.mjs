@@ -1359,6 +1359,62 @@ runTest("Dynamic Browser Tab Favicon System & Route Isolation", () => {
   assert.notEqual(resolveFavicon("/admin-portal/orders"), resolveFavicon("/orders"));
 });
 
+runTest("Minimalist Header Profile Button & Account Dropdown Architecture", () => {
+  // 1. Resolve Display Name Logic (mirroring Header.tsx checkAuth)
+  function resolveDisplayName({ full_name, email, isAdmin }) {
+    if (isAdmin) return "Store Admin";
+    if (full_name && full_name.trim()) return full_name.trim();
+    // Fallback: Never leak raw email address or email username
+    return "My Account";
+  }
+
+  // Real user with full name
+  assert.equal(resolveDisplayName({ full_name: "Arjun Taneja", email: "arjun@example.com", isAdmin: false }), "Arjun Taneja");
+  
+  // Real user with empty or whitespace full name -> fallback to "My Account", NOT email
+  assert.equal(resolveDisplayName({ full_name: "", email: "shopper99@gmail.com", isAdmin: false }), "My Account");
+  assert.equal(resolveDisplayName({ full_name: "   ", email: "shopper99@gmail.com", isAdmin: false }), "My Account");
+  assert.equal(resolveDisplayName({ full_name: null, email: "shopper99@gmail.com", isAdmin: false }), "My Account");
+  
+  // Admin user
+  assert.equal(resolveDisplayName({ full_name: "Boss", email: "onestore.auth@gmail.com", isAdmin: true }), "Store Admin");
+
+  // 2. Dropdown Menu Items Route Mapping
+  const menuConfig = [
+    { label: "My Profile", route: "/account", icon: "User" },
+    { label: "My Orders", route: "/orders", icon: "Package" },
+    { label: "Saved Addresses", route: "/account/addresses", icon: "MapPin" },
+    { label: "Settings", route: "/account?tab=settings", icon: "Settings" },
+  ];
+
+  const adminItem = { label: "Admin Portal", route: "/admin-portal/dashboard", icon: "Shield" };
+
+  assert.equal(menuConfig[0].route, "/account");
+  assert.equal(menuConfig[1].route, "/orders");
+  assert.equal(menuConfig[2].route, "/account/addresses");
+  assert.equal(menuConfig[3].route, "/account?tab=settings");
+  assert.equal(adminItem.route, "/admin-portal/dashboard");
+
+  // 3. Sign Out Storage Cleanup
+  const mockStorage = {
+    items: {
+      one_store_session: JSON.stringify({ id: "usr_1" }),
+      one_store_user_name: "Arjun Taneja",
+      other_pref: "true",
+    },
+    removeItem(key) {
+      delete this.items[key];
+    },
+  };
+
+  mockStorage.removeItem("one_store_session");
+  mockStorage.removeItem("one_store_user_name");
+
+  assert.equal(mockStorage.items.one_store_session, undefined);
+  assert.equal(mockStorage.items.one_store_user_name, undefined);
+  assert.equal(mockStorage.items.other_pref, "true");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -126,6 +126,19 @@ export function UserProfileClient({
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (initialProfile?.full_name) {
+      try {
+        localStorage.setItem("one_store_user_name", initialProfile.full_name);
+        window.dispatchEvent(
+          new CustomEvent("user_profile_updated", { detail: { full_name: initialProfile.full_name } })
+        );
+      } catch {
+        // Ignore
+      }
+    }
+  }, [initialProfile?.full_name]);
+
   // Address State
   const [addresses, setAddresses] = useState<AddressItem[]>(initialAddresses);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
@@ -236,6 +249,16 @@ export function UserProfileClient({
       }
 
       setProfile(data.profile);
+      if (data.profile?.full_name) {
+        try {
+          localStorage.setItem("one_store_user_name", data.profile.full_name);
+          window.dispatchEvent(
+            new CustomEvent("user_profile_updated", { detail: { full_name: data.profile.full_name } })
+          );
+        } catch {
+          // Ignore
+        }
+      }
       setProfileSuccessMsg("Your complete profile has been permanently saved!");
 
       // If came from checkout and profile is now 100%, offer immediate redirect

@@ -408,6 +408,7 @@ export async function sendPhoneOtp(phone: string): Promise<AuthResponse> {
 export async function signOutUser(): Promise<AuthResponse> {
   if (typeof window !== "undefined") {
     localStorage.removeItem("one_store_session");
+    localStorage.removeItem("one_store_user_name");
     document.cookie = "one_store_user_email=; path=/; max-age=0";
     document.cookie = "one_store_user_role=; path=/; max-age=0";
   }
