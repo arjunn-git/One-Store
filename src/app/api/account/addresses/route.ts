@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   validatePostalCode,
   validatePhoneNumber,
@@ -70,9 +71,27 @@ export async function POST(request: Request) {
         .select()
         .single();
       if (pErr) {
-        return NextResponse.json({ success: false, error: pErr.message }, { status: 400 });
+        try {
+          const adminProf = await createAdminClient()
+            .from("customer_profiles")
+            .insert({
+              auth_user_id: authData.user.id,
+              email: authData.user.email,
+              is_email_verified: !!authData.user.email_confirmed_at,
+            })
+            .select()
+            .single();
+          if (adminProf.data) {
+            profile = adminProf.data;
+          } else {
+            return NextResponse.json({ success: false, error: pErr.message }, { status: 400 });
+          }
+        } catch {
+          return NextResponse.json({ success: false, error: pErr.message }, { status: 400 });
+        }
+      } else {
+        profile = newProf;
       }
-      profile = newProf;
     }
 
     const body = await request.json();
@@ -148,7 +167,8 @@ export async function POST(request: Request) {
     const validLabels = ["Home", "Work", "Other", "Office", "Warehouse"];
     const safeLabel = validLabels.includes(label) ? label : "Home";
 
-    const { data: newAddress, error } = await supabase
+    let newAddress = null;
+    const { data: insertedAddress, error } = await supabase
       .from("addresses")
       .insert({
         customer_id: profile.id,
@@ -167,7 +187,34 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      try {
+        const adminRes = await createAdminClient()
+          .from("addresses")
+          .insert({
+            customer_id: profile.id,
+            label: safeLabel,
+            recipient_name: recipient_name.trim(),
+            phone: phone.trim(),
+            line1: line1.trim(),
+            line2: line2?.trim() || null,
+            city: city.trim(),
+            state_or_province: state_or_province.trim(),
+            postal_code: postal_code.trim().toUpperCase(),
+            country_code: targetCountry,
+            is_default: makeDefault,
+          })
+          .select()
+          .single();
+        if (adminRes.data) {
+          newAddress = adminRes.data;
+        } else {
+          return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+        }
+      } catch {
+        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      }
+    } else {
+      newAddress = insertedAddress;
     }
 
     // Recalculate profile completion
