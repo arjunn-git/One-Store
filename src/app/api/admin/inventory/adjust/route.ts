@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 
 // POST /api/admin/inventory/adjust — Adjust variant stock with audit reason
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user || !isAdminEmail(user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const supabase = await createClient();
 
     const body = await request.json();
     const { variant_id, new_count, reason } = body;
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
         previous_count: previousCount,
         new_count: nextCount,
         reason: adjustmentReason,
-        performed_by: user.email,
+        performed_by: authResult.user?.email || "onestore.auth@gmail.com",
       });
     } catch {
       // Ignore if movements table pending

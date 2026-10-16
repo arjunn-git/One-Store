@@ -173,7 +173,7 @@ export async function verifyEmailOtp(
     const demoUser = {
       id: `usr_${Date.now()}`,
       email: trimmedEmail,
-      full_name: isAdminEmail(trimmedEmail) ? "Arjun Taneja (Admin)" : "One Store Customer",
+      full_name: isAdminEmail(trimmedEmail) ? "One Store Administrator" : "One Store Customer",
       role,
     };
 

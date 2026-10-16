@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
 
 // GET /api/admin/inventory — Fetch variants across all products with stock and movements
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user || !isAdminEmail(user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const supabase = await createClient();
 
     const { searchParams } = new URL(request.url);
     const lowStockOnly = searchParams.get("lowStock") === "true";

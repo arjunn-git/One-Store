@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
 
 // GET /api/admin/products — List all products with variants & categories
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // Check admin authorization
-    if (!user || !isAdminEmail(user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const supabase = await createClient();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -77,14 +75,12 @@ export async function GET(request: Request) {
 // POST /api/admin/products — Create new product with variants and initial stock
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user || !isAdminEmail(user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const supabase = await createClient();
 
     const body = await request.json();
     const {
@@ -207,7 +203,7 @@ export async function POST(request: Request) {
           previous_count: 0,
           new_count: v.inventory_count,
           reason: "Initial product creation",
-          performed_by: user.email,
+          performed_by: authResult.user?.email || "onestore.auth@gmail.com",
         }));
         await supabase.from("inventory_movements").insert(movements);
       }

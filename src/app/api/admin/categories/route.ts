@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { FALLBACK_CATEGORIES } from "@/lib/services/products";
 
 export async function GET() {
@@ -28,14 +29,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user || !isAdminEmail(user.email)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const supabase = await createClient();
 
     const body = await request.json();
     const { name, slug, description, image_url } = body;

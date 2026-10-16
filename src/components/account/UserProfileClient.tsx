@@ -215,15 +215,9 @@ export function UserProfileClient({
                 <span className="text-xs text-[#7DD3FC] font-semibold uppercase tracking-wider">
                   {displayGreeting()},
                 </span>
-                {isAdmin ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-bold bg-[#7DD3FC] text-[#080B10] shadow-sm">
-                    <Sparkles className="h-3 w-3" /> System Administrator
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Verified Member
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Verified Member
+                </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                 {fullName || initialProfile.email}
@@ -239,15 +233,6 @@ export function UserProfileClient({
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#7DD3FC]/10"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                <span>Admin Portal</span>
-              </Link>
-            )}
             <button
               type="button"
               onClick={handleSignOut}
@@ -658,7 +643,7 @@ export function UserProfileClient({
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Arjun Taneja"
+                  placeholder="e.g. Alex Sharma"
                   className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 />
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />

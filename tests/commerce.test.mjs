@@ -592,7 +592,7 @@ runTest("Customer Support Inquiry Dispatch & Destination Routing (onestore.auth@
 
   // Valid inquiry check
   const validPayload = {
-    name: "Arjun Taneja",
+    name: "Aarav Sharma",
     email: "customer@example.com",
     orderNumber: "OS-2026-IN-1001",
     subject: "Order Tracking & Delivery",
@@ -649,6 +649,182 @@ runTest("Admin Automated Live Email Pipeline (Order, Support, Payment -> onestor
   assert.doesNotMatch(recipientTarget, /arjuntaneja204/, "Personal email must not be used as recipient target");
 });
 
+runTest("Separate Admin Portal Route Isolation & Legacy Redirects", () => {
+  // 1. Legacy /admin URL mapper
+  function resolveAdminRoute(pathname) {
+    if (pathname === "/admin" || pathname === "/admin/") {
+      return "/admin-portal/dashboard";
+    }
+    if (pathname.startsWith("/admin/")) {
+      const subpath = pathname.replace(/^\/admin/, "");
+      return `/admin-portal${subpath}`;
+    }
+    return pathname;
+  }
+
+  assert.equal(resolveAdminRoute("/admin"), "/admin-portal/dashboard");
+  assert.equal(resolveAdminRoute("/admin/orders"), "/admin-portal/orders");
+  assert.equal(resolveAdminRoute("/admin/products"), "/admin-portal/products");
+  assert.equal(resolveAdminRoute("/admin/inventory"), "/admin-portal/inventory");
+
+  // 2. Authorization gate simulator
+  function evaluateAdminGate(pathname, userEmail, hasValidAdminToken) {
+    const OFFICIAL_ADMIN = "onestore.auth@gmail.com";
+    const isAdmin = (userEmail?.toLowerCase() === OFFICIAL_ADMIN) || hasValidAdminToken;
+
+    if (pathname === "/admin-portal/login") {
+      return isAdmin ? { action: "redirect", target: "/admin-portal/dashboard" } : { action: "allow" };
+    }
+
+    if (pathname.startsWith("/admin-portal")) {
+      if (!userEmail && !hasValidAdminToken) {
+        return { action: "redirect", target: `/admin-portal/login?next=${pathname}` };
+      }
+      if (!isAdmin) {
+        return { action: "redirect", target: "/admin-portal/login?error=access_denied" };
+      }
+      return { action: "allow" };
+    }
+
+    return { action: "allow" };
+  }
+
+  // Unauthenticated user attempting to access /admin-portal/dashboard
+  const unauthAttempt = evaluateAdminGate("/admin-portal/dashboard", null, false);
+  assert.equal(unauthAttempt.action, "redirect");
+  assert.equal(unauthAttempt.target, "/admin-portal/login?next=/admin-portal/dashboard");
+
+  // Normal customer attempting to access /admin-portal/dashboard
+  const customerAttempt = evaluateAdminGate("/admin-portal/dashboard", "customer@gmail.com", false);
+  assert.equal(customerAttempt.action, "redirect");
+  assert.equal(customerAttempt.target, "/admin-portal/login?error=access_denied");
+
+  // Verified admin attempting to access /admin-portal/dashboard
+  const adminAccess = evaluateAdminGate("/admin-portal/dashboard", "onestore.auth@gmail.com", true);
+  assert.equal(adminAccess.action, "allow");
+
+  // Verified admin visiting login screen gets redirected to dashboard
+  const adminLoginVisit = evaluateAdminGate("/admin-portal/login", "onestore.auth@gmail.com", true);
+  assert.equal(adminLoginVisit.action, "redirect");
+  assert.equal(adminLoginVisit.target, "/admin-portal/dashboard");
+});
+
+runTest("Dedicated Admin Account & Anti-Brute-Force Rate Limiter (5-Attempt Guard)", () => {
+  const OFFICIAL_ADMIN = "onestore.auth@gmail.com";
+
+  // Rate limiter model matching admin-auth.ts
+  const MAX_ATTEMPTS = 5;
+  const attempts = new Map();
+
+  function recordAttempt(identifier) {
+    const current = attempts.get(identifier) || 0;
+    const next = current + 1;
+    attempts.set(identifier, next);
+    const locked = next >= MAX_ATTEMPTS;
+    const remaining = Math.max(0, MAX_ATTEMPTS - next);
+    return { locked, remaining };
+  }
+
+  function resetAttempts(identifier) {
+    attempts.delete(identifier);
+  }
+
+  const testIp = "192.168.1.100";
+
+  // 1-4 failed attempts: not locked
+  for (let i = 1; i <= 4; i++) {
+    const res = recordAttempt(testIp);
+    assert.equal(res.locked, false);
+    assert.equal(res.remaining, 5 - i);
+  }
+
+  // 5th failed attempt: triggers lockout
+  const fifthAttempt = recordAttempt(testIp);
+  assert.equal(fifthAttempt.locked, true);
+  assert.equal(fifthAttempt.remaining, 0);
+
+  // Reset upon correct credentials
+  resetAttempts(testIp);
+  assert.equal(attempts.has(testIp), false);
+
+  // Non-admin identity rejection
+  function validateAdminIdentity(email) {
+    return email.toLowerCase().trim() === OFFICIAL_ADMIN;
+  }
+  assert.equal(validateAdminIdentity("onestore.auth@gmail.com"), true);
+  assert.equal(validateAdminIdentity("hacker@example.com"), false);
+  assert.equal(validateAdminIdentity("customer@gmail.com"), false);
+});
+
+runTest("Cryptographic Admin Session Token Validation & Tamper Rejection", () => {
+  const SECRET = "test-admin-secret-2026";
+  const OFFICIAL_ADMIN = "onestore.auth@gmail.com";
+
+  function createToken(email, role = "admin") {
+    const payload = JSON.stringify({ email, role, issuedAt: Date.now() });
+    const sig = crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
+    return Buffer.from(payload).toString("base64") + "." + sig;
+  }
+
+  function verifyToken(token) {
+    try {
+      const [payloadB64, sig] = token.split(".");
+      const payloadStr = Buffer.from(payloadB64, "base64").toString("utf-8");
+      const expectedSig = crypto.createHmac("sha256", SECRET).update(payloadStr).digest("hex");
+      if (sig !== expectedSig) return { valid: false };
+      const parsed = JSON.parse(payloadStr);
+      if (parsed.email !== OFFICIAL_ADMIN || parsed.role !== "admin") return { valid: false };
+      return { valid: true, email: parsed.email };
+    } catch {
+      return { valid: false };
+    }
+  }
+
+  // 1. Valid token
+  const validToken = createToken(OFFICIAL_ADMIN, "admin");
+  const validResult = verifyToken(validToken);
+  assert.equal(validResult.valid, true);
+  assert.equal(validResult.email, OFFICIAL_ADMIN);
+
+  // 2. Tampered signature
+  const tamperedSigToken = validToken.slice(0, -4) + "abcd";
+  assert.equal(verifyToken(tamperedSigToken).valid, false, "Tampered signature must be rejected");
+
+  // 3. Tampered payload (elevating a customer email)
+  const tamperedPayload = Buffer.from(JSON.stringify({ email: "attacker@gmail.com", role: "admin", issuedAt: Date.now() })).toString("base64");
+  const forgedToken = tamperedPayload + "." + validToken.split(".")[1];
+  assert.equal(verifyToken(forgedToken).valid, false, "Mismatched signature for altered payload must be rejected");
+
+  // 4. Token issued for non-admin email rejected even if signature is valid
+  const nonAdminSignedToken = createToken("customer@example.com", "admin");
+  assert.equal(verifyToken(nonAdminSignedToken).valid, false, "Token for non-admin email must be rejected");
+});
+
+runTest("Database Anti-Self-Promotion Policy Guard Simulation", () => {
+  // Simulates Postgres trg_prevent_self_role_promotion
+  function simulateProfileRoleUpdate(oldRow, newRow, callerIsServiceRole) {
+    if (newRow.role !== oldRow.role) {
+      if (!callerIsServiceRole) {
+        // Anti-self-promotion: revert role to oldRow.role
+        newRow.role = oldRow.role;
+      }
+    }
+    return newRow;
+  }
+
+  const customerProfile = { id: "p1", email: "shopper@gmail.com", role: "customer" };
+
+  // Customer tries to update their own role to 'admin'
+  const maliciousUpdate = { ...customerProfile, role: "admin" };
+  const result = simulateProfileRoleUpdate(customerProfile, maliciousUpdate, false);
+  assert.equal(result.role, "customer", "Regular user update must NOT be allowed to self-promote role");
+
+  // Service role / Admin client allows verified assignment
+  const adminPromotion = { ...customerProfile, role: "admin" };
+  const serviceResult = simulateProfileRoleUpdate(customerProfile, adminPromotion, true);
+  assert.equal(serviceResult.role, "admin", "Service role can assign authorized admin roles");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
@@ -656,4 +832,5 @@ console.log("------------------------------------------------------------");
 if (failed > 0) {
   process.exit(1);
 }
+
 

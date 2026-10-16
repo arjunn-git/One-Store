@@ -42,7 +42,7 @@ export default async function OrdersPage() {
       total_amount: 24999.0,
       payment_provider: "razorpay",
       shipping_address: {
-        recipientName: "Arjun Taneja",
+        recipientName: "Customer Account",
         city: "Mumbai",
         stateOrProvince: "Maharashtra",
         postalCode: "400001",

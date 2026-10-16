@@ -180,7 +180,7 @@ export default function SupportPage() {
                       required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="e.g. Arjun Taneja"
+                      placeholder="e.g. Alex Sharma"
                       className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC]"
                     />
                   </div>

@@ -1,51 +1,15 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { getAllStoredOrders } from "@/lib/services/payments";
 
 // GET /api/admin/orders — Fetch orders with line items and customer details
 export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const demoEmail = cookieStore.get("one_store_user_email")?.value;
-
-    let userEmail = demoEmail || null;
-    let isAdmin = isAdminEmail(userEmail);
-
-    if (isLiveSupabaseConfigured()) {
-      try {
-        const supabase = await createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user?.email) {
-          userEmail = user.email;
-          if (isAdminEmail(user.email)) {
-            isAdmin = true;
-          }
-        }
-
-        if (user && !isAdmin) {
-          const { data: profile } = await supabase
-            .from("customer_profiles")
-            .select("role")
-            .eq("auth_user_id", user.id)
-            .single();
-
-          if (profile?.role === "admin" || profile?.role === "owner") {
-            isAdmin = true;
-          }
-        }
-      } catch {
-        // Fall back to cookie auth
-      }
-    }
-
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
     const { searchParams } = new URL(request.url);

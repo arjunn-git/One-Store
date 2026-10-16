@@ -23,7 +23,7 @@ export default function AddressesPage() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([
     {
       id: "addr_01",
-      recipientName: "Arjun Taneja",
+      recipientName: "One Store Customer",
       phone: "+91 98765 43210",
       line1: "Flat 402, Skyline Residency, Bandra West",
       line2: "Near Linking Road",
@@ -35,7 +35,7 @@ export default function AddressesPage() {
     },
     {
       id: "addr_02",
-      recipientName: "Arjun Taneja",
+      recipientName: "One Store Customer",
       phone: "+44 7911 123456",
       line1: "24 Kensington High Street",
       city: "London",

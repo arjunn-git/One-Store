@@ -228,7 +228,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Arjun Taneja"
+                placeholder="e.g. Alex Sharma"
                 className="w-full h-12 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-sm text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#7DD3FC] transition-colors"
               />
             </div>

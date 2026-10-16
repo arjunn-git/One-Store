@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isLiveSupabaseConfigured, isAdminEmail } from "@/lib/services/auth";
+import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { OFFICIAL_ADMIN_EMAIL, verifyAdminTokenEdge } from "@/lib/services/admin-shared";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -8,7 +9,7 @@ export async function updateSession(request: NextRequest) {
   });
 
   const pathname = request.nextUrl.pathname;
-  const demoEmail = request.cookies.get("one_store_user_email")?.value;
+  const adminToken = request.cookies.get("one_store_admin_token")?.value;
 
   let authenticatedEmail: string | null = null;
 
@@ -38,18 +39,30 @@ export async function updateSession(request: NextRequest) {
 
       const { data } = await supabase.auth.getUser();
       if (data.user?.email) {
-        authenticatedEmail = data.user.email;
+        authenticatedEmail = data.user.email.toLowerCase().trim();
       }
     } catch {
       authenticatedEmail = null;
     }
   }
 
-  const activeEmail = authenticatedEmail || demoEmail;
-  const isAuthenticated = !!activeEmail;
-  const isAdmin = isAdminEmail(activeEmail);
+  // Check signed admin token if Supabase session is not already active
+  let hasValidAdminToken = false;
+  if (adminToken) {
+    const tokenResult = await verifyAdminTokenEdge(adminToken);
+    if (tokenResult.valid && tokenResult.email === OFFICIAL_ADMIN_EMAIL) {
+      hasValidAdminToken = true;
+      if (!authenticatedEmail) {
+        authenticatedEmail = OFFICIAL_ADMIN_EMAIL;
+      }
+    }
+  }
 
-  // If request arrives with ?code= anywhere other than /auth/callback, forward to callback handler
+  const isVerifiedAdmin =
+    (authenticatedEmail === OFFICIAL_ADMIN_EMAIL) || hasValidAdminToken;
+  const isCustomerAuthenticated = !!authenticatedEmail && !isVerifiedAdmin;
+
+  // 1. OAuth code redirect handling
   if (request.nextUrl.searchParams.has("code") && pathname !== "/auth/callback") {
     const code = request.nextUrl.searchParams.get("code");
     const callbackUrl = new URL("/auth/callback", request.url);
@@ -57,36 +70,66 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(callbackUrl);
   }
 
-  // If already authenticated and visiting /login or /signup, direct to destination
-  if ((pathname === "/login" || pathname === "/signup") && isAuthenticated) {
+  // 2. Redirect legacy /admin routes to /admin-portal
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    const targetSubpath = pathname.replace(/^\/admin/, "");
+    const targetPath =
+      targetSubpath === "" || targetSubpath === "/"
+        ? "/admin-portal/dashboard"
+        : `/admin-portal${targetSubpath}`;
+    const url = request.nextUrl.clone();
+    url.pathname = targetPath;
+    return NextResponse.redirect(url);
+  }
+
+  // 3. Isolated Admin Portal Routes (/admin-portal/*)
+  if (pathname === "/admin-portal") {
+    const url = request.nextUrl.clone();
+    url.pathname = isVerifiedAdmin ? "/admin-portal/dashboard" : "/admin-portal/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/admin-portal/login") {
+    // If admin is already authenticated, take them directly to the admin dashboard
+    if (isVerifiedAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin-portal/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    // Otherwise allow viewing the admin login screen
+    return supabaseResponse;
+  }
+
+  if (pathname.startsWith("/admin-portal")) {
+    // Admin dashboard / orders / products / inventory routes
+    if (!isVerifiedAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin-portal/login";
+      if (isCustomerAuthenticated) {
+        url.searchParams.set("error", "access_denied");
+      } else {
+        url.searchParams.set("next", pathname);
+      }
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
+  // 4. Customer login/signup isolation
+  // Customer pages must NEVER redirect to the admin portal
+  if ((pathname === "/login" || pathname === "/signup") && isCustomerAuthenticated) {
     const nextParam = request.nextUrl.searchParams.get("next");
-    const target = nextParam || (isAdmin ? "/admin" : "/account");
+    const target = nextParam && !nextParam.startsWith("/admin") ? nextParam : "/account";
     const url = request.nextUrl.clone();
     url.pathname = target;
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  // Protect admin routes: strictly restricted to authorized administrator accounts
-  if (pathname.startsWith("/admin")) {
-    if (!isAuthenticated) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
-    }
-    if (!isAdmin) {
-      // Normal customer accounts can NEVER view admin portal
-      const url = request.nextUrl.clone();
-      url.pathname = "/account";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-  }
-
-  // Protect account routes
+  // 5. Customer account protection
   if (pathname.startsWith("/account")) {
-    if (!isAuthenticated) {
+    if (!authenticatedEmail && !request.cookies.get("one_store_user_email")?.value) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);

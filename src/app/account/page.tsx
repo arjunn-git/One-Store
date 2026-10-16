@@ -92,7 +92,7 @@ export default async function AccountPage() {
   const userProfile: ProfileData = profile || {
     id: authUser?.id || "usr_default",
     auth_user_id: authUser?.id || "usr_default",
-    full_name: authUser?.user_metadata?.full_name || (isAdmin ? "Arjun Taneja" : null),
+    full_name: authUser?.user_metadata?.full_name || null,
     email: activeEmail,
     is_email_verified: true,
     phone: null,

@@ -1,35 +1,12 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { verifyAdminRequest } from "@/lib/services/admin-auth";
 import { getRecentActivities } from "@/lib/services/activity";
 
 export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const demoEmail = cookieStore.get("one_store_user_email")?.value;
-
-    let userEmail = demoEmail || null;
-
-    if (isLiveSupabaseConfigured()) {
-      try {
-        const supabase = await createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user?.email) {
-          userEmail = user.email;
-        }
-      } catch {
-        // Fall back to cookie auth
-      }
-    }
-
-    if (!userEmail || !isAdminEmail(userEmail)) {
-      return NextResponse.json(
-        { error: "Unauthorized. Administrator credentials required." },
-        { status: 403 }
-      );
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
     const { searchParams } = new URL(request.url);

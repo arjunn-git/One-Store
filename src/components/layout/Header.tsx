@@ -235,18 +235,6 @@ export function Header() {
             )}
           </Link>
 
-          {/* Admin Command Link (Strictly restricted to Arjun) */}
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/50 text-xs font-semibold hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all"
-              title="Admin Command Dashboard"
-            >
-              <Shield className="h-3.5 w-3.5" />
-              <span>Admin</span>
-            </Link>
-          )}
-
           {/* User Account or Sign In */}
           {isLoggedIn ? (
             <div className="flex items-center gap-2">
@@ -429,34 +417,6 @@ export function Header() {
                 <ChevronRight className="h-4 w-4 text-[#9CAFC3]" />
               </Link>
             </div>
-
-            {/* Admin Command Section (Strictly Arjun Taneja) */}
-            {isAdmin && (
-              <div className="space-y-2 pt-2 border-t border-[#243447]/60">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#7DD3FC] px-3 flex items-center gap-1.5">
-                  <Shield className="h-3 w-3" />
-                  <span>Admin Operations Command</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-3 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs font-semibold text-[#FFFFFF] hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all flex flex-col gap-1"
-                  >
-                    <span className="text-[#7DD3FC]">Dashboard</span>
-                    <span className="text-[10px] text-[#9CAFC3]">Analytics &amp; Stock</span>
-                  </Link>
-                  <Link
-                    href="/admin/orders"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-3 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs font-semibold text-[#FFFFFF] hover:bg-[#7DD3FC] hover:text-[#080B10] transition-all flex flex-col gap-1"
-                  >
-                    <span className="text-[#7DD3FC]">Live Orders</span>
-                    <span className="text-[10px] text-[#9CAFC3]">Real-Time Telemetry</span>
-                  </Link>
-                </div>
-              </div>
-            )}
 
             {/* Account & Profile Section */}
             <div className="space-y-2 pt-2 border-t border-[#243447]/60">
