@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LiveActivityMonitor } from "@/components/admin/LiveActivityMonitor";
+import { ClientLiveActivityMonitor as LiveActivityMonitor } from "@/components/admin/ClientLiveActivityMonitor";
 import {
   ShoppingBag,
   RefreshCw,

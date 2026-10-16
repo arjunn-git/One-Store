@@ -60,10 +60,17 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [newEventsCount, setNewEventsCount] = useState(0);
   const [testingEvent, setTestingEvent] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [, setTick] = useState(0);
 
   const previousActivitiesRef = useRef<Set<string>>(new Set());
   const isMountedRef = useRef(true);
+  const hasInitialFetchRef = useRef(false);
+
+  // Set mounted flag on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-tick relative timestamps every 5 seconds
   useEffect(() => {
@@ -99,12 +106,13 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           }
         });
 
-        if (freshCount > 0 && activities.length > 0) {
+        if (freshCount > 0 && hasInitialFetchRef.current) {
           setNewEventsCount((prev) => prev + freshCount);
           setTimeout(() => {
             if (isMountedRef.current) setNewEventsCount(0);
           }, 4000);
         }
+        hasInitialFetchRef.current = true;
 
         setActivities(data.activities);
         if (data.counts) {
@@ -125,7 +133,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
         setLoading(false);
       }
     }
-  }, [activities.length, isLivePolling]);
+  }, [isLivePolling]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -282,9 +290,11 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <div className="text-[10px] text-[#9CAFC3] uppercase tracking-wider">Active Visitors</div>
-            <div className="text-sm font-black text-[#7DD3FC]">
-              {activeShoppers === null
-                ? "Checking..."
+            <div className="text-sm font-black text-[#7DD3FC]" suppressHydrationWarning>
+              {!mounted
+                ? "Connecting..."
+                : activeShoppers === null
+                ? "Connecting..."
                 : activeShoppers === 1
                 ? "1 shopper online"
                 : `${activeShoppers} shoppers online`}
@@ -530,8 +540,8 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] font-mono text-[#9CAFC3] block">
-                    {formatRelativeTime(act.timestamp)}
+                  <span className="text-[10px] font-mono text-[#9CAFC3] block" suppressHydrationWarning>
+                    {mounted ? formatRelativeTime(act.timestamp) : "Recently"}
                   </span>
                 </div>
               </div>
@@ -542,7 +552,9 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
 
       {/* Footer Info */}
       <div className="flex items-center justify-between text-[11px] text-[#9CAFC3] pt-2 border-t border-[#243447]/60">
-        <span>Updated: {lastRefreshed.toLocaleTimeString()}</span>
+        <span suppressHydrationWarning>
+          Updated: {mounted ? lastRefreshed.toLocaleTimeString() : "--:--:--"}
+        </span>
         <span className="text-[#7DD3FC] flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
           <span>Genuine operational event telemetry</span>

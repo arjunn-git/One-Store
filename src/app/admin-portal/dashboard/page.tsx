@@ -5,7 +5,7 @@ import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAllStoredOrders } from "@/lib/services/payments";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
-import { LiveActivityMonitor } from "@/components/admin/LiveActivityMonitor";
+import { ClientLiveActivityMonitor as LiveActivityMonitor } from "@/components/admin/ClientLiveActivityMonitor";
 import {
   TrendingUp,
   Package,
@@ -253,7 +253,7 @@ export default async function AdminPortalDashboard() {
               <tbody className="divide-y divide-[#243447]/60">
                 {liveOrders.slice(0, 10).map((order) => {
                   const customerDisplay =
-                    order.shipping_address?.recipientName ||
+                    (typeof order.shipping_address === "object" && order.shipping_address !== null && order.shipping_address?.recipientName) ||
                     order.customer?.full_name ||
                     order.customer_email ||
                     "Customer";
@@ -269,8 +269,8 @@ export default async function AdminPortalDashboard() {
                       </td>
                       <td className="py-4 font-bold text-[#FFFFFF]">
                         {order.currency === "INR"
-                          ? `₹${Number(order.total_amount).toLocaleString("en-IN")}`
-                          : `£${Number(order.total_amount).toFixed(2)}`}
+                          ? `₹${Number(order.total_amount || 0).toLocaleString("en-IN")}`
+                          : `£${Number(order.total_amount || 0).toFixed(2)}`}
                       </td>
                       <td className="py-4">
                         {order.status === "delivered" ? (
@@ -298,8 +298,14 @@ export default async function AdminPortalDashboard() {
                           {order.payment_status || "Pending"}
                         </span>
                       </td>
-                      <td className="py-4 text-[#9CAFC3]">
-                        {order.created_at ? new Date(order.created_at).toLocaleDateString() : "Just now"}
+                      <td className="py-4 text-[#9CAFC3]" suppressHydrationWarning>
+                        {order.created_at
+                          ? new Date(order.created_at).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "Just now"}
                       </td>
                       <td className="py-4 text-right">
                         <Link
@@ -337,9 +343,10 @@ export default async function AdminPortalDashboard() {
           <div className="space-y-3">
             {catalogProducts.slice(0, 5).map((prod) => {
               const availableUnits =
-                prod.variants && prod.variants.length > 0
-                  ? prod.variants.reduce((s: number, v: any) => s + (v.inventory_count || 0), 0)
+                Array.isArray(prod.variants) && prod.variants.length > 0
+                  ? prod.variants.reduce((s: number, v: any) => s + (Number(v?.inventory_count) || 0), 0)
                   : 10;
+              const prodImage = Array.isArray(prod.images) && prod.images.length > 0 ? prod.images[0] : null;
 
               return (
                 <div
@@ -348,10 +355,10 @@ export default async function AdminPortalDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-[#102A43] border border-[#243447] overflow-hidden shrink-0 flex items-center justify-center">
-                      {prod.images && prod.images[0] ? (
+                      {prodImage ? (
                         <img
-                          src={prod.images[0]}
-                          alt={prod.name}
+                          src={prodImage}
+                          alt={prod.name || "Product"}
                           className="h-full w-full object-cover"
                         />
                       ) : (
