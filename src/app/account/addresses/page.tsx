@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { validatePostalCode, validatePhoneNumber } from "@/lib/services/profile-validation";
 import { CustomDropdown } from "@/components/account/CustomDropdown";
+import { RealTimeMapLocator, type ResolvedLocationData } from "@/components/account/RealTimeMapLocator";
 
 interface SavedAddress {
   id: string;
@@ -53,6 +54,21 @@ export default function AddressesPage() {
     country_code: "IN" as "IN" | "GB",
     is_default: false,
   });
+
+  const [addrCoordinates, setAddrCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+
+  const handleLocationResolved = (data: ResolvedLocationData) => {
+    setAddrCoordinates(data.coordinates);
+    setNewAddr((prev) => ({
+      ...prev,
+      line1: data.street || (data.displayName ? data.displayName.split(",")[0] : prev.line1),
+      line2: data.locality || prev.line2,
+      city: data.city || prev.city,
+      state_or_province: data.state || prev.state_or_province,
+      postal_code: data.postalCode || prev.postal_code,
+      country_code: data.country || prev.country_code,
+    }));
+  };
 
   const fetchAddresses = async () => {
     setIsLoading(true);
@@ -226,6 +242,13 @@ export default function AddressesPage() {
                 <span>{errorMsg}</span>
               </div>
             )}
+
+            {/* Real-Time Map & GPS Locator */}
+            <RealTimeMapLocator
+              country={newAddr.country_code}
+              activeCoordinates={addrCoordinates}
+              onLocationResolved={handleLocationResolved}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <CustomDropdown

@@ -39,6 +39,7 @@ import {
 import { AddressAutocompleteInput } from "@/components/account/AddressAutocompleteInput";
 import { PostalCodeLookupInput } from "@/components/account/PostalCodeLookupInput";
 import { CustomDropdown } from "@/components/account/CustomDropdown";
+import { RealTimeMapLocator, type ResolvedLocationData } from "@/components/account/RealTimeMapLocator";
 import { type AddressSuggestion } from "@/app/api/address/autocomplete/route";
 
 export interface ProfileData {
@@ -138,6 +139,10 @@ export function UserProfileClient({
   const [manuallyEditedAddressCity, setManuallyEditedAddressCity] = useState(false);
   const [manuallyEditedAddressState, setManuallyEditedAddressState] = useState(false);
 
+  // Real-time map telemetry coordinates
+  const [profileCoordinates, setProfileCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+  const [modalCoordinates, setModalCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
@@ -231,6 +236,53 @@ export function UserProfileClient({
     ) {
       setPostalCode(suggestion.postalCode);
     }
+
+    if (suggestion.coordinates) {
+      setProfileCoordinates(suggestion.coordinates);
+    }
+  };
+
+  const handleProfileLocationResolved = (data: ResolvedLocationData) => {
+    setProfileCoordinates(data.coordinates);
+    if (data.street) {
+      setStreetAddress(data.street);
+    }
+    if (data.houseNumber && (!apartmentUnit || !apartmentUnit.trim())) {
+      setApartmentUnit(data.houseNumber);
+    }
+    if (data.locality) {
+      setSelectedLocality(data.locality);
+    }
+    if (data.city) {
+      setCity(data.city);
+      setManuallyEditedCity(true);
+    }
+    if (data.state) {
+      setStateOrProvince(data.state);
+      setManuallyEditedState(true);
+    }
+    if (data.postalCode) {
+      setPostalCode(data.postalCode);
+    }
+    if (data.country && data.country !== country) {
+      handleMarketChange(data.country);
+    }
+  };
+
+  const handleModalLocationResolved = (data: ResolvedLocationData) => {
+    setModalCoordinates(data.coordinates);
+    setAddressForm((prev) => ({
+      ...prev,
+      line1: data.street || (data.displayName ? data.displayName.split(",")[0] : prev.line1),
+      line2: data.locality || prev.line2,
+      city: data.city || prev.city,
+      state_or_province: data.state || prev.state_or_province,
+      postal_code: data.postalCode || prev.postal_code,
+      country_code: data.country || prev.country_code,
+    }));
+    if (data.locality) {
+      setAddressFormLocality(data.locality);
+    }
   };
 
   const handleAddressModalMarketChange = (newCountry: "IN" | "GB") => {
@@ -289,6 +341,9 @@ export function UserProfileClient({
           ? suggestion.postalCode
           : prev.postal_code,
     }));
+    if (suggestion.coordinates) {
+      setModalCoordinates(suggestion.coordinates);
+    }
   };
 
   useEffect(() => {
@@ -948,6 +1003,13 @@ export function UserProfileClient({
                 </div>
               )}
 
+              {/* Real-Time Map & GPS Locator */}
+              <RealTimeMapLocator
+                country={addressForm.country_code === "GB" ? "GB" : "IN"}
+                activeCoordinates={modalCoordinates}
+                onLocationResolved={handleModalLocationResolved}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 {/* Address Label */}
                 <CustomDropdown
@@ -1404,6 +1466,15 @@ export function UserProfileClient({
                 />
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
               </div>
+            </div>
+
+            {/* Real-Time Map Data & GPS Locator */}
+            <div className="sm:col-span-2">
+              <RealTimeMapLocator
+                country={country as "IN" | "GB"}
+                activeCoordinates={profileCoordinates}
+                onLocationResolved={handleProfileLocationResolved}
+              />
             </div>
 
             {/* Apartment / Flat / Unit / House */}

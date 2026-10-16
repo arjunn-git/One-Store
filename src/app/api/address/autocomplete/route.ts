@@ -18,6 +18,10 @@ export interface AddressSuggestion {
   state?: string;
   postalCode?: string;
   country: "IN" | "GB";
+  coordinates?: {
+    lat: number;
+    lon: number;
+  };
   attribution?: string;
 }
 
@@ -132,6 +136,14 @@ export async function GET(request: Request) {
 
         const label = parts.length > 0 ? parts.join(", ") : cleanQuery;
 
+        const coords =
+          Array.isArray(feat.geometry?.coordinates) && feat.geometry.coordinates.length >= 2
+            ? {
+                lat: Number(feat.geometry.coordinates[1]),
+                lon: Number(feat.geometry.coordinates[0]),
+              }
+            : undefined;
+
         return {
           id: `sug_${country}_${p.osm_id || index}_${Date.now()}`,
           label,
@@ -142,6 +154,7 @@ export async function GET(request: Request) {
           state: p.state || undefined,
           postalCode: p.postcode || undefined,
           country,
+          coordinates: coords,
           attribution: "© OpenStreetMap contributors, ODbL 1.0",
         };
       });

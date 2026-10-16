@@ -19,6 +19,10 @@ export interface PostalLookupResponse {
   district?: string;
   localities?: string[];
   multipleLocalities?: boolean;
+  coordinates?: {
+    lat: number;
+    lon: number;
+  };
   source?: string;
   error?: string;
   fallback?: boolean;
@@ -200,6 +204,10 @@ export async function GET(request: Request) {
       const state = r.region || r.country || "England";
       const district = r.admin_district || "";
       const localities = Array.from(new Set([r.parish, r.admin_district].filter(Boolean))) as string[];
+      const coords =
+        typeof r.latitude === "number" && typeof r.longitude === "number"
+          ? { lat: r.latitude, lon: r.longitude }
+          : undefined;
 
       const result: PostalLookupResponse = {
         success: true,
@@ -210,6 +218,7 @@ export async function GET(request: Request) {
         district,
         localities,
         multipleLocalities: localities.length > 1,
+        coordinates: coords,
         source: "Royal Mail / Postcodes.io (National Statistics)",
       };
 

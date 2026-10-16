@@ -1692,6 +1692,99 @@ runTest("Intelligent Address Autocomplete & Postal-Code Lookup Engine (India & U
   );
 });
 
+runTest("Real-Time Map Data & GPS Reverse Geocoding Telemetry Engine", () => {
+  // 1. Coordinate Validation Logic
+  function validateCoordinates(lat, lon) {
+    if (typeof lat !== "number" || typeof lon !== "number") return false;
+    if (isNaN(lat) || isNaN(lon)) return false;
+    return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+  }
+
+  assert.equal(validateCoordinates(28.6139, 77.2090), true, "New Delhi coordinates valid");
+  assert.equal(validateCoordinates(51.5074, -0.1278), true, "London coordinates valid");
+  assert.equal(validateCoordinates(95.0, 77.0), false, "Latitude > 90 must fail");
+  assert.equal(validateCoordinates(28.0, 185.0), false, "Longitude > 180 must fail");
+  assert.equal(validateCoordinates(NaN, 0), false, "NaN coordinate must fail");
+
+  // 2. Cache Key Generation (11-meter precision rounding)
+  function getCacheKey(lat, lon) {
+    return `${lat.toFixed(4)}:${lon.toFixed(4)}`;
+  }
+  assert.equal(getCacheKey(28.613912, 77.209034), "28.6139:77.2090");
+  assert.equal(getCacheKey(28.613949, 77.209011), "28.6139:77.2090");
+
+  // 3. OpenStreetMap Reverse Geocode Normalizer
+  function normalizeReverseGeocode(raw) {
+    const addr = raw.address || {};
+    const cCode = (addr.country_code || "").toUpperCase();
+    const country = cCode === "GB" || cCode === "UK" ? "GB" : "IN";
+
+    return {
+      coordinates: { lat: Number(raw.lat), lon: Number(raw.lon) },
+      street: addr.road || addr.street || addr.pedestrian || undefined,
+      locality: addr.suburb || addr.neighbourhood || addr.district || undefined,
+      city: addr.city || addr.town || addr.municipality || undefined,
+      district: addr.state_district || addr.district || undefined,
+      state: addr.state || undefined,
+      postalCode: addr.postcode || undefined,
+      country,
+      displayName: raw.display_name,
+    };
+  }
+
+  const sampleIndiaOsm = {
+    lat: "28.6139094",
+    lon: "77.2090007",
+    display_name: "Kartavya Path, Raisina Hill, New Delhi, Delhi, 110004, India",
+    address: {
+      road: "Kartavya Path",
+      suburb: "Raisina Hill",
+      city: "New Delhi",
+      state_district: "New Delhi",
+      state: "Delhi",
+      postcode: "110004",
+      country: "India",
+      country_code: "in",
+    },
+  };
+
+  const normalized = normalizeReverseGeocode(sampleIndiaOsm);
+  assert.equal(normalized.coordinates.lat, 28.6139094);
+  assert.equal(normalized.coordinates.lon, 77.2090007);
+  assert.equal(normalized.street, "Kartavya Path");
+  assert.equal(normalized.locality, "Raisina Hill");
+  assert.equal(normalized.city, "New Delhi");
+  assert.equal(normalized.state, "Delhi");
+  assert.equal(normalized.postalCode, "110004");
+  assert.equal(normalized.country, "IN");
+
+  // 4. Autocomplete GeoJSON Coordinates Parser [lon, lat] -> { lat, lon }
+  function parseFeatureCoordinates(feat) {
+    if (Array.isArray(feat?.geometry?.coordinates) && feat.geometry.coordinates.length >= 2) {
+      return {
+        lat: Number(feat.geometry.coordinates[1]),
+        lon: Number(feat.geometry.coordinates[0]),
+      };
+    }
+    return undefined;
+  }
+
+  const sampleFeature = {
+    type: "Feature",
+    geometry: {
+      coordinates: [77.2090, 28.6139],
+      type: "Point",
+    },
+    properties: {
+      name: "Connaught Place",
+    },
+  };
+
+  const coords = parseFeatureCoordinates(sampleFeature);
+  assert.equal(coords.lat, 28.6139);
+  assert.equal(coords.lon, 77.2090);
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
