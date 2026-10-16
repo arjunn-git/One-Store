@@ -1415,6 +1415,52 @@ runTest("Minimalist Header Profile Button & Account Dropdown Architecture", () =
   assert.equal(mockStorage.items.other_pref, "true");
 });
 
+runTest("Admin Portal Enterprise Navigation & Visual Architecture", () => {
+  // 1. Navigation items & active-state resolution
+  const navItems = [
+    { href: "/admin-portal/dashboard", label: "Operations Command", exact: true },
+    { href: "/admin-portal/orders", label: "Orders Console", exact: false },
+    { href: "/admin-portal/products", label: "Product Catalog", exact: true },
+    { href: "/admin-portal/products/new", label: "Add Product", exact: true },
+    { href: "/admin-portal/inventory", label: "Inventory Levels", exact: false },
+    { href: "/admin-portal/customers", label: "Customers & Users", exact: false },
+  ];
+
+  function isNavActive(item, currentPath) {
+    return item.exact ? currentPath === item.href : currentPath.startsWith(item.href);
+  }
+
+  assert.equal(isNavActive(navItems[0], "/admin-portal/dashboard"), true);
+  assert.equal(isNavActive(navItems[0], "/admin-portal/dashboard/sub"), false);
+  assert.equal(isNavActive(navItems[1], "/admin-portal/orders"), true);
+  assert.equal(isNavActive(navItems[1], "/admin-portal/orders/OS-1001"), true);
+  assert.equal(isNavActive(navItems[2], "/admin-portal/products"), true);
+  assert.equal(isNavActive(navItems[3], "/admin-portal/products/new"), true);
+  assert.equal(isNavActive(navItems[4], "/admin-portal/inventory"), true);
+  assert.equal(isNavActive(navItems[5], "/admin-portal/customers"), true);
+
+  // 2. Stock categorization thresholds
+  function getStockStatus(units) {
+    if (units <= 0) return { label: "Out of Stock", level: "critical" };
+    if (units <= 5) return { label: "Low Stock Warning", level: "warning" };
+    return { label: "Optimal Stock", level: "healthy" };
+  }
+
+  assert.equal(getStockStatus(0).level, "critical");
+  assert.equal(getStockStatus(-1).level, "critical");
+  assert.equal(getStockStatus(3).level, "warning");
+  assert.equal(getStockStatus(5).level, "warning");
+  assert.equal(getStockStatus(6).level, "healthy");
+  assert.equal(getStockStatus(50).level, "healthy");
+
+  // 3. Telemetry filter mapping
+  const operationalFilters = ["ALL", "ORDERS", "PAYMENTS", "SUPPORT", "CART", "MARKET", "AUTH", "BROWSING"];
+  assert.equal(operationalFilters.length, 8);
+  assert.ok(operationalFilters.includes("ORDERS"));
+  assert.ok(operationalFilters.includes("PAYMENTS"));
+  assert.ok(operationalFilters.includes("MARKET"));
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

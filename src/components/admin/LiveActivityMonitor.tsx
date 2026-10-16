@@ -251,46 +251,46 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
   };
 
   return (
-    <div className={`rounded-2xl bg-[#102A43]/40 border border-[#243447] p-6 space-y-6 shadow-xl ${className}`}>
+    <div className={`rounded-2xl bg-[#0C131C] border border-[#243447]/80 p-5 sm:p-6 space-y-5 shadow-xl ${className}`}>
       {/* Top Status Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#243447] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#243447]/60 pb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2.5 w-2.5">
+            <span className="relative flex h-2 w-2 shrink-0">
               {connectionState === "connected" && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
               )}
               <span
-                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                className={`relative inline-flex rounded-full h-2 w-2 ${
                   connectionState === "connected"
-                    ? "bg-emerald-500"
+                    ? "bg-emerald-400"
                     : connectionState === "reconnecting"
-                    ? "bg-amber-400 animate-pulse"
+                    ? "bg-amber-400"
                     : connectionState === "error"
-                    ? "bg-rose-500"
-                    : "bg-zinc-600"
+                    ? "bg-rose-400"
+                    : "bg-zinc-500"
                 }`}
               ></span>
             </span>
-            <h3 className="text-base font-extrabold text-[#FFFFFF] tracking-tight flex items-center gap-2">
+            <h3 className="text-base font-bold text-[#FFFFFF] tracking-tight flex items-center gap-2">
               <span>Dynamic User Activity Stream</span>
               {newEventsCount > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse flex items-center gap-1">
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  <span>+{newEventsCount} new event(s)</span>
+                  <span>+{newEventsCount} new</span>
                 </span>
               )}
             </h3>
           </div>
           <p className="text-xs text-[#9CAFC3]">
-            Streaming live storefront interactions, carts, checkouts, and multi-market transactions across India &amp; United Kingdom.
+            Streaming live storefront checkouts, cart interactions, and dual-market sessions across India &amp; United Kingdom.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           <div className="text-right hidden sm:block">
-            <div className="text-[10px] text-[#9CAFC3] uppercase tracking-wider">Active Visitors</div>
-            <div className="text-sm font-black text-[#7DD3FC]" suppressHydrationWarning>
+            <div className="text-[10px] text-[#9CAFC3] uppercase tracking-wider font-medium">Active Visitors</div>
+            <div className="text-xs font-semibold text-[#7DD3FC]" suppressHydrationWarning>
               {!mounted
                 ? "Connecting..."
                 : activeShoppers === null
@@ -305,34 +305,34 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           <button
             type="button"
             onClick={togglePolling}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
               connectionState === "connected"
-                ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50"
+                ? "bg-emerald-950/30 border-emerald-800/40 text-emerald-300 hover:bg-emerald-950/50"
                 : connectionState === "reconnecting"
-                ? "bg-amber-950/40 border-amber-500/50 text-amber-300"
+                ? "bg-amber-950/30 border-amber-800/40 text-amber-300"
                 : connectionState === "error"
-                ? "bg-rose-950/40 border-rose-500/50 text-rose-300 hover:bg-rose-900/50"
+                ? "bg-rose-950/30 border-rose-800/40 text-rose-300 hover:bg-rose-950/50"
                 : "bg-[#080B10] border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF]"
             }`}
           >
             {connectionState === "connected" ? (
               <>
-                <Radio className="h-3.5 w-3.5 animate-pulse text-emerald-400" />
+                <Radio className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                 <span>Live Sync Active (4s)</span>
               </>
             ) : connectionState === "reconnecting" ? (
               <>
-                <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-400" />
+                <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-400 shrink-0" />
                 <span>Reconnecting...</span>
               </>
             ) : connectionState === "error" ? (
               <>
-                <WifiOff className="h-3.5 w-3.5 text-rose-400" />
+                <WifiOff className="h-3.5 w-3.5 text-rose-400 shrink-0" />
                 <span>Connection Lost (Retry)</span>
               </>
             ) : (
               <>
-                <Activity className="h-3.5 w-3.5 text-zinc-400" />
+                <Activity className="h-3.5 w-3.5 text-[#9CAFC3] shrink-0" />
                 <span>Sync Paused</span>
               </>
             )}
@@ -341,16 +341,17 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           <button
             type="button"
             onClick={() => fetchActivities(true)}
-            className="p-1.5 rounded-xl bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC] text-[#9CAFC3] hover:text-[#FFFFFF] transition-all"
+            className="p-1.5 rounded-lg bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC]/50 text-[#9CAFC3] hover:text-[#FFFFFF] transition-colors"
             title="Refresh now"
+            aria-label="Refresh activity feed"
           >
-            <RefreshCw className={`h-4 w-4 ${connectionState === "reconnecting" ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${connectionState === "reconnecting" ? "animate-spin text-[#7DD3FC]" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
         {[
           { id: "ALL", label: `All (${activities.length})` },
           {
@@ -385,10 +386,10 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           <button
             key={tab.id}
             onClick={() => setSelectedFilter(tab.id)}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 ${
               selectedFilter === tab.id
-                ? "bg-[#7DD3FC] text-[#080B10]"
-                : "bg-[#080B10] border border-[#243447] text-[#9CAFC3] hover:text-[#FFFFFF]"
+                ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
+                : "bg-[#080B10]/70 border border-[#243447]/80 text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]/40"
             }`}
           >
             {tab.label}
@@ -397,7 +398,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       </div>
 
       {/* Activity Timeline List */}
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+      <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
         {loading ? (
           <div className="py-12 text-center text-xs text-[#9CAFC3] flex flex-col items-center justify-center gap-3">
             <RefreshCw className="h-5 w-5 animate-spin text-[#7DD3FC]" />
@@ -405,22 +406,22 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           </div>
         ) : connectionState === "error" && activities.length === 0 ? (
           <div className="py-10 text-center text-xs bg-rose-950/20 rounded-xl border border-rose-500/30 p-6 space-y-3">
-            <WifiOff className="h-8 w-8 text-rose-400 mx-auto" />
-            <div className="font-bold text-[#FFFFFF]">Activity Stream Connection Lost</div>
+            <WifiOff className="h-7 w-7 text-rose-400 mx-auto" />
+            <div className="font-semibold text-[#FFFFFF]">Activity Stream Connection Lost</div>
             <p className="text-rose-200/70 max-w-sm mx-auto">
               Unable to reach the live activity endpoint. Check your admin authorization or server connection.
             </p>
             <button
               onClick={() => fetchActivities(true)}
-              className="px-4 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 font-semibold"
+              className="px-4 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 font-medium"
             >
               Reconnect Now
             </button>
           </div>
         ) : filteredActivities.length === 0 ? (
-          <div className="py-12 text-center text-xs bg-[#080B10]/40 rounded-xl border border-[#243447] p-8 space-y-3">
-            <Activity className="h-8 w-8 text-[#9CAFC3]/40 mx-auto" />
-            <div className="text-sm font-bold text-[#FFFFFF]">
+          <div className="py-12 text-center text-xs bg-[#080B10]/40 rounded-xl border border-[#243447]/80 p-8 space-y-3">
+            <Activity className="h-7 w-7 text-[#9CAFC3]/40 mx-auto" />
+            <div className="text-sm font-semibold text-[#FFFFFF]">
               {selectedFilter === "ALL"
                 ? "No live storefront activity recorded yet"
                 : `No activity found under "${FILTER_LABELS[selectedFilter] || selectedFilter}"`}
@@ -435,7 +436,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                 <button
                   type="button"
                   onClick={() => setSelectedFilter("ALL")}
-                  className="px-3 py-1.5 rounded-lg bg-[#080B10] border border-[#243447] text-[#7DD3FC] hover:bg-[#102A43] text-xs font-semibold transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-[#080B10] border border-[#243447] text-[#7DD3FC] hover:bg-[#102A43] text-xs font-medium transition-colors"
                 >
                   View All Store Events ({activities.length})
                 </button>
@@ -465,7 +466,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                       setTestingEvent(false);
                     }
                   }}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-lg shadow-[#7DD3FC]/10"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm"
                 >
                   <Globe className="h-3.5 w-3.5" />
                   <span>{testingEvent ? "Emitting..." : "Test Market Switch Event (IN ⇄ GB)"}</span>
@@ -489,22 +490,22 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                     onOrderClick(String(act.details.orderNumber));
                   }
                 }}
-                className={`p-3.5 rounded-xl bg-[#080B10] border border-[#243447] hover:border-[#7DD3FC]/60 transition-all flex items-start justify-between gap-3 ${
-                  isOrder ? "cursor-pointer hover:bg-[#102A43]/30" : ""
+                className={`p-3 rounded-xl bg-[#080B10]/70 border border-[#243447]/80 hover:border-[#243447] transition-colors flex items-start justify-between gap-3 ${
+                  isOrder ? "cursor-pointer hover:bg-[#102A43]/20" : ""
                 }`}
               >
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="h-8 w-8 rounded-lg bg-[#102A43] border border-[#243447] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="h-8 w-8 rounded-lg bg-[#102A43]/50 border border-[#243447] flex items-center justify-center shrink-0 mt-0.5">
                     {getEventIcon(act.type)}
                   </div>
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-[#FFFFFF]">{act.action}</span>
+                      <span className="text-xs font-semibold text-[#FFFFFF]">{act.action}</span>
                       <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
                           act.market === "GB"
-                            ? "bg-blue-500/10 text-sky-300 border-blue-500/30"
-                            : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                            ? "bg-sky-950/40 text-sky-300 border-sky-800/50"
+                            : "bg-emerald-950/40 text-emerald-300 border-emerald-800/50"
                         }`}
                       >
                         {act.market === "GB" ? "UK (£ GBP)" : "India (₹ INR)"}
@@ -512,14 +513,14 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                     </div>
 
                     <div className="text-[11px] text-[#9CAFC3] flex items-center gap-2 flex-wrap">
-                      <span className="text-[#7DD3FC]">{act.actor}</span>
+                      <span className="text-[#7DD3FC] font-medium">{act.actor}</span>
                       {Boolean(act.details?.orderNumber) && (
-                        <span className="font-mono text-[#FFFFFF] bg-[#102A43] px-1.5 py-0.5 rounded border border-[#243447]">
+                        <span className="font-mono text-[#FFFFFF] bg-[#102A43]/60 px-1.5 py-0.5 rounded border border-[#243447]">
                           {String(act.details?.orderNumber)}
                         </span>
                       )}
                       {Boolean(act.details?.totalAmount) && (
-                        <span className="font-semibold text-emerald-400">
+                        <span className="font-medium text-emerald-400">
                           {act.currency === "INR"
                             ? `₹${Number(act.details?.totalAmount).toLocaleString("en-IN")}`
                             : `£${Number(act.details?.totalAmount).toFixed(2)}`}
@@ -531,7 +532,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                         </span>
                       )}
                       {Boolean(act.details?.trackingNumber) && (
-                        <span className="text-[10px] font-mono text-sky-300 bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-800">
+                        <span className="text-[10px] font-mono text-sky-300 bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-800/50">
                           Tracking: {String(act.details?.trackingNumber)}
                         </span>
                       )}
@@ -540,7 +541,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] font-mono text-[#9CAFC3] block" suppressHydrationWarning>
+                  <span className="text-[10px] font-mono text-[#9CAFC3] block" suppressHydrationWarning title={act.timestamp}>
                     {mounted ? formatRelativeTime(act.timestamp) : "Recently"}
                   </span>
                 </div>
@@ -553,7 +554,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       {/* Footer Info */}
       <div className="flex items-center justify-between text-[11px] text-[#9CAFC3] pt-2 border-t border-[#243447]/60">
         <span suppressHydrationWarning>
-          Updated: {mounted ? lastRefreshed.toLocaleTimeString() : "--:--:--"}
+          Telemetry Synced: {mounted ? lastRefreshed.toLocaleTimeString() : "--:--:--"}
         </span>
         <span className="text-[#7DD3FC] flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>

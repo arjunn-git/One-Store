@@ -245,17 +245,17 @@ export default function AdminPortalOrdersPage() {
       />
 
       {/* Filters and search */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#102A43]/40 border border-[#243447]">
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl bg-[#0C131C] border border-[#243447]/80 shadow-lg">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none">
           {["all", "pending_payment", "processing", "shipped", "delivered", "cancelled"].map(
             (status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize whitespace-nowrap transition-colors ${
                   statusFilter === status
-                    ? "bg-[#7DD3FC] text-[#080B10]"
-                    : "text-[#9CAFC3] hover:text-[#FFFFFF] bg-[#080B10]"
+                    ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
+                    : "bg-[#080B10]/70 border border-[#243447]/80 text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]/40"
                 }`}
               >
                 {status.replace("_", " ")}
@@ -265,27 +265,27 @@ export default function AdminPortalOrdersPage() {
         </div>
 
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CAFC3]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by order #, name, email..."
-            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
+            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] placeholder:text-[#9CAFC3]/60 focus:outline-none focus:border-[#7DD3FC]/60 focus:ring-1 focus:ring-[#7DD3FC]/30"
           />
         </form>
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-2xl border border-[#243447] bg-[#102A43]/20 overflow-hidden shadow-xl">
+      <div className="rounded-2xl border border-[#243447]/80 bg-[#0C131C] overflow-hidden shadow-xl">
         {loading ? (
           <div className="p-16 text-center text-xs text-[#9CAFC3]">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#7DD3FC]" />
             Fetching real-time orders...
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-xs text-red-400">
-            <AlertCircle className="h-6 w-6 mx-auto mb-2 text-red-500" />
+          <div className="p-8 text-center text-xs text-rose-400">
+            <AlertCircle className="h-6 w-6 mx-auto mb-2 text-rose-500" />
             {error}
           </div>
         ) : orders.length === 0 ? (
@@ -297,20 +297,20 @@ export default function AdminPortalOrdersPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#080B10] border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
+              <thead className="bg-[#080B10] border-b border-[#243447]/60 text-[#9CAFC3] text-[11px] uppercase tracking-wider font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4">Order Ref</th>
-                  <th className="py-3.5 px-4">Customer Details</th>
-                  <th className="py-3.5 px-4">Market</th>
-                  <th className="py-3.5 px-4">Items</th>
-                  <th className="py-3.5 px-4">Total Amount</th>
-                  <th className="py-3.5 px-4">Payment</th>
-                  <th className="py-3.5 px-4">Fulfillment Status</th>
-                  <th className="py-3.5 px-4">Created</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 font-semibold">Order Ref</th>
+                  <th className="py-3 px-4 font-semibold">Customer Details</th>
+                  <th className="py-3 px-4 font-semibold">Market</th>
+                  <th className="py-3 px-4 font-semibold">Items</th>
+                  <th className="py-3 px-4 font-semibold">Total Amount</th>
+                  <th className="py-3 px-4 font-semibold">Payment</th>
+                  <th className="py-3 px-4 font-semibold">Fulfillment Status</th>
+                  <th className="py-3 px-4 font-semibold">Created</th>
+                  <th className="py-3 px-4 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#243447]/60">
+              <tbody className="divide-y divide-[#243447]/40">
                 {orders.map((ord) => {
                   const customerName =
                     ord.shipping_address?.recipientName ||
@@ -321,12 +321,12 @@ export default function AdminPortalOrdersPage() {
                   const customerEmail = ord.customer_email || ord.customer?.email || "";
 
                   return (
-                    <tr key={ord.id} className="hover:bg-[#102A43]/30 transition-colors">
-                      <td className="py-4 px-4 font-mono font-bold text-[#7DD3FC]">
+                    <tr key={ord.id} className="hover:bg-[#102A43]/20 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-medium text-[#7DD3FC]">
                         {ord.order_number}
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="font-semibold text-[#FFFFFF]">{customerName}</div>
+                      <td className="py-3.5 px-4">
+                        <div className="font-medium text-[#FFFFFF]">{customerName}</div>
                         {customerEmail && (
                           <div className="text-[11px] text-[#9CAFC3]">{customerEmail}</div>
                         )}
@@ -336,18 +336,18 @@ export default function AdminPortalOrdersPage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-[#9CAFC3]">
+                      <td className="py-3.5 px-4 text-[#9CAFC3]">
                         {ord.currency === "GBP" ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-[#FFFFFF]">
+                          <span className="inline-flex items-center gap-1 font-medium text-[#FFFFFF]">
                             🇬🇧 UK (£)
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 font-semibold text-[#FFFFFF]">
+                          <span className="inline-flex items-center gap-1 font-medium text-[#FFFFFF]">
                             🇮🇳 India (₹)
                           </span>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-[#9CAFC3]">
+                      <td className="py-3.5 px-4 text-[#9CAFC3]">
                         {ord.items && ord.items.length > 0 ? (
                           <span>
                             {ord.items.length} item{ord.items.length > 1 ? "s" : ""}
@@ -356,47 +356,47 @@ export default function AdminPortalOrdersPage() {
                           <span>1 item</span>
                         )}
                       </td>
-                      <td className="py-4 px-4 font-bold text-[#FFFFFF]">
+                      <td className="py-3.5 px-4 font-semibold text-[#FFFFFF]">
                         {ord.currency === "INR"
                           ? `₹${Number(ord.total_amount).toLocaleString("en-IN")}`
                           : `£${Number(ord.total_amount).toFixed(2)}`}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase ${
                             ord.payment_status === "succeeded"
-                              ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                              ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/50"
                               : ord.payment_status === "failed"
-                              ? "bg-red-950/80 text-red-400 border border-red-800"
-                              : "bg-amber-950/80 text-amber-300 border border-amber-800"
+                              ? "bg-rose-950/40 text-rose-300 border border-rose-800/50"
+                              : "bg-amber-950/40 text-amber-300 border border-amber-800/50"
                           }`}
                         >
                           {ord.payment_status}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                             ord.status === "delivered"
-                              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
+                              ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/50"
                               : ord.status === "shipped"
-                              ? "bg-[#102A43] text-[#7DD3FC] border border-[#243447]"
+                              ? "bg-sky-950/40 text-sky-300 border border-sky-800/50"
                               : ord.status === "cancelled"
-                              ? "bg-red-950/80 text-red-300 border border-red-800"
-                              : "bg-amber-950/80 text-amber-300 border border-amber-800"
+                              ? "bg-rose-950/40 text-rose-300 border border-rose-800/50"
+                              : "bg-amber-950/40 text-amber-300 border border-amber-800/50"
                           }`}
                         >
                           {ord.status.replace("_", " ")}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-[#9CAFC3] whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-[#9CAFC3] whitespace-nowrap">
                         {ord.created_at ? new Date(ord.created_at).toLocaleDateString() : "—"}
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right">
                         <button
                           type="button"
                           onClick={() => openOrderModal(ord)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#7DD3FC] border border-[#243447] text-xs font-semibold transition-all"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#080B10] hover:bg-[#102A43] text-[#FFFFFF] hover:text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC]/50 text-xs font-medium transition-colors"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           <span>Dispatch</span>

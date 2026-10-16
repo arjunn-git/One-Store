@@ -172,24 +172,24 @@ export default function AdminPortalInventoryPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#102A43]/40 border border-[#243447]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl bg-[#0C131C] border border-[#243447]/80 shadow-lg">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setLowStockOnly(false)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               !lowStockOnly
-                ? "bg-[#7DD3FC] text-[#080B10]"
-                : "text-[#9CAFC3] hover:text-[#FFFFFF] bg-[#080B10]"
+                ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
+                : "bg-[#080B10]/70 border border-[#243447]/80 text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]/40"
             }`}
           >
             All Variant SKUs ({items.length})
           </button>
           <button
             onClick={() => setLowStockOnly(true)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
               lowStockOnly
-                ? "bg-amber-400 text-[#080B10]"
-                : "text-amber-400 hover:text-amber-300 bg-[#080B10] border border-amber-900/40"
+                ? "bg-amber-400/10 text-amber-300 border border-amber-400/30 shadow-sm font-semibold"
+                : "bg-[#080B10]/70 border border-[#243447]/80 text-amber-300 hover:text-amber-200 hover:bg-amber-950/20"
             }`}
           >
             <AlertTriangle className="h-3.5 w-3.5" />
@@ -198,44 +198,44 @@ export default function AdminPortalInventoryPage() {
         </div>
 
         <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CAFC3]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search SKU, Product, or Variant..."
-            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
+            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] placeholder:text-[#9CAFC3]/60 focus:outline-none focus:border-[#7DD3FC]/60 focus:ring-1 focus:ring-[#7DD3FC]/30"
           />
         </form>
       </div>
 
       {/* Inventory Items Table */}
-      <div className="rounded-2xl border border-[#243447] bg-[#102A43]/20 overflow-hidden shadow-xl">
+      <div className="rounded-2xl border border-[#243447]/80 bg-[#0C131C] overflow-hidden shadow-xl">
         {loading ? (
           <div className="p-16 text-center text-xs text-[#9CAFC3]">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#7DD3FC]" />
             Reading atomic inventory balances...
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-xs text-red-400">
-            <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-red-500" />
+          <div className="p-8 text-center text-xs text-rose-400">
+            <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-rose-500" />
             {error}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#080B10] border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
+              <thead className="bg-[#080B10] border-b border-[#243447]/60 text-[#9CAFC3] text-[11px] uppercase tracking-wider font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4">Item &amp; Variant</th>
-                  <th className="py-3.5 px-4">SKU Code</th>
-                  <th className="py-3.5 px-4">Available Quantity</th>
-                  <th className="py-3.5 px-4">Reserved Cart Stock</th>
-                  <th className="py-3.5 px-4">Safety Threshold</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Quick Action</th>
+                  <th className="py-3 px-4 font-semibold">Item &amp; Variant</th>
+                  <th className="py-3 px-4 font-semibold">SKU Code</th>
+                  <th className="py-3 px-4 font-semibold">Available Quantity</th>
+                  <th className="py-3 px-4 font-semibold">Reserved Cart Stock</th>
+                  <th className="py-3 px-4 font-semibold">Safety Threshold</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 text-right font-semibold">Quick Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#243447]/60">
+              <tbody className="divide-y divide-[#243447]/40">
                 {items.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-[#9CAFC3]">
@@ -244,43 +244,43 @@ export default function AdminPortalInventoryPage() {
                   </tr>
                 ) : (
                   items.map((it) => (
-                    <tr key={it.id} className="hover:bg-[#102A43]/30 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-[#FFFFFF]">{it.product_name}</div>
+                    <tr key={it.id} className="hover:bg-[#102A43]/20 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-[#FFFFFF]">{it.product_name}</div>
                         <div className="text-[11px] text-[#7DD3FC] mt-0.5">{it.variant_name}</div>
                       </td>
-                      <td className="py-4 px-4 font-mono font-semibold text-[#FFFFFF]">{it.sku}</td>
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4 font-mono font-medium text-[#FFFFFF]">{it.sku}</td>
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`font-mono font-bold text-sm ${
-                            it.is_low_stock ? "text-amber-400" : "text-emerald-400"
+                          className={`font-mono font-semibold text-xs ${
+                            it.is_low_stock ? "text-amber-300" : "text-emerald-400"
                           }`}
                         >
                           {it.inventory_count} units
                         </span>
                       </td>
-                      <td className="py-4 px-4 font-mono text-[#9CAFC3]">
+                      <td className="py-3.5 px-4 font-mono text-[#9CAFC3]">
                         {it.reserved_count || 0}
                       </td>
-                      <td className="py-4 px-4 font-mono text-[#9CAFC3]">
+                      <td className="py-3.5 px-4 font-mono text-[#9CAFC3]">
                         {it.low_stock_threshold} units
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         {it.is_low_stock ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/40 text-amber-300 border border-amber-800/50">
                             <AlertTriangle className="h-3 w-3" /> Low Stock Warning
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/50">
                             <CheckCircle2 className="h-3 w-3" /> Optimal Stock
                           </span>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right">
                         <button
                           type="button"
                           onClick={() => openAdjustModal(it)}
-                          className="px-3 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#7DD3FC] border border-[#243447] text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+                          className="px-2.5 py-1 rounded-lg bg-[#080B10] hover:bg-[#102A43] text-[#FFFFFF] hover:text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC]/50 text-xs font-medium transition-colors inline-flex items-center gap-1.5"
                         >
                           <ArrowUpDown className="h-3.5 w-3.5" />
                           <span>Adjust Balance</span>
@@ -296,8 +296,8 @@ export default function AdminPortalInventoryPage() {
       </div>
 
       {/* Inventory Movement History Log */}
-      <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4 shadow-xl">
-        <h2 className="text-sm font-bold text-[#FFFFFF] uppercase tracking-wider flex items-center gap-2">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-4 shadow-xl">
+        <h2 className="text-xs font-bold text-[#FFFFFF] uppercase tracking-wider flex items-center gap-2">
           <History className="h-4 w-4 text-[#7DD3FC]" />
           <span>Audit-Compliant Inventory Ledger Movement Records</span>
         </h2>
@@ -307,17 +307,17 @@ export default function AdminPortalInventoryPage() {
             No manual adjustments recorded in this session.
           </div>
         ) : (
-          <div className="divide-y divide-[#243447]/60">
+          <div className="divide-y divide-[#243447]/40">
             {movements.slice(0, 8).map((m) => (
               <div key={m.id} className="py-3 flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-mono font-bold text-[#7DD3FC]">{m.variant_sku}</span>
+                  <span className="font-mono font-medium text-[#7DD3FC]">{m.variant_sku}</span>
                   <span className="text-[#9CAFC3] ml-2 font-normal">— {m.reason}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span
-                    className={`font-mono font-bold ${
-                      m.change_amount > 0 ? "text-emerald-400" : "text-red-400"
+                    className={`font-mono font-semibold ${
+                      m.change_amount > 0 ? "text-emerald-400" : "text-rose-400"
                     }`}
                   >
                     {m.change_amount > 0 ? `+${m.change_amount}` : m.change_amount} units

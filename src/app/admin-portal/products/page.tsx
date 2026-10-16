@@ -137,7 +137,7 @@ export default function AdminPortalProductsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin-portal/products/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] text-xs font-bold transition-all shadow-lg shadow-[#7DD3FC]/10"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] text-xs font-semibold transition-colors shadow-sm"
           >
             <PlusCircle className="h-4 w-4" />
             <span>Create New Product</span>
@@ -146,7 +146,7 @@ export default function AdminPortalProductsPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#102A43]/40 border border-[#243447]">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl bg-[#0C131C] border border-[#243447]/80 shadow-lg">
         {/* Status and Market filters */}
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <div className="flex items-center gap-1 bg-[#080B10] p-1 rounded-xl border border-[#243447]">
@@ -154,9 +154,9 @@ export default function AdminPortalProductsPage() {
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
                   statusFilter === st
-                    ? "bg-[#7DD3FC] text-[#080B10]"
+                    ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
                     : "text-[#9CAFC3] hover:text-[#FFFFFF]"
                 }`}
               >
@@ -170,9 +170,9 @@ export default function AdminPortalProductsPage() {
               <button
                 key={m}
                 onClick={() => setMarketFilter(m)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium uppercase transition-colors ${
                   marketFilter === m
-                    ? "bg-[#7DD3FC] text-[#080B10]"
+                    ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
                     : "text-[#9CAFC3] hover:text-[#FFFFFF]"
                 }`}
               >
@@ -184,33 +184,33 @@ export default function AdminPortalProductsPage() {
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9CAFC3]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title, SKU, or tag..."
-            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
+            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] placeholder:text-[#9CAFC3]/60 focus:outline-none focus:border-[#7DD3FC]/60 focus:ring-1 focus:ring-[#7DD3FC]/30"
           />
         </form>
       </div>
 
       {/* Products Table */}
-      <div className="rounded-2xl border border-[#243447] bg-[#102A43]/20 overflow-hidden shadow-xl">
+      <div className="rounded-2xl border border-[#243447]/80 bg-[#0C131C] overflow-hidden shadow-xl">
         {loading ? (
           <div className="p-16 text-center text-xs text-[#9CAFC3]">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#7DD3FC]" />
             Loading catalog database...
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-xs text-red-400">
-            <AlertCircle className="h-6 w-6 mx-auto mb-2 text-red-500" />
+          <div className="p-8 text-center text-xs text-rose-400">
+            <AlertCircle className="h-6 w-6 mx-auto mb-2 text-rose-500" />
             {error}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#080B10] border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
+              <thead className="bg-[#080B10] border-b border-[#243447]/60 text-[#9CAFC3] text-[11px] uppercase tracking-wider font-semibold">
                 <tr>
                   <th className="py-3.5 px-4">Product Info</th>
                   <th className="py-3.5 px-4">SKU / ID</th>

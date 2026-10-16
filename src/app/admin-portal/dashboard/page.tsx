@@ -115,93 +115,132 @@ export default async function AdminPortalDashboard() {
     catalogProducts = FALLBACK_PRODUCTS;
   }
 
+  const inrCompletedOrders = liveOrders.filter((o) => o.currency === "INR" && o.payment_status === "succeeded");
+  const gbpCompletedOrders = liveOrders.filter((o) => o.currency === "GBP" && o.payment_status === "succeeded");
+
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Page Title & Status Header */}
-      <div className="border-b border-[#243447] pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-[#243447]/60 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#7DD3FC] mb-1 font-semibold uppercase tracking-wider">
-            <Activity className="h-3.5 w-3.5" />
-            <span>Executive Operations Command</span>
+          <div className="flex items-center gap-2 text-xs text-[#7DD3FC] mb-1 font-medium tracking-wide">
+            <Activity className="h-3.5 w-3.5 shrink-0" />
+            <span>Operations &amp; Telemetry Command Center</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
-            Administrative Portal
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#FFFFFF] tracking-tight">
+            Store Overview &amp; Control
           </h1>
+          <p className="text-xs text-[#9CAFC3] mt-0.5">
+            Real-time financial settlements, active fulfillment pipelines, and genuine multi-market telemetry.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 shrink-0">
           <Link
             href="/admin-portal/orders"
-            className="px-3.5 py-2 rounded-xl bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#7DD3FC] border border-[#243447] text-xs font-bold transition-all shadow-sm flex items-center gap-2"
+            className="px-3.5 py-2 rounded-xl bg-[#102A43]/40 hover:bg-[#102A43] text-[#FFFFFF] hover:text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC]/40 text-xs font-medium transition-colors shadow-sm flex items-center gap-2"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag className="h-3.5 w-3.5 text-[#7DD3FC]" />
             <span>Orders Queue ({liveOrders.length})</span>
           </Link>
           <Link
             href="/admin-portal/products/new"
-            className="px-3.5 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs transition-all shadow-md shadow-[#7DD3FC]/10 flex items-center gap-2"
+            className="px-3.5 py-2 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
           >
-            <Package className="h-4 w-4" />
+            <Package className="h-3.5 w-3.5" />
             <span>Add New Product</span>
           </Link>
         </div>
       </div>
 
       {/* Key Financial & Operational Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Metric 1: India Revenue */}
-        <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl backdrop-blur-sm">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-3 shadow-lg">
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
-            <span>Gross Volume (India)</span>
-            <TrendingUp className="h-4 w-4 text-[#7DD3FC]" />
+            <span className="font-medium">Gross Volume (India)</span>
+            <div className="p-2 rounded-xl bg-[#102A43]/40 border border-[#243447]/60 text-[#7DD3FC]">
+              <TrendingUp className="h-3.5 w-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-[#FFFFFF]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
             ₹{grossVolumeInr.toLocaleString("en-IN")}
           </div>
-          <div className="text-[11px] text-emerald-400">
-            {liveOrders.filter((o) => o.currency === "INR" && o.payment_status === "succeeded").length} completed order(s)
+          <div className="text-xs text-[#9CAFC3]">
+            {inrCompletedOrders.length > 0 ? (
+              <span className="text-emerald-400 font-medium">
+                {inrCompletedOrders.length} settled transaction{inrCompletedOrders.length > 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span>No settled transactions yet</span>
+            )}
           </div>
         </div>
 
         {/* Metric 2: UK Revenue */}
-        <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl backdrop-blur-sm">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-3 shadow-lg">
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
-            <span>Gross Volume (UK)</span>
-            <DollarSign className="h-4 w-4 text-[#7DD3FC]" />
+            <span className="font-medium">Gross Volume (UK)</span>
+            <div className="p-2 rounded-xl bg-[#102A43]/40 border border-[#243447]/60 text-[#7DD3FC]">
+              <DollarSign className="h-3.5 w-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-[#FFFFFF]">
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
             £{grossVolumeGbp.toFixed(2)}
           </div>
-          <div className="text-[11px] text-emerald-400">
-            {liveOrders.filter((o) => o.currency === "GBP" && o.payment_status === "succeeded").length} completed order(s)
+          <div className="text-xs text-[#9CAFC3]">
+            {gbpCompletedOrders.length > 0 ? (
+              <span className="text-emerald-400 font-medium">
+                {gbpCompletedOrders.length} settled transaction{gbpCompletedOrders.length > 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span>No settled transactions yet</span>
+            )}
           </div>
         </div>
 
         {/* Metric 3: Pending Fulfillment */}
-        <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl backdrop-blur-sm">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-3 shadow-lg">
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
-            <span>Pending Fulfillment</span>
-            <Package className="h-4 w-4 text-amber-400" />
+            <span className="font-medium">Pending Fulfillment</span>
+            <div className="p-2 rounded-xl bg-[#102A43]/40 border border-[#243447]/60 text-amber-400">
+              <Package className="h-3.5 w-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-[#FFFFFF]">{pendingFulfillmentCount}</div>
-          <div className="text-[11px] text-amber-300">
-            {pendingFulfillmentCount === 0 ? "All orders dispatched" : "Requires dispatch label generation"}
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
+            {pendingFulfillmentCount}
+          </div>
+          <div className="text-xs">
+            {pendingFulfillmentCount === 0 ? (
+              <span className="text-emerald-400 font-medium">All customer orders fulfilled</span>
+            ) : (
+              <span className="text-amber-300 font-medium">
+                {pendingFulfillmentCount} order{pendingFulfillmentCount > 1 ? "s" : ""} awaiting dispatch
+              </span>
+            )}
           </div>
         </div>
 
         {/* Metric 4: Active Registered Accounts */}
         <Link
           href="/admin-portal/customers"
-          className="p-6 rounded-2xl bg-[#102A43]/40 hover:bg-[#102A43]/70 border border-[#243447] hover:border-[#7DD3FC] space-y-2 shadow-xl backdrop-blur-sm transition-all group block"
+          className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] hover:bg-[#102A43]/20 border border-[#243447]/80 hover:border-[#7DD3FC]/50 space-y-3 shadow-lg transition-all group block"
         >
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
-            <span>Active Customers</span>
-            <Users className="h-4 w-4 text-[#7DD3FC] group-hover:scale-110 transition-transform" />
+            <span className="font-medium">Active Customers</span>
+            <div className="p-2 rounded-xl bg-[#102A43]/40 border border-[#243447]/60 text-[#7DD3FC] group-hover:scale-105 transition-transform">
+              <Users className="h-3.5 w-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-[#FFFFFF]">{activeCustomersCount}</div>
-          <div className="text-[11px] text-[#7DD3FC] flex items-center justify-between">
-            <span>Dual-market accounts</span>
-            <span className="font-semibold underline">Fetch details &rarr;</span>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
+            {activeCustomersCount}
+          </div>
+          <div className="text-xs text-[#9CAFC3] flex items-center justify-between">
+            <span>Verified shopper profiles</span>
+            <span className="text-[#7DD3FC] group-hover:underline flex items-center gap-0.5">
+              <span>View</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </span>
           </div>
         </Link>
       </div>
@@ -210,18 +249,18 @@ export default async function AdminPortalDashboard() {
       <LiveActivityMonitor />
 
       {/* Orders Table */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-6 shadow-xl backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-[#FFFFFF]">Live Orders Queue</h2>
+            <h2 className="text-base font-bold text-[#FFFFFF] tracking-tight">Live Orders Queue</h2>
             <p className="text-xs text-[#9CAFC3]">
-              Real-time transaction queue synced with Razorpay and Stripe payment webhooks.
+              Real-time transaction queue synchronized with Razorpay (India) and Stripe (UK) webhooks.
             </p>
           </div>
 
           <Link
             href="/admin-portal/orders"
-            className="px-3.5 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#7DD3FC] hover:text-[#080B10] text-[#7DD3FC] border border-[#243447] font-semibold text-xs transition-all w-fit"
+            className="px-3.5 py-1.5 rounded-lg bg-[#102A43]/50 hover:bg-[#102A43] text-[#FFFFFF] hover:text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC]/40 font-medium text-xs transition-colors w-fit"
           >
             Manage All Orders ({liveOrders.length})
           </Link>
@@ -229,8 +268,8 @@ export default async function AdminPortalDashboard() {
 
         {liveOrders.length === 0 ? (
           <div className="py-12 text-center space-y-3 bg-[#080B10]/60 rounded-xl border border-[#243447]/60">
-            <Package className="h-10 w-10 mx-auto text-[#7DD3FC]/60" />
-            <div className="text-sm font-bold text-[#FFFFFF]">No Customer Orders Recorded Yet</div>
+            <Package className="h-9 w-9 mx-auto text-[#7DD3FC]/50" />
+            <div className="text-sm font-semibold text-[#FFFFFF]">No Customer Orders Recorded Yet</div>
             <p className="text-xs text-[#9CAFC3] max-w-md mx-auto">
               Your live database is connected and awaiting customer transactions. Place a test order from the storefront to see live orders appear here.
             </p>
@@ -239,18 +278,18 @@ export default async function AdminPortalDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-[#243447] text-[#9CAFC3] uppercase tracking-wider font-semibold">
-                  <th className="pb-3">Order Ref</th>
-                  <th className="pb-3">Customer</th>
-                  <th className="pb-3">Market</th>
-                  <th className="pb-3">Amount</th>
-                  <th className="pb-3">Fulfillment</th>
-                  <th className="pb-3">Payment</th>
-                  <th className="pb-3">Date</th>
-                  <th className="pb-3 text-right">Action</th>
+                <tr className="border-b border-[#243447]/60 text-[#9CAFC3] text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="pb-3 font-semibold">Order Ref</th>
+                  <th className="pb-3 font-semibold">Customer</th>
+                  <th className="pb-3 font-semibold">Market</th>
+                  <th className="pb-3 font-semibold">Amount</th>
+                  <th className="pb-3 font-semibold">Fulfillment</th>
+                  <th className="pb-3 font-semibold">Payment</th>
+                  <th className="pb-3 font-semibold">Date</th>
+                  <th className="pb-3 text-right font-semibold">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#243447]/60">
+              <tbody className="divide-y divide-[#243447]/40">
                 {liveOrders.slice(0, 10).map((order) => {
                   const customerDisplay =
                     (typeof order.shipping_address === "object" && order.shipping_address !== null && order.shipping_address?.recipientName) ||
@@ -260,45 +299,49 @@ export default async function AdminPortalDashboard() {
 
                   return (
                     <tr key={order.id || order.order_number} className="hover:bg-[#102A43]/20 transition-colors">
-                      <td className="py-4 font-mono font-bold text-[#7DD3FC]">
+                      <td className="py-3.5 font-mono font-medium text-[#7DD3FC]">
                         {order.order_number}
                       </td>
-                      <td className="py-4 font-semibold text-[#FFFFFF]">{customerDisplay}</td>
-                      <td className="py-4 text-[#9CAFC3]">
+                      <td className="py-3.5 font-medium text-[#FFFFFF]">{customerDisplay}</td>
+                      <td className="py-3.5 text-[#9CAFC3]">
                         {order.currency === "INR" ? "India (₹)" : "UK (£)"}
                       </td>
-                      <td className="py-4 font-bold text-[#FFFFFF]">
+                      <td className="py-3.5 font-semibold text-[#FFFFFF]">
                         {order.currency === "INR"
                           ? `₹${Number(order.total_amount || 0).toLocaleString("en-IN")}`
                           : `£${Number(order.total_amount || 0).toFixed(2)}`}
                       </td>
-                      <td className="py-4">
+                      <td className="py-3.5">
                         {order.status === "delivered" ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/50">
                             Delivered
                           </span>
                         ) : order.status === "shipped" ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-sky-950/40 text-sky-300 border border-sky-800/50">
                             In Transit
                           </span>
+                        ) : order.status === "cancelled" ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-950/40 text-rose-300 border border-rose-800/50">
+                            Cancelled
+                          </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/40 text-amber-300 border border-amber-800/50">
                             {order.status?.replace("_", " ") || "Processing"}
                           </span>
                         )}
                       </td>
-                      <td className="py-4">
+                      <td className="py-3.5">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase ${
                             order.payment_status === "succeeded"
-                              ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
-                              : "bg-amber-950/80 text-amber-300 border border-amber-800"
+                              ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/50"
+                              : "bg-amber-950/40 text-amber-300 border border-amber-800/50"
                           }`}
                         >
                           {order.payment_status || "Pending"}
                         </span>
                       </td>
-                      <td className="py-4 text-[#9CAFC3]" suppressHydrationWarning>
+                      <td className="py-3.5 text-[#9CAFC3]" suppressHydrationWarning>
                         {order.created_at
                           ? new Date(order.created_at).toLocaleDateString("en-GB", {
                               day: "2-digit",
@@ -307,10 +350,10 @@ export default async function AdminPortalDashboard() {
                             })
                           : "Just now"}
                       </td>
-                      <td className="py-4 text-right">
+                      <td className="py-3.5 text-right">
                         <Link
                           href="/admin-portal/orders"
-                          className="px-3 py-1 rounded bg-[#080B10] hover:bg-[#102A43] border border-[#243447] hover:border-[#7DD3FC] text-[#FFFFFF] font-semibold text-[11px] transition-all inline-block"
+                          className="px-2.5 py-1 rounded-lg bg-[#080B10] hover:bg-[#102A43] border border-[#243447] hover:border-[#7DD3FC]/50 text-[#FFFFFF] font-medium text-xs transition-colors inline-block"
                         >
                           Manage
                         </Link>
@@ -325,22 +368,22 @@ export default async function AdminPortalDashboard() {
       </div>
 
       {/* Catalog & Inventory Operations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Inventory low-stock monitor */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4 shadow-xl">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-4 shadow-xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-[#FFFFFF] flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-400" />
+            <h2 className="text-base font-bold text-[#FFFFFF] flex items-center gap-2 tracking-tight">
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
               <span>Inventory &amp; Low-Stock Monitor</span>
             </h2>
             <Link
               href="/admin-portal/inventory"
-              className="text-xs text-[#7DD3FC] hover:underline font-semibold"
+              className="text-xs text-[#7DD3FC] hover:underline font-medium"
             >
               Manage Stock
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {catalogProducts.slice(0, 5).map((prod) => {
               const availableUnits =
                 Array.isArray(prod.variants) && prod.variants.length > 0
@@ -351,10 +394,10 @@ export default async function AdminPortalDashboard() {
               return (
                 <div
                   key={prod.id}
-                  className="p-4 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-between text-xs"
+                  className="p-3 rounded-xl bg-[#080B10]/70 border border-[#243447]/80 flex items-center justify-between text-xs hover:border-[#243447] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-[#102A43] border border-[#243447] overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-lg bg-[#102A43] border border-[#243447] overflow-hidden shrink-0 flex items-center justify-center">
                       {prodImage ? (
                         <img
                           src={prodImage}
@@ -362,29 +405,31 @@ export default async function AdminPortalDashboard() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Package className="h-5 w-5 text-[#9CAFC3]" />
+                        <Package className="h-4 w-4 text-[#9CAFC3]" />
                       )}
                     </div>
                     <div>
-                      <div className="font-bold text-[#FFFFFF]">{prod.name}</div>
-                      <div className="font-mono text-[11px] text-[#9CAFC3] mt-0.5">
+                      <div className="font-semibold text-[#FFFFFF]">{prod.name}</div>
+                      <div className="font-mono text-[11px] text-[#9CAFC3]">
                         SKU: {prod.sku}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <span
-                      className={`px-2.5 py-1 rounded-full border font-mono font-semibold ${
-                        availableUnits <= 5
-                          ? "bg-red-950/80 text-red-300 border-red-800"
-                          : "bg-[#102A43] text-[#7DD3FC] border-[#243447]"
+                      className={`px-2.5 py-0.5 rounded-full border text-[11px] font-mono font-medium ${
+                        availableUnits <= 0
+                          ? "bg-rose-950/40 text-rose-300 border-rose-800/50"
+                          : availableUnits <= 5
+                          ? "bg-amber-950/40 text-amber-300 border-amber-800/50"
+                          : "bg-[#102A43]/50 text-[#7DD3FC] border-[#243447]"
                       }`}
                     >
                       {availableUnits} Units
                     </span>
                     <Link
                       href="/admin-portal/inventory"
-                      className="text-[11px] text-[#7DD3FC] hover:underline font-semibold"
+                      className="text-xs text-[#7DD3FC] hover:underline font-medium"
                     >
                       Adjust
                     </Link>
@@ -396,12 +441,12 @@ export default async function AdminPortalDashboard() {
         </div>
 
         {/* Audit Logs */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4 shadow-xl">
-          <h2 className="text-lg font-bold text-[#FFFFFF] flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-[#7DD3FC]" />
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-4 shadow-xl">
+          <h2 className="text-base font-bold text-[#FFFFFF] flex items-center gap-2 tracking-tight">
+            <ShieldAlert className="h-4 w-4 text-[#7DD3FC]" />
             <span>Security &amp; Operations Audit Log</span>
           </h2>
-          <div className="space-y-3 text-xs">
+          <div className="space-y-2.5 text-xs">
             {[
               {
                 action: "ADMIN_AUTH_SECURED",
@@ -426,15 +471,17 @@ export default async function AdminPortalDashboard() {
             ].map((log, i) => (
               <div
                 key={i}
-                className="p-3.5 rounded-xl bg-[#080B10] border border-[#243447] flex justify-between items-center"
+                className="p-3 rounded-xl bg-[#080B10]/70 border border-[#243447]/80 flex justify-between items-center"
               >
                 <div>
-                  <span className="font-mono text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
+                  <span className="font-mono text-[10px] font-medium text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
                     {log.action}
                   </span>
                   <div className="text-[#FFFFFF] mt-1 text-xs">{log.detail}</div>
                 </div>
-                <span className="text-[11px] text-[#9CAFC3] shrink-0 font-medium">{log.time}</span>
+                <span className="text-[11px] text-[#9CAFC3] shrink-0 font-medium px-2 py-0.5 rounded-full bg-[#102A43]/30 border border-[#243447]/60">
+                  {log.time}
+                </span>
               </div>
             ))}
           </div>

@@ -43,13 +43,13 @@ export function AdminNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap ${
                   isActive
-                    ? "bg-[#7DD3FC] text-[#080B10] shadow-sm font-bold"
-                    : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]"
+                    ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
+                    : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]/50 border border-transparent hover:border-[#243447]/60 font-medium"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-[#7DD3FC]" : "text-[#9CAFC3]"}`} />
                 <span>{item.label}</span>
               </Link>
             );
