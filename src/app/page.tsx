@@ -43,14 +43,14 @@ export default async function Home() {
               <span>Use code <strong className="font-mono text-[#FFFFFF] bg-[#080B10] px-2 py-0.5 rounded border border-[#7DD3FC]/30">LAUNCH10</strong> for 10% off</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#FFFFFF] max-w-5xl leading-tight">
-              Engineered Lifestyle.{" "}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#FFFFFF] max-w-4xl leading-[1.12] [text-wrap:balance]">
+              Everyday Luxury, <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFFFFF] via-[#7DD3FC] to-[#FFFFFF]">
-                Precision &amp; Craft.
+                Engineered to Perfection.
               </span>
             </h1>
 
-            <p className="mt-6 text-sm sm:text-base md:text-lg text-[#9CAFC3] max-w-2xl leading-relaxed">
+            <p className="mt-6 text-sm sm:text-base md:text-lg text-[#9CAFC3] max-w-2xl leading-relaxed [text-wrap:balance]">
               Curated studio acoustics, engineered minimalist carry, and precision chronographs.
               Seamless dual-market checkout in INR (₹) and GBP (£) with fully insured express delivery.
             </p>
