@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getSecureOrderDetails } from "@/lib/services/payments";
 import { OrderSuccessFallback } from "@/components/storefront/OrderSuccessFallback";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export const dynamic = "force-dynamic";
 
@@ -132,8 +133,8 @@ async function SuccessDetails({ searchParams }: SuccessPageProps) {
   if (order.payment_status === "failed") {
     return (
       <div className="max-w-xl mx-auto p-8 rounded-2xl bg-[#102A43]/40 border border-red-800/80 text-center space-y-6 shadow-2xl">
-        <div className="h-16 w-16 rounded-full bg-red-950/60 text-red-400 border border-red-800 flex items-center justify-center mx-auto">
-          <XCircle className="h-8 w-8" />
+        <div className="flex justify-center">
+          <OneStoreLogo variant="state" state="error" size="lg" asCard />
         </div>
 
         <div className="space-y-2">
@@ -188,8 +189,8 @@ async function SuccessDetails({ searchParams }: SuccessPageProps) {
   if (order.payment_status === "pending" || order.payment_status === "processing") {
     return (
       <div className="max-w-xl mx-auto p-8 rounded-2xl bg-[#102A43]/40 border border-amber-600/60 text-center space-y-6 shadow-2xl">
-        <div className="h-16 w-16 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
-          <Clock className="h-8 w-8 animate-pulse" />
+        <div className="flex justify-center">
+          <OneStoreLogo variant="loading" size="lg" asCard />
         </div>
 
         <div className="space-y-2">
@@ -246,8 +247,8 @@ async function SuccessDetails({ searchParams }: SuccessPageProps) {
   // ---------------------------------------------------------------------------
   return (
     <div className="max-w-xl mx-auto p-8 rounded-2xl bg-[#102A43]/40 border border-[#243447] text-center space-y-6 shadow-2xl">
-      <div className="h-16 w-16 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
-        <CheckCircle2 className="h-8 w-8" />
+      <div className="flex justify-center">
+        <OneStoreLogo variant="state" state="success" size="lg" asCard />
       </div>
 
       <div className="space-y-2">

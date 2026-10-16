@@ -14,6 +14,7 @@ import {
   Radio,
   Users,
 } from "lucide-react";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function AdminPortalHeader() {
   const pathname = usePathname();
@@ -46,16 +47,13 @@ export function AdminPortalHeader() {
       {/* Top Administrative Bar */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-b border-[#243447]/60 text-xs">
         <div className="flex items-center gap-3">
-          <Link href="/admin-portal/dashboard" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-bold text-xs shadow-inner">
-              1
-            </div>
-            <div className="flex items-center gap-1.5 font-bold tracking-tight text-[#FFFFFF]">
-              <span>ONE STORE</span>
-              <span className="px-2 py-0.5 rounded-full bg-[#7DD3FC]/15 text-[#7DD3FC] border border-[#7DD3FC]/30 text-[10px] font-extrabold uppercase tracking-wider">
-                ADMIN PORTAL
-              </span>
-            </div>
+          <Link href="/admin-portal/dashboard" className="group" title="Admin Operations Command">
+            <OneStoreLogo
+              variant="state"
+              state="security"
+              size="sm"
+              badge="ADMIN PORTAL"
+            />
           </Link>
 
           <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-[#243447] text-[#9CAFC3]">

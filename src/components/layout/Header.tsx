@@ -25,6 +25,7 @@ import { useWishlist } from "@/lib/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CountrySelector } from "@/components/layout/CountrySelector";
 import { signOutUser, isAdminEmail } from "@/lib/services/auth";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function Header() {
   const pathname = usePathname();
@@ -149,13 +150,8 @@ export function Header() {
           </button>
 
           {/* Brand logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#102A43] border border-[#243447] text-[#7DD3FC] font-bold text-lg group-hover:border-[#7DD3FC] transition-colors">
-              1
-            </div>
-            <span className="text-xl font-bold tracking-tight text-[#FFFFFF]">
-              ONE <span className="text-[#7DD3FC]">STORE</span>
-            </span>
+          <Link href="/" className="group" title="One Store Home">
+            <OneStoreLogo variant="primary" size="md" layout="horizontal" />
           </Link>
         </div>
 

@@ -15,6 +15,7 @@ import {
   Loader2,
   Store,
 } from "lucide-react";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export default function AdminPortalLoginPage() {
   const router = useRouter();
@@ -88,18 +89,16 @@ export default function AdminPortalLoginPage() {
         {/* Card */}
         <div className="bg-[#102A43]/50 border border-[#243447] rounded-3xl p-8 sm:p-10 shadow-2xl backdrop-blur-xl space-y-6">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-[#080B10] border border-[#7DD3FC]/40 text-[#7DD3FC] shadow-inner mb-2">
-              <Lock className="h-6 w-6" />
-            </div>
-            <div className="inline-block px-3 py-1 rounded-full bg-[#7DD3FC]/10 border border-[#7DD3FC]/30 text-[#7DD3FC] text-[10px] font-bold uppercase tracking-widest">
-              Administrative Gateway
-            </div>
-            <h1 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">
-              One Store Command
-            </h1>
-            <p className="text-xs text-[#9CAFC3]">
-              Restricted Operations Portal — Authorized Staff Only
+          <div className="text-center space-y-3 flex flex-col items-center">
+            <OneStoreLogo
+              variant="state"
+              state="security"
+              size="lg"
+              badge="ADMIN"
+              asCard
+            />
+            <p className="text-xs text-[#9CAFC3] max-w-xs leading-relaxed">
+              Restricted Operations Console — Authorized Credentials Only
             </p>
           </div>
 

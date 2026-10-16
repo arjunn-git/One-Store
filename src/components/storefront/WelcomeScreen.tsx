@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function WelcomeScreen() {
   const pathname = usePathname();
@@ -133,15 +134,13 @@ export function WelcomeScreen() {
       <div className="absolute bottom-10 right-1/4 w-[350px] h-[250px] bg-[#102A43]/40 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-md w-full flex flex-col items-center text-center space-y-6 relative z-10">
-        {/* 1. ONE STORE Brand Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-[#102A43]/70 border border-[#243447] backdrop-blur-md shadow-xl shadow-black/40">
-          <div className="h-7 w-7 rounded-lg bg-[#7DD3FC] flex items-center justify-center text-[#080B10] shadow-sm">
-            <ShoppingBag className="h-4 w-4 stroke-[2.5]" />
-          </div>
-          <span className="font-mono font-black text-sm tracking-widest text-[#FFFFFF]">
-            ONE STORE
-          </span>
-        </div>
+        {/* 1. ONE STORE Dynamic Logo */}
+        <OneStoreLogo
+          variant={progress >= 100 ? "state" : errorMessage ? "state" : "loading"}
+          state={progress >= 100 ? "success" : errorMessage ? "error" : "default"}
+          size="md"
+          asCard
+        />
 
         {/* 2. Showcase Image Card (matching reference visual) */}
         <div className="relative w-full aspect-[16/10] sm:aspect-[16/10.5] rounded-3xl bg-gradient-to-b from-[#102A43]/50 via-[#0c141e]/90 to-[#080B10] border border-[#243447] overflow-hidden p-2 shadow-2xl group">

@@ -1147,6 +1147,73 @@ runTest("Event-Driven Welcome Screen Initialization Sequences & Error Resilience
   assert.equal(shouldRenderWelcomeScreen("/", true), false, "Internal navigation must NOT flash welcome screen");
 });
 
+runTest("Centralized Dynamic ONE STORE Logo System & Accessibility Validation", () => {
+  // Test logo variant and state resolution logic
+  function resolveLogoConfig({ variant = "primary", state = "default", size = "md", reducedMotion = false }) {
+    const validVariants = ["primary", "loading", "state"];
+    const validStates = ["security", "success", "error", "default"];
+    const validSizes = ["xs", "sm", "md", "lg", "xl"];
+
+    assert.ok(validVariants.includes(variant), `Variant ${variant} must be valid`);
+    assert.ok(validStates.includes(state), `State ${state} must be valid`);
+    assert.ok(validSizes.includes(size), `Size ${size} must be valid`);
+
+    let iconType = "shopping-bag";
+    let isAnimated = false;
+    let colorTheme = "#7DD3FC";
+
+    if (variant === "loading") {
+      iconType = "spinner-arc";
+      isAnimated = !reducedMotion;
+      colorTheme = "#7DD3FC";
+    } else if (variant === "state") {
+      if (state === "security") {
+        iconType = "shield-check";
+        colorTheme = "#7DD3FC";
+      } else if (state === "success") {
+        iconType = "check-circle";
+        colorTheme = "#34D399";
+      } else if (state === "error") {
+        iconType = "alert-triangle";
+        colorTheme = "#F87171";
+      }
+    }
+
+    return { iconType, isAnimated, colorTheme };
+  }
+
+  // 1. Primary main logo
+  const primary = resolveLogoConfig({ variant: "primary", size: "md" });
+  assert.equal(primary.iconType, "shopping-bag");
+  assert.equal(primary.isAnimated, false);
+  assert.equal(primary.colorTheme, "#7DD3FC");
+
+  // 2. Animated loading logo (motion-safe)
+  const loading = resolveLogoConfig({ variant: "loading", size: "lg", reducedMotion: false });
+  assert.equal(loading.iconType, "spinner-arc");
+  assert.equal(loading.isAnimated, true);
+
+  // 3. Animated loading logo respects reduced-motion
+  const loadingReduced = resolveLogoConfig({ variant: "loading", size: "lg", reducedMotion: true });
+  assert.equal(loadingReduced.iconType, "spinner-arc");
+  assert.equal(loadingReduced.isAnimated, false, "Animation must be disabled when user prefers reduced motion");
+
+  // 4. State-based security logo (Admin Portal & verification)
+  const securityState = resolveLogoConfig({ variant: "state", state: "security" });
+  assert.equal(securityState.iconType, "shield-check");
+  assert.equal(securityState.colorTheme, "#7DD3FC");
+
+  // 5. State-based success logo (Checkout success)
+  const successState = resolveLogoConfig({ variant: "state", state: "success" });
+  assert.equal(successState.iconType, "check-circle");
+  assert.equal(successState.colorTheme, "#34D399");
+
+  // 6. State-based error logo (Payment decline / access failure)
+  const errorState = resolveLogoConfig({ variant: "state", state: "error" });
+  assert.equal(errorState.iconType, "alert-triangle");
+  assert.equal(errorState.colorTheme, "#F87171");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

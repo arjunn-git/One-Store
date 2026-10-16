@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, Truck, RotateCcw, Headphones } from "lucide-react";
+import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function Footer() {
   return (
@@ -60,11 +61,8 @@ export function Footer() {
       {/* Main footer navigation */}
       <div className="max-w-7xl mx-auto px-4 py-12 md:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
         <div className="col-span-1 sm:col-span-2">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-[#102A43] text-[#7DD3FC] font-bold text-sm">
-              1
-            </div>
-            <span className="text-lg font-bold text-[#FFFFFF]">ONE STORE</span>
+          <div className="mb-3">
+            <OneStoreLogo variant="primary" size="sm" layout="horizontal" />
           </div>
           <p className="text-xs leading-relaxed max-w-sm mb-4">
             A bespoke, high-performance commerce platform engineered for selective shoppers in India
