@@ -38,6 +38,7 @@ import {
 } from "@/lib/services/profile-validation";
 import { AddressAutocompleteInput } from "@/components/account/AddressAutocompleteInput";
 import { PostalCodeLookupInput } from "@/components/account/PostalCodeLookupInput";
+import { CustomDropdown } from "@/components/account/CustomDropdown";
 import { type AddressSuggestion } from "@/app/api/address/autocomplete/route";
 
 export interface ProfileData {
@@ -949,37 +950,60 @@ export function UserProfileClient({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 {/* Address Label */}
-                <div>
-                  <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                    Address Label
-                  </label>
-                  <select
-                    value={addressForm.label}
-                    onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
-                    className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                  >
-                    <option value="Home" className="bg-[#080B10] text-[#FFFFFF]">Home</option>
-                    <option value="Work" className="bg-[#080B10] text-[#FFFFFF]">Work / Office</option>
-                    <option value="Other" className="bg-[#080B10] text-[#FFFFFF]">Other</option>
-                  </select>
-                </div>
+                <CustomDropdown
+                  id="modal-address-label"
+                  label="Address Label"
+                  value={addressForm.label}
+                  onChange={(val) => setAddressForm({ ...addressForm, label: val })}
+                  options={[
+                    {
+                      value: "Home",
+                      label: "Home",
+                      subtitle: "Primary residence / Personal",
+                      icon: <Home className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                    },
+                    {
+                      value: "Work",
+                      label: "Work / Office",
+                      subtitle: "Corporate / Business hours delivery",
+                      icon: <Briefcase className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                    },
+                    {
+                      value: "Other",
+                      label: "Other",
+                      subtitle: "Alternate location",
+                      icon: <Building className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                    },
+                  ]}
+                  placeholder="Select address label"
+                />
 
                 {/* Country */}
-                <div>
-                  <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                    Country
-                  </label>
-                  <select
-                    value={addressForm.country_code}
-                    onChange={(e) =>
-                      handleAddressModalMarketChange(e.target.value as "IN" | "GB")
-                    }
-                    className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                  >
-                    <option value="IN" className="bg-[#080B10] text-[#FFFFFF]">India (₹ INR)</option>
-                    <option value="GB" className="bg-[#080B10] text-[#FFFFFF]">United Kingdom (£ GBP)</option>
-                  </select>
-                </div>
+                <CustomDropdown
+                  id="modal-address-country"
+                  label="Country / Market"
+                  value={addressForm.country_code}
+                  onChange={(val) =>
+                    handleAddressModalMarketChange(val as "IN" | "GB")
+                  }
+                  options={[
+                    {
+                      value: "IN",
+                      label: "India",
+                      subtitle: "₹ INR • Express domestic delivery",
+                      badge: "₹ INR",
+                      icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                    },
+                    {
+                      value: "GB",
+                      label: "United Kingdom",
+                      subtitle: "£ GBP • Royal Mail Tracked dispatch",
+                      badge: "£ GBP",
+                      icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                    },
+                  ]}
+                  placeholder="Select destination country"
+                />
 
                 <div>
                   <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
@@ -1315,26 +1339,30 @@ export function UserProfileClient({
             </div>
 
             {/* Country / Market */}
-            <div className="space-y-1.5">
-              <label className="text-[#FFFFFF] uppercase tracking-wider font-semibold text-[11px]">
-                Shopping Country / Market *
-              </label>
-              <div className="relative">
-                <select
-                  value={country}
-                  onChange={(e) => handleMarketChange(e.target.value as "IN" | "GB")}
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                >
-                  <option value="IN" className="bg-[#080B10] text-[#FFFFFF]">
-                    India (₹ INR - Razorpay &amp; Express Domestic Dispatch)
-                  </option>
-                  <option value="GB" className="bg-[#080B10] text-[#FFFFFF]">
-                    United Kingdom (£ GBP - Stripe &amp; Royal Mail Tracked)
-                  </option>
-                </select>
-                <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CAFC3]" />
-              </div>
-            </div>
+            <CustomDropdown
+              id="shopping-country-market"
+              label="Shopping Country / Market"
+              required
+              value={country}
+              onChange={(val) => handleMarketChange(val as "IN" | "GB")}
+              options={[
+                {
+                  value: "IN",
+                  label: "India",
+                  subtitle: "₹ INR • Razorpay & Express Domestic Dispatch",
+                  badge: "₹ INR",
+                  icon: <Globe className="h-4 w-4 text-[#7DD3FC]" />,
+                },
+                {
+                  value: "GB",
+                  label: "United Kingdom",
+                  subtitle: "£ GBP • Stripe & Royal Mail Tracked",
+                  badge: "£ GBP",
+                  icon: <Globe className="h-4 w-4 text-[#7DD3FC]" />,
+                },
+              ]}
+              leftIcon={<Globe className="h-4 w-4" />}
+            />
 
             {/* Market Switching Notification */}
             {marketSwitchNotice && (

@@ -15,8 +15,10 @@ import {
   ArrowLeft,
   X,
   AlertCircle,
+  Globe,
 } from "lucide-react";
 import { validatePostalCode, validatePhoneNumber } from "@/lib/services/profile-validation";
+import { CustomDropdown } from "@/components/account/CustomDropdown";
 
 interface SavedAddress {
   id: string;
@@ -226,36 +228,59 @@ export default function AddressesPage() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                  Address Label
-                </label>
-                <select
-                  value={newAddr.label}
-                  onChange={(e) => setNewAddr({ ...newAddr, label: e.target.value })}
-                  className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                >
-                  <option value="Home">Home</option>
-                  <option value="Work">Work / Office</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              <CustomDropdown
+                id="new-addr-label"
+                label="Address Label"
+                value={newAddr.label}
+                onChange={(val) => setNewAddr({ ...newAddr, label: val })}
+                options={[
+                  {
+                    value: "Home",
+                    label: "Home",
+                    subtitle: "Primary residence / Personal",
+                    icon: <Home className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                  },
+                  {
+                    value: "Work",
+                    label: "Work / Office",
+                    subtitle: "Corporate / Business hours delivery",
+                    icon: <Briefcase className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                  },
+                  {
+                    value: "Other",
+                    label: "Other",
+                    subtitle: "Alternate location",
+                    icon: <Building className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                  },
+                ]}
+                placeholder="Select address label"
+              />
 
-              <div>
-                <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                  Country
-                </label>
-                <select
-                  value={newAddr.country_code}
-                  onChange={(e) =>
-                    setNewAddr({ ...newAddr, country_code: e.target.value as "IN" | "GB" })
-                  }
-                  className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-                >
-                  <option value="IN">India (₹ INR)</option>
-                  <option value="GB">United Kingdom (£ GBP)</option>
-                </select>
-              </div>
+              <CustomDropdown
+                id="new-addr-country"
+                label="Country / Market"
+                value={newAddr.country_code}
+                onChange={(val) =>
+                  setNewAddr({ ...newAddr, country_code: val as "IN" | "GB" })
+                }
+                options={[
+                  {
+                    value: "IN",
+                    label: "India",
+                    subtitle: "₹ INR • Express domestic delivery",
+                    badge: "₹ INR",
+                    icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                  },
+                  {
+                    value: "GB",
+                    label: "United Kingdom",
+                    subtitle: "£ GBP • Royal Mail Tracked dispatch",
+                    badge: "£ GBP",
+                    icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+                  },
+                ]}
+                placeholder="Select destination country"
+              />
 
               <div>
                 <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Loader2, Check, AlertCircle, Building, MapPin, ChevronDown } from "lucide-react";
+import { Loader2, Check, AlertCircle, Building, MapPin } from "lucide-react";
 import { validatePostalCode } from "@/lib/services/profile-validation";
 import { type PostalLookupResponse } from "@/app/api/address/lookup/route";
+import { CustomDropdown } from "@/components/account/CustomDropdown";
 
 interface PostalCodeLookupInputProps {
   id?: string;
@@ -41,30 +42,8 @@ export function PostalCodeLookupInput({
   const [resolvedStatus, setResolvedStatus] = useState<"idle" | "success" | "warning" | "error">("idle");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [localities, setLocalities] = useState<string[]>([]);
-  const [localityDropdownOpen, setLocalityDropdownOpen] = useState(false);
-  const localityMenuRef = useRef<HTMLDivElement>(null);
   const lastLookedUpRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Outside click listener for custom locality menu
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (localityMenuRef.current && !localityMenuRef.current.contains(event.target as Node)) {
-        setLocalityDropdownOpen(false);
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setLocalityDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   const performLookup = useCallback(
     async (code: string) => {
@@ -239,85 +218,27 @@ export function PostalCodeLookupInput({
 
       {/* Locality Selector for PINs mapping to multiple post offices */}
       {localities.length > 1 && (
-        <div className="pt-1.5 space-y-1.5 relative" ref={localityMenuRef}>
-          <label className="text-[10px] uppercase font-bold text-[#7DD3FC] flex items-center gap-1.5">
-            <Building className="h-3 w-3 text-[#7DD3FC]" />
-            <span>Select Your Specific Delivery Locality / Post Office:</span>
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setLocalityDropdownOpen((prev) => !prev)}
-              aria-expanded={localityDropdownOpen}
-              aria-haspopup="listbox"
-              className="w-full h-11 px-3.5 rounded-xl bg-[#080B10] hover:bg-[#102A43]/40 border border-[#243447] hover:border-[#7DD3FC]/60 text-xs text-left text-[#FFFFFF] flex items-center justify-between gap-2 transition-all focus:outline-none focus:border-[#7DD3FC] focus:ring-1 focus:ring-[#7DD3FC]/40"
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                <MapPin className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />
-                <span
-                  className={
-                    selectedLocality
-                      ? "text-[#FFFFFF] font-medium truncate"
-                      : "text-[#9CAFC3] truncate"
-                  }
-                >
-                  {selectedLocality || "-- Choose your area / delivery branch --"}
-                </span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-[#9CAFC3] transition-transform duration-200 shrink-0 ${
-                  localityDropdownOpen ? "rotate-180 text-[#7DD3FC]" : ""
-                }`}
-              />
-            </button>
-
-            {localityDropdownOpen && (
-              <div
-                role="listbox"
-                className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-56 overflow-y-auto rounded-xl bg-[#080B10]/98 backdrop-blur-2xl border border-[#243447] shadow-2xl p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 focus:outline-none"
-              >
-                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#9CAFC3] flex items-center justify-between border-b border-[#243447]/60 pb-1 mb-1">
-                  <span>Available Localities ({localities.length})</span>
-                  <span className="text-[9px] text-[#7DD3FC]">Select branch</span>
-                </div>
-                {localities.map((loc) => {
-                  const isSelected = selectedLocality === loc;
-                  return (
-                    <button
-                      key={loc}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => {
-                        if (onSelectLocality) {
-                          onSelectLocality(loc);
-                        }
-                        setLocalityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between gap-2 ${
-                        isSelected
-                          ? "bg-[#102A43] text-[#7DD3FC]"
-                          : "text-[#FFFFFF] hover:bg-[#102A43]/60 hover:text-[#7DD3FC]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <MapPin
-                          className={`h-3 w-3 shrink-0 ${
-                            isSelected ? "text-[#7DD3FC]" : "text-[#9CAFC3]"
-                          }`}
-                        />
-                        <span className="truncate">{loc}</span>
-                      </div>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-[#7DD3FC] shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <p className="text-[10px] text-[#9CAFC3]">
-            This PIN code serves multiple localities. Selecting yours helps ensure exact courier delivery.
-          </p>
+        <div className="pt-1.5">
+          <CustomDropdown
+            id={`${id}-locality`}
+            label="Select Your Specific Delivery Locality / Post Office"
+            value={selectedLocality}
+            onChange={(val) => {
+              if (onSelectLocality) {
+                onSelectLocality(val);
+              }
+            }}
+            options={localities.map((loc) => ({
+              value: loc,
+              label: loc,
+              subtitle: "India Post Delivery Branch",
+              icon: <MapPin className="h-3.5 w-3.5 text-[#7DD3FC]" />,
+            }))}
+            placeholder="-- Choose your area / delivery branch --"
+            searchable={localities.length > 5}
+            leftIcon={<Building className="h-3.5 w-3.5 text-[#7DD3FC]" />}
+            helperText="This PIN code serves multiple localities. Selecting yours helps ensure exact courier delivery."
+          />
         </div>
       )}
     </div>
