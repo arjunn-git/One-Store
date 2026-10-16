@@ -5,6 +5,15 @@ import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import { OrderTrackerClient, TrackedOrder } from "@/components/orders/OrderTrackerClient";
 import Link from "next/link";
 import { Package } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Order History & Real-Time Tracking",
+  description: "Track your live dispatch status, delivery updates, and view invoices across India and the UK.",
+  icons: {
+    icon: "/favicons/orders.svg",
+  },
+};
 
 export default async function OrdersPage() {
   let orders: TrackedOrder[] = [];

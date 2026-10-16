@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     url: "https://one-store-gray.vercel.app/products",
     type: "website",
   },
+  icons: {
+    icon: "/favicons/products.svg",
+  },
 };
 
 interface ProductsPageProps {

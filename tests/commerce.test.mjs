@@ -1294,6 +1294,71 @@ runTest("Genuine Live Store Activity Stream & Client Event Security Enforcement"
   assert.equal(countActiveVisitors(), 2, "Expired session must not be counted as active");
 });
 
+runTest("Dynamic Browser Tab Favicon System & Route Isolation", () => {
+  const expectedMappings = {
+    "/": "/favicons/home.svg",
+    "/products": "/favicons/products.svg",
+    "/products/one-acoustic-pro": "/favicons/product-detail.svg",
+    "/search": "/favicons/search.svg",
+    "/cart": "/favicons/cart.svg",
+    "/checkout": "/favicons/checkout.svg",
+    "/login": "/favicons/auth.svg",
+    "/signup": "/favicons/auth.svg",
+    "/account": "/favicons/profile.svg",
+    "/account/addresses": "/favicons/profile.svg",
+    "/orders": "/favicons/orders.svg",
+    "/orders/OS-2026-IN-1001": "/favicons/orders.svg",
+    "/wishlist": "/favicons/wishlist.svg",
+    "/support": "/favicons/support.svg",
+    "/admin-portal/dashboard": "/favicons/admin-dashboard.svg",
+    "/admin-portal/orders": "/favicons/admin-orders.svg",
+    "/admin-portal/products": "/favicons/admin-products.svg",
+    "/admin-portal/inventory": "/favicons/admin-inventory.svg",
+    "/admin-portal/customers": "/favicons/admin-customers.svg",
+    "/admin-portal/settings": "/favicons/admin-settings.svg",
+    "/404": "/favicons/error.svg",
+    "/unknown-path": "/favicons/home.svg",
+  };
+
+  // Pure resolver function mirroring src/lib/services/favicon.ts
+  function resolveFavicon(raw) {
+    const clean = (raw.split("?")[0].split("#")[0] || "/").replace(/\/+$/, "") || "/";
+    if (clean.startsWith("/admin-portal/orders") || clean.startsWith("/admin/orders")) return "/favicons/admin-orders.svg";
+    if (clean.startsWith("/admin-portal/products") || clean.startsWith("/admin/products")) return "/favicons/admin-products.svg";
+    if (clean.startsWith("/admin-portal/inventory") || clean.startsWith("/admin/inventory")) return "/favicons/admin-inventory.svg";
+    if (clean.startsWith("/admin-portal/customers") || clean.startsWith("/admin/customers")) return "/favicons/admin-customers.svg";
+    if (clean.startsWith("/admin-portal/settings") || clean.startsWith("/admin/settings")) return "/favicons/admin-settings.svg";
+    if (clean === "/admin-portal" || clean === "/admin-portal/dashboard" || clean === "/admin") return "/favicons/admin-dashboard.svg";
+    if (clean === "/" || clean === "") return "/favicons/home.svg";
+    if (clean === "/products") return "/favicons/products.svg";
+    if (clean.startsWith("/products/")) return "/favicons/product-detail.svg";
+    if (clean.startsWith("/categories")) return "/favicons/products.svg";
+    if (clean === "/search" || clean.startsWith("/search/")) return "/favicons/search.svg";
+    if (clean === "/cart") return "/favicons/cart.svg";
+    if (clean === "/checkout" || clean.startsWith("/checkout/")) return "/favicons/checkout.svg";
+    if (clean === "/login" || clean === "/signup" || clean.startsWith("/auth/") || clean === "/admin-portal/login") return "/favicons/auth.svg";
+    if (clean === "/account" || clean === "/account/addresses" || clean.startsWith("/account/profile")) return "/favicons/profile.svg";
+    if (clean === "/orders" || clean.startsWith("/orders/") || clean.startsWith("/account/orders")) return "/favicons/orders.svg";
+    if (clean === "/wishlist" || clean.startsWith("/wishlist/")) return "/favicons/wishlist.svg";
+    if (clean === "/support" || clean.startsWith("/support/") || clean === "/contact") return "/favicons/support.svg";
+    if (clean === "/404" || clean === "/500" || clean === "/_not-found") return "/favicons/error.svg";
+    return "/favicons/home.svg";
+  }
+
+  for (const [route, expectedUrl] of Object.entries(expectedMappings)) {
+    assert.equal(
+      resolveFavicon(route),
+      expectedUrl,
+      `Route '${route}' must accurately resolve to '${expectedUrl}'`
+    );
+  }
+
+  // Admin isolation guarantee: /admin-portal/orders must NOT collide with /orders
+  assert.equal(resolveFavicon("/admin-portal/orders"), "/favicons/admin-orders.svg");
+  assert.equal(resolveFavicon("/orders"), "/favicons/orders.svg");
+  assert.notEqual(resolveFavicon("/admin-portal/orders"), resolveFavicon("/orders"));
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

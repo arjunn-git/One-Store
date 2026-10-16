@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicons/home.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
     ],
     apple: [
@@ -139,6 +139,7 @@ import { CartProvider } from "@/lib/context/CartContext";
 import { WishlistProvider } from "@/lib/context/WishlistContext";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { WelcomeScreen } from "@/components/storefront/WelcomeScreen";
+import { DynamicFaviconManager } from "@/components/layout/DynamicFaviconManager";
 
 export default function RootLayout({
   children,
@@ -153,6 +154,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(rootStructuredData) }}
         />
         <GoogleAnalytics />
+        <DynamicFaviconManager />
         <MarketProvider>
           <CartProvider>
             <WishlistProvider>

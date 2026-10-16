@@ -7,6 +7,9 @@ export const metadata = {
     index: false,
     follow: false,
   },
+  icons: {
+    icon: "/favicons/admin-dashboard.svg",
+  },
 };
 
 export default function AdminPortalLayout({
