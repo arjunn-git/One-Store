@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { processCheckout, type CheckoutPayload } from "@/lib/services/checkout";
 import { recordActivity } from "@/lib/services/activity";
+import { notifyAdminOrderPlaced } from "@/lib/services/admin-notifications";
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +32,25 @@ export async function POST(request: Request) {
           country: body.market === "GB" ? "United Kingdom" : "India",
         },
       });
+
+      // Dispatch real-time email notification to onestore.auth@gmail.com
+      notifyAdminOrderPlaced({
+        orderNumber: result.orderNumber,
+        totalAmount: result.totalAmount || 0,
+        currency: result.currency || (body.market === "GB" ? "GBP" : "INR"),
+        market: body.market,
+        paymentProvider: result.paymentProvider || body.paymentProvider,
+        customerName: body.recipientName || "Customer",
+        customerEmail: body.customerEmail,
+        phone: body.phone,
+        shippingAddress: {
+          line1: body.line1,
+          city: body.city,
+          stateOrProvince: body.stateOrProvince,
+          postalCode: body.postalCode,
+          countryCode: body.countryCode,
+        },
+      }).catch((e) => console.error("Admin order notification error:", e));
     }
 
     return NextResponse.json(result);

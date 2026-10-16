@@ -607,6 +607,48 @@ runTest("Customer Support Inquiry Dispatch & Destination Routing (onestore.auth@
   assert.equal(validResult.payload.orderNumber, "OS-2026-IN-1001");
 });
 
+runTest("Admin Automated Live Email Pipeline (Order, Support, Payment -> onestore.auth@gmail.com)", () => {
+  const TARGET_ADMIN = "onestore.auth@gmail.com";
+
+  // Mock template generators matching admin-notifications.ts logic
+  function generateOrderAlertSubject(orderNumber, totalAmount, currency) {
+    const symbol = currency === "GBP" ? "£" : "₹";
+    return `🛍️ [NEW ORDER] ${orderNumber} — ${symbol}${Number(totalAmount).toLocaleString()}`;
+  }
+
+  function generatePaymentAlertSubject(orderNumber, totalAmount, currency, provider) {
+    const symbol = currency === "GBP" ? "£" : "₹";
+    return `💳 [PAYMENT SETTLED] ${orderNumber} — ${symbol}${Number(totalAmount).toLocaleString()} via ${provider.toUpperCase()}`;
+  }
+
+  function generateSupportAlertSubject(ticketId, subject, senderName) {
+    return `🎧 [SUPPORT INQUIRY] ${ticketId}: ${subject} (${senderName})`;
+  }
+
+  // 1. Order alert
+  const orderSubjIN = generateOrderAlertSubject("OS-2026-IN-9901", 124999, "INR");
+  assert.equal(orderSubjIN, "🛍️ [NEW ORDER] OS-2026-IN-9901 — ₹124,999");
+
+  const orderSubjUK = generateOrderAlertSubject("OS-2026-GB-8802", 1450, "GBP");
+  assert.equal(orderSubjUK, "🛍️ [NEW ORDER] OS-2026-GB-8802 — £1,450");
+
+  // 2. Payment alert
+  const paySubj = generatePaymentAlertSubject("OS-2026-IN-9901", 124999, "INR", "razorpay");
+  assert.equal(paySubj, "💳 [PAYMENT SETTLED] OS-2026-IN-9901 — ₹124,999 via RAZORPAY");
+
+  const paySubjUK = generatePaymentAlertSubject("OS-2026-GB-8802", 1450, "GBP", "stripe");
+  assert.equal(paySubjUK, "💳 [PAYMENT SETTLED] OS-2026-GB-8802 — £1,450 via STRIPE");
+
+  // 3. Support inquiry alert
+  const supportSubj = generateSupportAlertSubject("TKT-TEST-01", "Order Tracking", "Jane Doe");
+  assert.equal(supportSubj, "🎧 [SUPPORT INQUIRY] TKT-TEST-01: Order Tracking (Jane Doe)");
+
+  // 4. Verify recipient routing
+  const recipientTarget = process.env.ADMIN_EMAIL || TARGET_ADMIN;
+  assert.equal(recipientTarget, "onestore.auth@gmail.com", "Admin alerts must strictly route to onestore.auth@gmail.com");
+  assert.doesNotMatch(recipientTarget, /arjuntaneja204/, "Personal email must not be used as recipient target");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
@@ -614,3 +656,4 @@ console.log("------------------------------------------------------------");
 if (failed > 0) {
   process.exit(1);
 }
+

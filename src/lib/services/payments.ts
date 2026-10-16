@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLiveSupabaseConfigured, isAdminEmail } from "./auth";
+import { notifyAdminPaymentCaptured } from "./admin-notifications";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types/database";
 
 export interface RazorpayVerificationPayload {
@@ -214,6 +215,19 @@ export async function markOrderPaymentStatus(
     } catch (dbErr) {
       console.warn("Could not sync payment status to Supabase:", dbErr);
     }
+  }
+
+  if (paymentStatus === "succeeded") {
+    const isUK = orderNumber.includes("-GB-");
+    notifyAdminPaymentCaptured({
+      orderNumber,
+      paymentId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string) || "N/A",
+      totalAmount: storedOrder?.total ?? 0,
+      currency: storedOrder?.currency || (isUK ? "GBP" : "INR"),
+      market: storedOrder?.market || (isUK ? "GB" : "IN"),
+      paymentProvider: (metadata?.provider as string) || storedOrder?.payment_provider || (isUK ? "stripe" : "razorpay"),
+      customerEmail: storedOrder?.customer_email || (metadata?.customerEmail as string),
+    }).catch((e) => console.error("Admin payment notification error:", e));
   }
 
   return true;

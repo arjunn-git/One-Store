@@ -1,4 +1,5 @@
 import { recordActivity } from "./activity";
+import { notifyAdminSupportInquiry } from "./admin-notifications";
 
 export const SUPPORT_EMAIL_DESTINATION = "onestore.auth@gmail.com";
 
@@ -52,7 +53,24 @@ export async function dispatchSupportInquiry(payload: SupportInquiryPayload): Pr
   const ticketId = `TKT-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
   let deliveryMethod = "Activity Stream";
 
-  // 1. Attempt Email Delivery via Resend API (if API key configured)
+  // 1. Direct Gmail SMTP Delivery to onestore.auth@gmail.com
+  try {
+    const smtpSent = await notifyAdminSupportInquiry({
+      ticketId,
+      name,
+      email,
+      orderNumber,
+      subject,
+      message,
+    });
+    if (smtpSent) {
+      deliveryMethod = "Gmail SMTP (onestore.auth@gmail.com)";
+    }
+  } catch (err) {
+    console.error("Gmail SMTP support error:", err);
+  }
+
+  // 2. Attempt Email Delivery via Resend API (if configured)
   const resendApiKey = process.env.RESEND_API_KEY;
   if (resendApiKey && resendApiKey !== "re_placeholder_key") {
     try {
