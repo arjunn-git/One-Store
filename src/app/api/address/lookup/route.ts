@@ -31,7 +31,12 @@ export interface PostalLookupResponse {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const rawCode = searchParams.get("code") || searchParams.get("postal_code") || searchParams.get("pin");
+    const rawCode =
+      searchParams.get("postcode") ||
+      searchParams.get("pincode") ||
+      searchParams.get("postal_code") ||
+      searchParams.get("code") ||
+      searchParams.get("pin");
     const country = (searchParams.get("country")?.toUpperCase() === "GB" ? "GB" : "IN") as "IN" | "GB";
 
     if (!rawCode || !rawCode.trim()) {

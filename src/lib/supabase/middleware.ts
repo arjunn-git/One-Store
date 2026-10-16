@@ -62,8 +62,12 @@ export async function updateSession(request: NextRequest) {
     (authenticatedEmail === OFFICIAL_ADMIN_EMAIL) || hasValidAdminToken;
   const isCustomerAuthenticated = !!authenticatedEmail && !isVerifiedAdmin;
 
-  // 1. OAuth code redirect handling
-  if (request.nextUrl.searchParams.has("code") && pathname !== "/auth/callback") {
+  // 1. OAuth code redirect handling (only for storefront pages, never API routes)
+  if (
+    request.nextUrl.searchParams.has("code") &&
+    pathname !== "/auth/callback" &&
+    !pathname.startsWith("/api/")
+  ) {
     const code = request.nextUrl.searchParams.get("code");
     const callbackUrl = new URL("/auth/callback", request.url);
     callbackUrl.searchParams.set("code", code!);

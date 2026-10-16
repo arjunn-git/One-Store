@@ -65,7 +65,7 @@ export function PostalCodeLookupInput({
 
       try {
         const res = await fetch(
-          `/api/address/lookup?code=${encodeURIComponent(clean)}&country=${encodeURIComponent(country)}`
+          `/api/address/lookup?postcode=${encodeURIComponent(clean)}&country=${encodeURIComponent(country)}`
         );
         const data: PostalLookupResponse = await res.json();
 
