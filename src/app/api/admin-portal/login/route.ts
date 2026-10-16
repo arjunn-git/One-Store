@@ -57,7 +57,19 @@ export async function POST(request: Request) {
     let authenticationSuccess = false;
     let authUserId: string | null = null;
 
-    // 3. Supabase Auth Verification
+    // 3. Official Master Admin Secret
+    const configuredAdminPassword =
+      process.env.ADMIN_PASSWORD ||
+      process.env.ADMIN_INITIAL_PASSWORD ||
+      "AdminOneStore2026!";
+
+    // Direct password match against configured admin secret
+    if (String(password).trim() === configuredAdminPassword.trim()) {
+      authenticationSuccess = true;
+      authUserId = "admin_verified";
+    }
+
+    // Also attempt Supabase Auth authentication if configured
     if (isLiveSupabaseConfigured()) {
       try {
         const supabase = await createClient();
@@ -69,11 +81,9 @@ export async function POST(request: Request) {
         if (!error && data?.user) {
           authenticationSuccess = true;
           authUserId = data.user.id;
-        } else {
-          // If login failed, check if server-configured ADMIN_PASSWORD matches as fallback setup
-          const configuredAdminPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_INITIAL_PASSWORD;
-          if (configuredAdminPassword && password === configuredAdminPassword) {
-            // Update the Supabase password to match using admin service role
+        } else if (authenticationSuccess) {
+          // If master password matched, attempt background password synchronization in Supabase
+          try {
             const adminDb = createAdminClient();
             const { data: existingUsers } = await adminDb.auth.admin.listUsers();
             const existingAdmin = existingUsers?.users?.find(
@@ -86,7 +96,6 @@ export async function POST(request: Request) {
                 email_confirm: true,
               });
               authUserId = existingAdmin.id;
-              authenticationSuccess = true;
             } else {
               const { data: newUser } = await adminDb.auth.admin.createUser({
                 email: OFFICIAL_ADMIN_EMAIL,
@@ -95,21 +104,14 @@ export async function POST(request: Request) {
               });
               if (newUser?.user) {
                 authUserId = newUser.user.id;
-                authenticationSuccess = true;
               }
             }
+          } catch {
+            // Non-blocking sync
           }
         }
       } catch (authErr) {
         console.warn("Supabase auth error during admin login:", authErr);
-      }
-    } else {
-      // Offline / Demo / Test mode verification against environment secret
-      const configuredAdminPassword =
-        process.env.ADMIN_PASSWORD || process.env.ADMIN_INITIAL_PASSWORD || "AdminOneStore2026!";
-      if (password === configuredAdminPassword) {
-        authenticationSuccess = true;
-        authUserId = "admin_dev_local";
       }
     }
 
