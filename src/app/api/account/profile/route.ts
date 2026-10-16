@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateProfileCompletion } from "@/lib/services/profile-validation";
+import { isAdminEmail } from "@/lib/services/auth";
 
 export async function GET() {
   try {
@@ -266,7 +267,14 @@ export async function POST(request: Request) {
       completion,
     });
 
-    if (candidateProfile.full_name) {
+    const isAdmin = isAdminEmail(authData.user.email);
+    if (isAdmin) {
+      response.cookies.set("one_store_user_name", "Store Admin", {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    } else if (candidateProfile.full_name) {
       response.cookies.set("one_store_user_name", candidateProfile.full_name, {
         path: "/",
         maxAge: 60 * 60 * 24 * 30,

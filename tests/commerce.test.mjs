@@ -1378,6 +1378,7 @@ runTest("Minimalist Header Profile Button & Account Dropdown Architecture", () =
   
   // Admin user
   assert.equal(resolveDisplayName({ full_name: "Boss", email: "onestore.auth@gmail.com", isAdmin: true }), "Store Admin");
+  assert.equal(resolveDisplayName({ full_name: "Arjun Taneja", email: "onestore.auth@gmail.com", isAdmin: true }), "Store Admin");
 
   // 2. Dropdown Menu Items Route Mapping
   const menuConfig = [

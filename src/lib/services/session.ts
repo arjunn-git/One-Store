@@ -1,5 +1,7 @@
 "use client";
 
+import { isAdminEmail } from "@/lib/services/auth";
+
 const SESSION_STORAGE_KEY = "one_store_anonymous_session_id";
 
 /**
@@ -41,8 +43,12 @@ export function getClientActor(market: "IN" | "GB" = "IN"): string {
     const emailMatch = document.cookie.match(/one_store_user_email=([^;]+)/);
     const cookieEmail = emailMatch ? decodeURIComponent(emailMatch[1]).trim() : "";
 
-    const name = savedName || cookieName;
     const email = savedEmail || cookieEmail;
+    if (email && isAdminEmail(email)) {
+      return `Store Admin (${email})`;
+    }
+
+    const name = savedName || cookieName;
 
     if (name && email) {
       return `${name} (${email})`;

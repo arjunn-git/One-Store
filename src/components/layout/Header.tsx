@@ -90,6 +90,7 @@ export function Header() {
   // Listen for client profile updates
   useEffect(() => {
     const handleProfileUpdate = (e: any) => {
+      if (isAdmin) return;
       if (e?.detail?.full_name) {
         setUserName(e.detail.full_name);
       }
@@ -98,7 +99,7 @@ export function Header() {
     return () => {
       window.removeEventListener("user_profile_updated", handleProfileUpdate);
     };
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     let isMounted = true;
@@ -131,27 +132,30 @@ export function Header() {
           const adminCheck = isAdminEmail(email);
           setIsAdmin(adminCheck);
 
-          let name = data.user.user_metadata?.full_name?.trim() || null;
-          if (!name) {
-            try {
-              const { data: profile } = await supabase
-                .from("customer_profiles")
-                .select("full_name")
-                .eq("auth_user_id", data.user.id)
-                .maybeSingle();
-              if (profile?.full_name?.trim()) {
-                name = profile.full_name.trim();
+          let name: string | null = null;
+          if (adminCheck) {
+            name = "Store Admin";
+          } else {
+            name = data.user.user_metadata?.full_name?.trim() || null;
+            if (!name) {
+              try {
+                const { data: profile } = await supabase
+                  .from("customer_profiles")
+                  .select("full_name")
+                  .eq("auth_user_id", data.user.id)
+                  .maybeSingle();
+                if (profile?.full_name?.trim()) {
+                  name = profile.full_name.trim();
+                }
+              } catch {
+                // Ignore profile fetch failure
               }
-            } catch {
-              // Ignore profile fetch failure
+            }
+            if (!name && savedName) {
+              name = savedName.trim();
             }
           }
-          if (!name && savedName) {
-            name = savedName.trim();
-          }
-          if (!name && adminCheck) {
-            name = "Store Admin";
-          }
+
           setUserName(name || null);
           if (name) {
             localStorage.setItem("one_store_user_name", name);
@@ -307,7 +311,7 @@ export function Header() {
                 className="group flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-transparent hover:bg-[#102A43]/50 border border-transparent hover:border-[#243447]/80 text-[#FFFFFF] hover:text-[#7DD3FC] text-sm font-medium transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC]/50"
               >
                 <span className="max-w-[130px] sm:max-w-[160px] truncate text-sm font-medium text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
-                  {userName || "My Account"}
+                  {isAdmin ? "Store Admin" : (userName || "My Account")}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-transform duration-200 shrink-0 ${
@@ -327,14 +331,14 @@ export function Header() {
                   {/* Account Header */}
                   <div className="px-3 py-2.5 mb-1.5 rounded-xl bg-[#102A43]/30 border border-[#243447]/60">
                     <p className="text-sm font-semibold text-[#FFFFFF] truncate">
-                      {userName || "My Account"}
+                      {isAdmin ? "Store Admin" : (userName || "My Account")}
                     </p>
                     <Link
                       href="/account"
                       onClick={() => setProfileMenuOpen(false)}
                       className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] transition-colors inline-block mt-0.5"
                     >
-                      View your profile
+                      {isAdmin ? "Store Administrator Account" : "View your profile"}
                     </Link>
                   </div>
 
@@ -577,14 +581,14 @@ export function Header() {
                 <div className="p-3.5 rounded-xl bg-[#102A43]/30 border border-[#243447] space-y-3">
                   <div>
                     <div className="text-sm font-semibold text-[#FFFFFF]">
-                      {userName || "My Account"}
+                      {isAdmin ? "Store Admin" : (userName || "My Account")}
                     </div>
                     <Link
                       href="/account"
                       onClick={() => setMobileMenuOpen(false)}
                       className="text-xs text-[#7DD3FC] hover:text-[#FFFFFF] transition-colors inline-block mt-0.5"
                     >
-                      View your profile
+                      {isAdmin ? "Store Administrator Account" : "View your profile"}
                     </Link>
                   </div>
 

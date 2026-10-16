@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       httpOnly: false,
     });
 
-    const fullName = (body.name || body.fullName || "").trim();
+    const fullName = isAdmin ? "Store Admin" : (body.name || body.fullName || "").trim();
     if (fullName) {
       cookieStore.set("one_store_user_name", fullName, {
         path: "/",
@@ -76,7 +76,11 @@ export async function POST(request: Request) {
       });
     }
 
-    const actorDisplay = fullName ? `${fullName} (${email})` : `${email.split("@")[0]} (${email})`;
+    const actorDisplay = isAdmin
+      ? `Store Admin (${email})`
+      : fullName
+      ? `${fullName} (${email})`
+      : `${email.split("@")[0]} (${email})`;
 
     // Record genuine customer login event
     await recordActivity({

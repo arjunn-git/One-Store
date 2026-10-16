@@ -8,6 +8,7 @@ import {
   Package,
   MapPin,
   ShieldCheck,
+  Shield,
   CheckCircle2,
   Mail,
   Phone,
@@ -127,6 +128,17 @@ export function UserProfileClient({
   const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isAdmin) {
+      try {
+        localStorage.setItem("one_store_user_name", "Store Admin");
+        window.dispatchEvent(
+          new CustomEvent("user_profile_updated", { detail: { full_name: "Store Admin" } })
+        );
+      } catch {
+        // Ignore
+      }
+      return;
+    }
     if (initialProfile?.full_name) {
       try {
         localStorage.setItem("one_store_user_name", initialProfile.full_name);
@@ -137,7 +149,7 @@ export function UserProfileClient({
         // Ignore
       }
     }
-  }, [initialProfile?.full_name]);
+  }, [initialProfile?.full_name, isAdmin]);
 
   // Address State
   const [addresses, setAddresses] = useState<AddressItem[]>(initialAddresses);
@@ -249,7 +261,7 @@ export function UserProfileClient({
       }
 
       setProfile(data.profile);
-      if (data.profile?.full_name) {
+      if (!isAdmin && data.profile?.full_name) {
         try {
           localStorage.setItem("one_store_user_name", data.profile.full_name);
           window.dispatchEvent(
@@ -408,7 +420,7 @@ export function UserProfileClient({
     return "Good evening";
   };
 
-  const nameOrEmail = fullName || profile.email?.split("@")[0] || "Shopper";
+  const nameOrEmail = isAdmin ? "Store Administrator" : (fullName || profile.email?.split("@")[0] || "Shopper");
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -416,29 +428,43 @@ export function UserProfileClient({
       <div className="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-r from-[#102A43]/70 via-[#102A43]/40 to-[#080B10] border border-[#243447] shadow-2xl backdrop-blur-md">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-5">
-            <div className="h-16 w-16 rounded-2xl bg-[#102A43] border border-[#7DD3FC]/50 text-[#7DD3FC] flex items-center justify-center font-bold text-2xl shadow-inner shrink-0">
-              {nameOrEmail.charAt(0).toUpperCase()}
+            <div
+              className={`h-16 w-16 rounded-2xl ${
+                isAdmin
+                  ? "bg-amber-950/40 border-amber-500/50 text-amber-300"
+                  : "bg-[#102A43] border-[#7DD3FC]/50 text-[#7DD3FC]"
+              } border flex items-center justify-center font-bold text-2xl shadow-inner shrink-0`}
+            >
+              {isAdmin ? <Shield className="h-8 w-8 text-amber-400" /> : nameOrEmail.charAt(0).toUpperCase()}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs text-[#7DD3FC] font-semibold uppercase tracking-wider">
                   {displayGreeting()},
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Verified Member
-                </span>
-                {completion.isComplete ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30">
-                    <ShieldCheck className="h-3 w-3" /> Profile 100% Complete
+                {isAdmin ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700 shadow-sm">
+                    <Shield className="h-3.5 w-3.5 text-amber-400" /> Store Administrator
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-800">
-                    <AlertCircle className="h-3 w-3 text-amber-400" /> Profile {completion.percentage}% Complete
-                  </span>
+                  <>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Verified Member
+                    </span>
+                    {completion.isComplete ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30">
+                        <ShieldCheck className="h-3 w-3" /> Profile 100% Complete
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-800">
+                        <AlertCircle className="h-3 w-3 text-amber-400" /> Profile {completion.percentage}% Complete
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
-                {fullName || profile.email}
+                {isAdmin ? "Store Administrator" : (fullName || profile.email)}
               </h1>
               <p className="text-xs text-[#9CAFC3] flex items-center gap-2 flex-wrap">
                 <span className="flex items-center gap-1 text-[#FFFFFF]">
@@ -451,6 +477,15 @@ export function UserProfileClient({
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
+            {isAdmin && (
+              <Link
+                href="/admin-portal/dashboard"
+                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-400/15"
+              >
+                <Shield className="h-4 w-4" />
+                <span>Open Admin Portal</span>
+              </Link>
+            )}
             {nextCheckout && (
               <Link
                 href={nextCheckout}
