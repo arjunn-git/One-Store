@@ -184,24 +184,37 @@ export interface PromoCode {
 
 export type ActivityEventType =
   | "ORDER_CREATED"
+  | "ORDER_STATUS_CHANGED"
+  | "ORDER_FULFILLED"
+  | "ORDER_CANCELLED"
+  | "ORDER_REFUNDED"
+  | "PAYMENT_INITIATED"
   | "PAYMENT_SUCCESS"
   | "PAYMENT_FAILED"
+  | "PAYMENT_PENDING"
+  | "PAYMENT_REFUNDED"
   | "CART_ADD"
   | "CART_REMOVE"
+  | "CART_UPDATED"
+  | "CART_CLEARED"
   | "CHECKOUT_INITIATED"
   | "MARKET_SWITCH"
   | "CUSTOMER_LOGIN"
   | "CUSTOMER_SIGNUP"
   | "CUSTOMER_LOGOUT"
   | "SEARCH_QUERY"
+  | "PRODUCT_VIEW"
   | "INVENTORY_UPDATE"
-  | "SUPPORT_INQUIRY";
+  | "SUPPORT_INQUIRY"
+  | "SESSION_ACTIVE";
 
 export interface ActivityEvent {
   id: string;
   type: ActivityEventType;
   action: string;
   actor: string;
+  authUserId?: string;
+  anonymousSessionId?: string;
   market: "IN" | "GB";
   currency: "INR" | "GBP";
   resourceType: string;
@@ -210,3 +223,4 @@ export interface ActivityEvent {
   ipAddress?: string;
   timestamp: string;
 }
+

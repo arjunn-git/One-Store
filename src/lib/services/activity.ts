@@ -5,101 +5,115 @@ import type { ActivityEvent, ActivityEventType } from "@/lib/types/database";
 declare global {
   // eslint-disable-next-line no-var
   var __one_store_activity_stream__: ActivityEvent[] | undefined;
+  // eslint-disable-next-line no-var
+  var __one_store_active_sessions__: Map<string, ActiveSessionRecord> | undefined;
+}
+
+export interface ActiveSessionRecord {
+  sessionId: string;
+  authUserId?: string;
+  market: "IN" | "GB";
+  lastActiveAt: number;
 }
 
 function getActivityStream(): ActivityEvent[] {
   if (!globalThis.__one_store_activity_stream__) {
-    // Seed initial realistic activity entries so admin sees immediate telemetry
-    globalThis.__one_store_activity_stream__ = [
-      {
-        id: "act_seed_01",
-        type: "ORDER_CREATED",
-        action: "Order Created",
-        actor: "Aarav Sharma (Customer)",
-        market: "IN",
-        currency: "INR",
-        resourceType: "orders",
-        resourceId: "OS-2026-IN-3434",
-        details: {
-          orderNumber: "OS-2026-IN-3434",
-          totalAmount: 24999,
-          paymentProvider: "razorpay",
-          itemsCount: 1,
-          itemName: "One Acoustic Pro Wireless",
-        },
-        timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-      },
-      {
-        id: "act_seed_02",
-        type: "PAYMENT_SUCCESS",
-        action: "Razorpay Payment Verified",
-        actor: "Aarav Sharma (Customer)",
-        market: "IN",
-        currency: "INR",
-        resourceType: "payments",
-        resourceId: "pay_rzp_in_live_01",
-        details: {
-          orderNumber: "OS-2026-IN-3434",
-          method: "UPI (PhonePe / GPay)",
-          amount: 24999,
-          status: "succeeded",
-        },
-        timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-      },
-      {
-        id: "act_seed_03",
-        type: "MARKET_SWITCH",
-        action: "Storefront Market Switched",
-        actor: "Oliver Smith (Shopper)",
-        market: "GB",
-        currency: "GBP",
-        resourceType: "storefront",
-        details: {
-          previousMarket: "IN",
-          newMarket: "GB",
-          currency: "GBP (£)",
-        },
-        timestamp: new Date(Date.now() - 1000 * 60 * 1.5).toISOString(),
-      },
-      {
-        id: "act_seed_04",
-        type: "CART_ADD",
-        action: "Product Added to Cart",
-        actor: "Oliver Smith (Shopper)",
-        market: "GB",
-        currency: "GBP",
-        resourceType: "cart",
-        details: {
-          productName: "Wireless Bluetooth Headphones",
-          sku: "UK-TEST-AUD-001",
-          priceGbp: 39.99,
-          quantity: 1,
-        },
-        timestamp: new Date(Date.now() - 1000 * 45).toISOString(),
-      },
-      {
-        id: "act_seed_05",
-        type: "CHECKOUT_INITIATED",
-        action: "Checkout Finalization Started",
-        actor: "Oliver Smith (Shopper)",
-        market: "GB",
-        currency: "GBP",
-        resourceType: "checkout",
-        details: {
-          gateway: "Stripe UK & Global",
-          cartTotal: "£39.99",
-        },
-        timestamp: new Date(Date.now() - 1000 * 20).toISOString(),
-      },
-    ];
+    // Genuine live activity stream starts completely empty with zero fake/mocked entries
+    globalThis.__one_store_activity_stream__ = [];
   }
   return globalThis.__one_store_activity_stream__;
+}
+
+function getActiveSessionsMap(): Map<string, ActiveSessionRecord> {
+  if (!globalThis.__one_store_active_sessions__) {
+    globalThis.__one_store_active_sessions__ = new Map<string, ActiveSessionRecord>();
+  }
+  return globalThis.__one_store_active_sessions__;
+}
+
+export async function recordSessionHeartbeat(params: {
+  sessionId: string;
+  market?: "IN" | "GB";
+  authUserId?: string;
+}): Promise<void> {
+  const { sessionId, market = "IN", authUserId } = params;
+  if (!sessionId) return;
+
+  const sessions = getActiveSessionsMap();
+  sessions.set(sessionId, {
+    sessionId,
+    market,
+    authUserId,
+    lastActiveAt: Date.now(),
+  });
+
+  // Prune sessions older than 30 minutes in memory
+  const thirtyMinsAgo = Date.now() - 30 * 60 * 1000;
+  for (const [id, rec] of sessions.entries()) {
+    if (rec.lastActiveAt < thirtyMinsAgo) {
+      sessions.delete(id);
+    }
+  }
+
+  // Also persist to Supabase active_sessions if live configured
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const admin = createAdminClient();
+      await admin.from("active_sessions").upsert(
+        {
+          session_id: sessionId,
+          market,
+          auth_user_id: authUserId || null,
+          last_active_at: new Date().toISOString(),
+        },
+        { onConflict: "session_id" }
+      );
+    } catch {
+      // Non-blocking
+    }
+  }
+}
+
+export async function getActiveShoppersCount(): Promise<number> {
+  const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000;
+
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const admin = createAdminClient();
+      const cutoff = new Date(fifteenMinutesAgo).toISOString();
+      const { data, count, error } = await admin
+        .from("active_sessions")
+        .select("session_id", { count: "exact", head: false })
+        .gte("last_active_at", cutoff);
+
+      if (!error && typeof count === "number") {
+        return count;
+      }
+      if (Array.isArray(data)) {
+        return data.length;
+      }
+    } catch {
+      // Fallback to memory
+    }
+  }
+
+  // Memory calculation for real active sessions
+  const sessions = getActiveSessionsMap();
+  let activeCount = 0;
+  for (const rec of sessions.values()) {
+    if (rec.lastActiveAt >= fifteenMinutesAgo) {
+      activeCount++;
+    }
+  }
+  return activeCount;
 }
 
 export async function recordActivity(event: {
   type: ActivityEventType;
   action: string;
   actor?: string;
+  authUserId?: string;
+  anonymousSessionId?: string;
   market?: "IN" | "GB";
   currency?: "INR" | "GBP";
   resourceType: string;
@@ -114,6 +128,8 @@ export async function recordActivity(event: {
     type: event.type,
     action: event.action,
     actor: event.actor || "Guest Shopper",
+    authUserId: event.authUserId,
+    anonymousSessionId: event.anonymousSessionId,
     market: event.market || "IN",
     currency: event.currency || (event.market === "GB" ? "GBP" : "INR"),
     resourceType: event.resourceType,
@@ -123,32 +139,58 @@ export async function recordActivity(event: {
     timestamp: new Date().toISOString(),
   };
 
+  // If a session ID is present, update session telemetry
+  if (event.anonymousSessionId) {
+    recordSessionHeartbeat({
+      sessionId: event.anonymousSessionId,
+      market: newEvent.market,
+      authUserId: newEvent.authUserId,
+    }).catch(() => {});
+  }
+
   // Prepend to in-memory activity ring (max 200 items)
   stream.unshift(newEvent);
   if (stream.length > 200) {
     stream.length = 200;
   }
 
-  // Also persist to Supabase audit_logs in background if configured
+  // Also persist to Supabase activity_events & audit_logs in background if configured
   if (isLiveSupabaseConfigured()) {
     try {
       const admin = createAdminClient();
-      await admin.from("audit_logs").insert({
-        action: `${newEvent.type}:${newEvent.action}`,
-        resource_type: newEvent.resourceType,
-        resource_id: newEvent.resourceId || null,
-        details: {
-          ...newEvent.details,
+      await Promise.allSettled([
+        admin.from("activity_events").insert({
+          id: newEvent.id,
+          type: newEvent.type,
+          action: newEvent.action,
           actor: newEvent.actor,
+          auth_user_id: newEvent.authUserId || null,
+          anonymous_session_id: newEvent.anonymousSessionId || null,
           market: newEvent.market,
           currency: newEvent.currency,
-          activity_id: newEvent.id,
-        },
-        ip_address: newEvent.ipAddress || null,
-        created_at: newEvent.timestamp,
-      });
+          resource_type: newEvent.resourceType,
+          resource_id: newEvent.resourceId || null,
+          details: newEvent.details || {},
+          ip_address: newEvent.ipAddress || null,
+          created_at: newEvent.timestamp,
+        }),
+        admin.from("audit_logs").insert({
+          action: `${newEvent.type}:${newEvent.action}`,
+          resource_type: newEvent.resourceType,
+          resource_id: newEvent.resourceId || null,
+          details: {
+            ...newEvent.details,
+            actor: newEvent.actor,
+            market: newEvent.market,
+            currency: newEvent.currency,
+            activity_id: newEvent.id,
+          },
+          ip_address: newEvent.ipAddress || null,
+          created_at: newEvent.timestamp,
+        }),
+      ]);
     } catch {
-      // Supabase audit log error suppressed to avoid blocking requests
+      // Supabase logging error suppressed to avoid blocking operational requests
     }
   }
 
@@ -161,9 +203,53 @@ export async function getRecentActivities(options?: {
   type?: string;
   market?: "IN" | "GB";
 }): Promise<ActivityEvent[]> {
-  const stream = getActivityStream();
-  const limit = options?.limit || 50;
+  const limit = Math.min(options?.limit || 50, 100);
 
+  // 1. Try querying Supabase activity_events table if configured
+  if (isLiveSupabaseConfigured()) {
+    try {
+      const admin = createAdminClient();
+      let query = admin
+        .from("activity_events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (options?.type && options.type !== "ALL") {
+        query = query.eq("type", options.type);
+      }
+      if (options?.market) {
+        query = query.eq("market", options.market);
+      }
+      if (options?.since) {
+        query = query.gt("created_at", options.since);
+      }
+
+      const { data, error } = await query;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data.map((row) => ({
+          id: row.id,
+          type: row.type as ActivityEventType,
+          action: row.action,
+          actor: row.actor,
+          authUserId: row.auth_user_id || undefined,
+          anonymousSessionId: row.anonymous_session_id || undefined,
+          market: row.market,
+          currency: row.currency,
+          resourceType: row.resource_type,
+          resourceId: row.resource_id || undefined,
+          details: row.details || {},
+          ipAddress: row.ip_address || undefined,
+          timestamp: row.created_at,
+        }));
+      }
+    } catch {
+      // Fall through to memory buffer
+    }
+  }
+
+  // 2. Query in-memory ring buffer
+  const stream = getActivityStream();
   let filtered = [...stream];
 
   if (options?.type && options.type !== "ALL") {

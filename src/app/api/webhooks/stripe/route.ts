@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { markOrderPaymentStatus } from "@/lib/services/payments";
 
 export async function POST(request: Request) {
   try {
@@ -51,16 +51,14 @@ export async function POST(request: Request) {
       const orderNumber = session.client_reference_id || session.metadata?.order_number;
 
       if (orderNumber) {
-        const supabase = createAdminClient();
-        await supabase
-          .from("orders")
-          .update({
-            payment_status: "succeeded",
-            status: "paid",
-            payment_reference: session.payment_intent || session.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("order_number", orderNumber);
+        await markOrderPaymentStatus(orderNumber, "succeeded", {
+          paymentId: session.payment_intent || session.id,
+          provider: "stripe",
+          verifiedVia: "stripe_webhook",
+          amount: session.amount_total ? session.amount_total / 100 : undefined,
+          customerEmail: session.customer_details?.email,
+          processedAt: new Date().toISOString(),
+        });
       }
     }
 

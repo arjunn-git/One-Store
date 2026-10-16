@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useMarket } from "./MarketContext";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
+import { getOrCreateAnonymousSessionId } from "@/lib/services/session";
 import type { Product, ProductVariant } from "@/lib/types/database";
 
 export interface CartLineItem {
@@ -123,9 +124,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Report storefront activity to real-time admin telemetry
     try {
+      const sessionId = getOrCreateAnonymousSessionId();
       fetch("/api/activity", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-id": sessionId,
+        },
         body: JSON.stringify({
           type: "CART_ADD",
           action: `Added to cart: ${product.name}`,
@@ -133,6 +138,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           currency: market === "GB" ? "GBP" : "INR",
           resourceType: "cart",
           resourceId: product.id,
+          anonymousSessionId: sessionId,
           details: {
             productName: product.name,
             variantName: variant?.name || null,
@@ -154,9 +160,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     if (targetItem) {
       try {
+        const sessionId = getOrCreateAnonymousSessionId();
         fetch("/api/activity", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-id": sessionId,
+          },
           body: JSON.stringify({
             type: "CART_REMOVE",
             action: `Removed from cart: ${targetItem.productName}`,
@@ -164,6 +174,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             currency: market === "GB" ? "GBP" : "INR",
             resourceType: "cart",
             resourceId: targetItem.productId,
+            anonymousSessionId: sessionId,
             details: { productName: targetItem.productName },
           }),
         }).catch(() => {});
@@ -178,6 +189,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem(itemId);
       return;
     }
+    const targetItem = items.find((i) => i.id === itemId);
     const updated = items.map((i) => {
       if (i.id === itemId) {
         return { ...i, quantity: Math.min(i.maxInventory, quantity) };
@@ -185,10 +197,63 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return i;
     });
     saveCart(updated);
+
+    if (targetItem) {
+      try {
+        const sessionId = getOrCreateAnonymousSessionId();
+        fetch("/api/activity", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-id": sessionId,
+          },
+          body: JSON.stringify({
+            type: "CART_UPDATED",
+            action: `Updated cart quantity: ${targetItem.productName} (${quantity})`,
+            market,
+            currency: market === "GB" ? "GBP" : "INR",
+            resourceType: "cart",
+            resourceId: targetItem.productId,
+            anonymousSessionId: sessionId,
+            details: {
+              productName: targetItem.productName,
+              newQuantity: quantity,
+            },
+          }),
+        }).catch(() => {});
+      } catch {
+        // Ignored
+      }
+    }
   };
 
   const clearCart = () => {
+    const countBeforeClear = items.length;
     saveCart([]);
+
+    if (countBeforeClear > 0) {
+      try {
+        const sessionId = getOrCreateAnonymousSessionId();
+        fetch("/api/activity", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-id": sessionId,
+          },
+          body: JSON.stringify({
+            type: "CART_CLEARED",
+            action: "Cart emptied",
+            market,
+            currency: market === "GB" ? "GBP" : "INR",
+            resourceType: "cart",
+            anonymousSessionId: sessionId,
+            details: { previousItemsCount: countBeforeClear },
+          }),
+        }).catch(() => {});
+      } catch {
+        // Ignored
+      }
+    }
   };
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import { verifyAdminRequest } from "@/lib/services/admin-auth";
+import { recordActivity } from "@/lib/services/activity";
+import type { ActivityEventType } from "@/lib/types/database";
 
 // GET /api/admin/orders/[id] — View single order
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -97,6 +99,41 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    if (updatedOrder) {
+      let eventType: ActivityEventType = "ORDER_STATUS_CHANGED";
+      let actionText = `Order ${updatedOrder.order_number} status updated to ${status || updatedOrder.status}`;
+
+      if (status === "shipped" || status === "delivered") {
+        eventType = "ORDER_FULFILLED";
+        actionText = `Order ${updatedOrder.order_number} fulfilled (${status})`;
+      } else if (status === "cancelled") {
+        eventType = "ORDER_CANCELLED";
+        actionText = `Order ${updatedOrder.order_number} cancelled`;
+      } else if (payment_status === "refunded") {
+        eventType = "ORDER_REFUNDED";
+        actionText = `Order ${updatedOrder.order_number} refunded`;
+      }
+
+      const isUK = updatedOrder.order_number?.includes("-GB-");
+      await recordActivity({
+        type: eventType,
+        action: actionText,
+        actor: `Admin (${authResult.email || "Portal"})`,
+        market: isUK ? "GB" : "IN",
+        currency: isUK ? "GBP" : "INR",
+        resourceType: "orders",
+        resourceId: updatedOrder.order_number || id,
+        details: {
+          orderId: id,
+          orderNumber: updatedOrder.order_number,
+          newStatus: status || updatedOrder.status,
+          paymentStatus: payment_status || updatedOrder.payment_status,
+          carrier: carrier_name,
+          trackingNumber: tracking_number,
+        },
+      }).catch(() => {});
     }
 
     return NextResponse.json({ success: true, order: updatedOrder });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isAdminEmail, isLiveSupabaseConfigured } from "@/lib/services/auth";
+import { isAdminEmail, isLiveSupabaseConfigured, maskEmail } from "@/lib/services/auth";
+import { recordActivity } from "@/lib/services/activity";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
@@ -65,6 +66,20 @@ export async function POST(request: Request) {
       httpOnly: false,
     });
 
+    // Record genuine customer login event (masked email for privacy)
+    await recordActivity({
+      type: "CUSTOMER_LOGIN",
+      action: isAdmin ? "Admin Authenticated" : "Customer Authenticated",
+      actor: `${maskEmail(email)} (${role})`,
+      market: "IN",
+      currency: "INR",
+      resourceType: "auth",
+      details: {
+        role,
+        isAdmin,
+      },
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: {
@@ -80,7 +95,20 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const cookieStore = await cookies();
+  const email = cookieStore.get("one_store_user_email")?.value || null;
   cookieStore.delete("one_store_user_email");
   cookieStore.delete("one_store_user_role");
+
+  if (email) {
+    await recordActivity({
+      type: "CUSTOMER_LOGOUT",
+      action: "User Signed Out",
+      actor: maskEmail(email),
+      market: "IN",
+      currency: "INR",
+      resourceType: "auth",
+    }).catch(() => {});
+  }
+
   return NextResponse.json({ success: true });
 }

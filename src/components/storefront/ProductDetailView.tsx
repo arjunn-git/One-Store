@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMarket } from "@/lib/context/MarketContext";
 import { useCart } from "@/lib/context/CartContext";
 import { useWishlist } from "@/lib/context/WishlistContext";
+import { getOrCreateAnonymousSessionId } from "@/lib/services/session";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
@@ -57,6 +58,36 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     market === "IN" ? product.available_in_in !== false : product.available_in_gb !== false;
 
   const router = useRouter();
+
+  // Instrument genuine product view activity for real-time telemetry
+  useEffect(() => {
+    if (!product?.id) return;
+    try {
+      const sessionId = getOrCreateAnonymousSessionId();
+      fetch("/api/activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-id": sessionId,
+        },
+        body: JSON.stringify({
+          type: "PRODUCT_VIEW",
+          action: `Viewed Product: ${product.name}`,
+          market,
+          currency: market === "GB" ? "GBP" : "INR",
+          resourceType: "products",
+          resourceId: product.id,
+          anonymousSessionId: sessionId,
+          details: {
+            productName: product.name,
+            sku: product.sku,
+          },
+        }),
+      }).catch(() => {});
+    } catch {
+      // Non-blocking
+    }
+  }, [product?.id, product?.name, product?.sku, market]);
 
   const handleBuyNow = () => {
     if (isOutOfStock || !isAvailableInCurrentMarket) return;

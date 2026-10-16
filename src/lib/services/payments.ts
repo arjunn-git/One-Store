@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLiveSupabaseConfigured, isAdminEmail } from "./auth";
 import { notifyAdminPaymentCaptured } from "./admin-notifications";
+import { recordActivity } from "./activity";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types/database";
 
 export interface RazorpayVerificationPayload {
@@ -217,17 +218,55 @@ export async function markOrderPaymentStatus(
     }
   }
 
+  const isUK = orderNumber.includes("-GB-");
+  const currentTotal = storedOrder?.total ?? storedOrder?.total_amount ?? metadata?.amount ?? 0;
+  const customerIdent = storedOrder?.customer_email || (metadata?.customerEmail as string);
+  const actorName = customerIdent ? `Customer (${customerIdent})` : `Customer (${orderNumber})`;
+
   if (paymentStatus === "succeeded") {
-    const isUK = orderNumber.includes("-GB-");
     notifyAdminPaymentCaptured({
       orderNumber,
       paymentId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string) || "N/A",
-      totalAmount: storedOrder?.total ?? 0,
+      totalAmount: currentTotal,
       currency: storedOrder?.currency || (isUK ? "GBP" : "INR"),
       market: storedOrder?.market || (isUK ? "GB" : "IN"),
       paymentProvider: (metadata?.provider as string) || storedOrder?.payment_provider || (isUK ? "stripe" : "razorpay"),
-      customerEmail: storedOrder?.customer_email || (metadata?.customerEmail as string),
+      customerEmail: customerIdent,
     }).catch((e) => console.error("Admin payment notification error:", e));
+
+    recordActivity({
+      type: "PAYMENT_SUCCESS",
+      action: isUK ? "Stripe Payment Settled" : "Razorpay Payment Verified",
+      actor: actorName,
+      market: isUK ? "GB" : "IN",
+      currency: isUK ? "GBP" : "INR",
+      resourceType: "payments",
+      resourceId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string) || orderNumber,
+      details: {
+        orderNumber,
+        paymentId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string),
+        totalAmount: currentTotal,
+        paymentProvider: (metadata?.provider as string) || storedOrder?.payment_provider || (isUK ? "stripe" : "razorpay"),
+        verifiedVia: metadata?.verifiedVia || "gateway",
+        status: "succeeded",
+      },
+    }).catch(() => {});
+  } else if (paymentStatus === "failed") {
+    recordActivity({
+      type: "PAYMENT_FAILED",
+      action: isUK ? "Stripe Payment Failed" : "Razorpay Payment Failed",
+      actor: actorName,
+      market: isUK ? "GB" : "IN",
+      currency: isUK ? "GBP" : "INR",
+      resourceType: "payments",
+      resourceId: (metadata?.paymentId as string) || orderNumber,
+      details: {
+        orderNumber,
+        reason: metadata?.reason || metadata?.failureReason || "Gateway rejected or verification failed",
+        paymentProvider: isUK ? "stripe" : "razorpay",
+        status: "failed",
+      },
+    }).catch(() => {});
   }
 
   return true;
