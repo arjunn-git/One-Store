@@ -12,6 +12,7 @@ import {
   LogOut,
   ShieldCheck,
   Radio,
+  Users,
 } from "lucide-react";
 
 export function AdminPortalHeader() {
@@ -28,6 +29,7 @@ export function AdminPortalHeader() {
     { href: "/admin-portal/products", label: "Product Catalog", icon: Package, exact: true },
     { href: "/admin-portal/products/new", label: "Add Product", icon: PlusCircle, exact: true },
     { href: "/admin-portal/inventory", label: "Inventory Levels", icon: Layers, exact: false },
+    { href: "/admin-portal/customers", label: "Customers & Users", icon: Users, exact: false },
   ];
 
   const handleSignOut = async () => {

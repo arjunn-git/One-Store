@@ -282,6 +282,25 @@ export default function AdminPortalEditProductPage() {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/products/${id}?hard=true`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        router.push("/admin-portal/products");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete product.");
+      }
+    } catch {
+      alert("Network error while deleting product.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-20 text-center text-xs text-[#9CAFC3] flex items-center justify-center">
@@ -340,6 +359,14 @@ export default function AdminPortalEditProductPage() {
             }`}
           >
             Archived
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteProduct}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-950/60 hover:bg-red-900 border border-red-800/80 text-red-300 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>Delete</span>
           </button>
         </div>
       </div>

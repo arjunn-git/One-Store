@@ -98,6 +98,25 @@ export default function AdminPortalProductsPage() {
     }
   };
 
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/products/${id}?hard=true`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete product.");
+      }
+    } catch {
+      alert("Network error while deleting product.");
+    }
+  };
+
   return (
     <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
       {/* Header & New Product CTA */}
@@ -319,6 +338,14 @@ export default function AdminPortalProductsPage() {
                               }`}
                             >
                               <Archive className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(p.id, p.name)}
+                              title="Permanently Delete Product"
+                              className="p-1.5 rounded-lg bg-[#080B10] hover:bg-red-950/70 border border-[#243447] hover:border-red-600 text-[#9CAFC3] hover:text-red-400 transition-all"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </td>

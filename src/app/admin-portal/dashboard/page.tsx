@@ -190,14 +190,20 @@ export default async function AdminPortalDashboard() {
         </div>
 
         {/* Metric 4: Active Registered Accounts */}
-        <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2 shadow-xl backdrop-blur-sm">
+        <Link
+          href="/admin-portal/customers"
+          className="p-6 rounded-2xl bg-[#102A43]/40 hover:bg-[#102A43]/70 border border-[#243447] hover:border-[#7DD3FC] space-y-2 shadow-xl backdrop-blur-sm transition-all group block"
+        >
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
             <span>Active Customers</span>
-            <Users className="h-4 w-4 text-[#7DD3FC]" />
+            <Users className="h-4 w-4 text-[#7DD3FC] group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-[#FFFFFF]">{activeCustomersCount}</div>
-          <div className="text-[11px] text-[#7DD3FC]">Dual-market customer accounts</div>
-        </div>
+          <div className="text-[11px] text-[#7DD3FC] flex items-center justify-between">
+            <span>Dual-market accounts</span>
+            <span className="font-semibold underline">Fetch details &rarr;</span>
+          </div>
+        </Link>
       </div>
 
       {/* Real-time Telemetry & Shopper Activity Stream */}
