@@ -238,12 +238,12 @@ export function Header() {
                 href="/account"
                 aria-label="My Account"
                 title="My Profile & Orders"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#7DD3FC]/40 hover:bg-[#7DD3FC] hover:text-[#080B10] text-xs font-semibold transition-all"
+                className="group flex items-center gap-2.5 px-3 py-1.5 h-10 rounded-xl bg-[#0c131c] hover:bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] text-xs font-medium transition-all shadow-sm"
               >
-                <div className="h-5 w-5 rounded-full bg-[#7DD3FC]/20 text-[#7DD3FC] flex items-center justify-center text-[10px] font-bold">
+                <div className="h-6 w-6 rounded-full bg-[#7DD3FC] text-[#080B10] flex items-center justify-center text-[11px] font-extrabold shrink-0 shadow-sm transition-transform group-hover:scale-105">
                   {(userName || "U").charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden md:inline font-medium max-w-[110px] truncate">
+                <span className="hidden md:inline font-semibold max-w-[120px] truncate text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
                   {userName || "Account"}
                 </span>
               </Link>
@@ -253,7 +253,7 @@ export function Header() {
                 onClick={handleSignOut}
                 aria-label="Sign Out"
                 title="Sign Out (Browse as guest shopper)"
-                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#080B10] hover:bg-red-950/50 text-[#9CAFC3] hover:text-red-300 border border-[#243447] hover:border-red-800/60 text-xs font-medium transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-[#080B10] hover:bg-rose-950/40 text-[#9CAFC3] hover:text-rose-300 border border-[#243447] hover:border-rose-500/40 text-xs font-medium transition-all"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Logout</span>
@@ -263,9 +263,9 @@ export function Header() {
             <Link
               href="/login"
               aria-label="Sign In"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] hover:text-[#7DD3FC] text-xs font-semibold transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-[#0c131c] hover:bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] hover:text-[#7DD3FC] text-xs font-semibold transition-all"
             >
-              <User className="h-3.5 w-3.5 text-[#7DD3FC]" />
+              <User className="h-4 w-4 text-[#7DD3FC]" />
               <span className="hidden xs:inline sm:inline">Sign In</span>
             </Link>
           )}
@@ -423,7 +423,7 @@ export function Header() {
               {isLoggedIn ? (
                 <div className="p-3.5 rounded-xl bg-[#102A43]/40 border border-[#243447] space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#102A43] border border-[#7DD3FC] text-[#7DD3FC] flex items-center justify-center font-bold text-sm">
+                    <div className="h-10 w-10 rounded-full bg-[#7DD3FC] text-[#080B10] flex items-center justify-center font-extrabold text-base shadow-md shrink-0">
                       {(userName || "U").charAt(0).toUpperCase()}
                     </div>
                     <div>
