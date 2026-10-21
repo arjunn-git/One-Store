@@ -655,16 +655,20 @@ export function AIAssistantWidget() {
         <div
           role="dialog"
           aria-label="One Store AI Concierge"
-          className={`fixed z-50 transition-all duration-300 flex flex-col bg-[#080B10]/95 border border-[#243447] shadow-[0_0_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl ${
+          className={`fixed z-50 transition-all duration-300 flex flex-col bg-[#080B10]/95 border shadow-[0_0_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden ${
             isMinimized
-              ? "bottom-5 right-5 sm:bottom-6 sm:right-6 w-80 rounded-2xl p-3 border-[#00F0FF]/40 cursor-pointer shadow-[0_0_25px_rgba(0,240,255,0.2)]"
+              ? "bottom-5 right-5 sm:bottom-6 sm:right-6 w-auto min-w-[280px] max-w-sm rounded-2xl border-[#00F0FF]/50 shadow-[0_0_25px_rgba(0,240,255,0.25)] animate-ai-glow"
               : "inset-x-0 bottom-0 sm:inset-x-auto sm:right-6 sm:bottom-6 w-full sm:w-[420px] h-[92vh] sm:h-[600px] sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl border-t sm:border border-[#00F0FF]/30"
           }`}
         >
           {/* Header */}
           <div
             onClick={() => isMinimized && setIsMinimized(false)}
-            className="flex items-center justify-between p-3.5 sm:p-4 border-b border-[#243447]/80 bg-gradient-to-r from-[#102A43]/70 via-[#0C131C] to-[#080B10] rounded-t-3xl sm:rounded-t-2xl shrink-0"
+            className={`flex items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-[#102A43]/80 via-[#0C131C] to-[#080B10] shrink-0 ${
+              isMinimized
+                ? "cursor-pointer rounded-2xl"
+                : "border-b border-[#243447]/80 rounded-t-3xl sm:rounded-t-2xl"
+            }`}
           >
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -681,12 +685,12 @@ export function AIAssistantWidget() {
               </div>
 
               <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm sm:text-sm font-bold text-[#FFFFFF] tracking-tight">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-[#FFFFFF] tracking-tight whitespace-nowrap">
                     One Store Concierge
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-[#102A43] border border-[#00F0FF]/30 text-[10px] sm:text-[9px] font-bold text-[#7DD3FC]">
-                    {market === "IN" ? "🇮🇳 IN (₹)" : "🇬🇧 UK (£)"}
+                  <span className="px-2 py-0.5 rounded-full bg-[#102A43] border border-[#00F0FF]/30 text-[10px] font-bold text-[#7DD3FC] whitespace-nowrap">
+                    {market === "IN" ? "IN (₹)" : "UK (£)"}
                   </span>
                 </div>
 
@@ -717,8 +721,38 @@ export function AIAssistantWidget() {
             </div>
 
             {/* Header Action Controls */}
-            <div className="flex items-center gap-1">
-              {!isMinimized && (
+            <div className="flex items-center gap-1.5 ml-3">
+              {isMinimized ? (
+                /* Minimized state controls: click to expand / close */
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMinimized(false);
+                    }}
+                    title="Expand assistant"
+                    className="p-1.5 rounded-lg text-[#00F0FF] hover:bg-[#102A43] border border-[#00F0FF]/30 transition-all text-xs flex items-center gap-1"
+                  >
+                    <ChevronRight className="h-4 w-4 -rotate-90 sm:rotate-0" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      stopListening();
+                      stopSpeaking();
+                      setIsOpen(false);
+                      setIsMinimized(false);
+                    }}
+                    title="Close assistant"
+                    className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-rose-950/40 hover:text-rose-300 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                /* Full open controls */
                 <>
                   {/* Voice Output Toggle */}
                   <button
@@ -747,32 +781,35 @@ export function AIAssistantWidget() {
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
 
-                  {/* Minimize Panel */}
+                  {/* Minimize Panel: cleanly collapses back to floating launcher pill */}
                   <button
                     type="button"
-                    onClick={() => setIsMinimized(true)}
-                    title="Minimize panel"
+                    onClick={() => {
+                      setIsOpen(false);
+                      setIsMinimized(false);
+                    }}
+                    title="Minimize to floating pill"
                     className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] transition-colors"
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
+
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopListening();
+                      stopSpeaking();
+                      setIsOpen(false);
+                      setIsMinimized(false);
+                    }}
+                    title="Close assistant"
+                    className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-rose-950/40 hover:text-rose-300 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </>
               )}
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  stopListening();
-                  stopSpeaking();
-                  setIsOpen(false);
-                  setIsMinimized(false);
-                }}
-                title="Close assistant"
-                className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-rose-950/40 hover:text-rose-300 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
           </div>
 
