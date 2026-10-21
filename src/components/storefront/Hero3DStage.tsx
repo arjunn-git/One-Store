@@ -50,7 +50,7 @@ export function Hero3DStage() {
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full max-w-4xl mx-auto my-10 py-6 px-4 perspective-1000 select-none cursor-pointer"
+      className="relative w-full max-w-4xl mx-auto my-6 sm:my-10 py-4 sm:py-6 px-2 sm:px-4 perspective-1000 select-none cursor-pointer"
     >
       {/* 3D Parallax Main Stage */}
       <div
@@ -60,7 +60,7 @@ export function Hero3DStage() {
           transformStyle: "preserve-3d",
           transition: "transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
-        className="relative w-full min-h-[340px] md:min-h-[380px] rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#080B10]/90 to-[#102A43]/40 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-8 overflow-hidden backdrop-blur-md will-change-transform"
+        className="relative w-full min-h-[300px] sm:min-h-[340px] md:min-h-[380px] rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#102A43]/60 via-[#080B10]/90 to-[#102A43]/40 border border-[#7DD3FC]/30 shadow-2xl shadow-[#7DD3FC]/10 flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden backdrop-blur-md will-change-transform"
       >
         {/* 3D Background Glowing Depth Rings */}
         <div

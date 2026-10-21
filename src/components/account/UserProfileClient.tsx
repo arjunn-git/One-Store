@@ -644,7 +644,7 @@ export function UserProfileClient({
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* 1. Welcoming Hero Banner */}
-      <div className="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-r from-[#102A43]/70 via-[#102A43]/40 to-[#080B10] border border-[#243447] shadow-2xl backdrop-blur-md">
+      <div className="relative overflow-hidden p-5 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#102A43]/70 via-[#102A43]/40 to-[#080B10] border border-[#243447] shadow-2xl backdrop-blur-md">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-5">
             <div
@@ -837,10 +837,10 @@ export function UserProfileClient({
       </div>
 
       {/* 4. Tabbed Navigation */}
-      <div className="flex items-center gap-2 border-b border-[#243447] pb-4">
+      <div className="flex items-center gap-2 border-b border-[#243447] pb-4 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("orders")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === "orders"
               ? "bg-[#7DD3FC] text-[#080B10] shadow-sm"
               : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]"
@@ -852,7 +852,7 @@ export function UserProfileClient({
 
         <button
           onClick={() => setActiveTab("addresses")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === "addresses"
               ? "bg-[#7DD3FC] text-[#080B10] shadow-sm"
               : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]"
@@ -864,7 +864,7 @@ export function UserProfileClient({
 
         <button
           onClick={() => setActiveTab("settings")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === "settings"
               ? "bg-[#7DD3FC] text-[#080B10] shadow-sm"
               : "text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43]"

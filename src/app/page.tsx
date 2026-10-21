@@ -34,7 +34,7 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden border-b border-[#243447] py-16 md:py-24 px-4 md:px-8">
+        <section className="relative overflow-hidden border-b border-[#243447] py-10 sm:py-16 md:py-24 px-3 sm:px-4 md:px-8">
           <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
             {/* Promotional launch ribbon */}
             <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-2xl sm:rounded-full bg-[#102A43] border border-[#7DD3FC]/40 text-xs font-medium text-[#FFFFFF] mb-6 shadow-md text-center">

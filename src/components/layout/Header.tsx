@@ -191,11 +191,12 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-[#243447] bg-[#080B10]/95 backdrop-blur-md">
       {/* Top utility bar */}
       <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 text-xs text-[#9CAFC3] border-b border-[#243447]/60 md:px-8">
-        <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-hidden">
           <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#7DD3FC] animate-pulse"></span>
-          <span className="text-[11px] sm:text-xs truncate">
+          <span className="text-[10px] sm:text-xs truncate">
             <span className="hidden sm:inline">Dual Market Operations: </span>
-            <span>India (₹) &amp; United Kingdom (£)</span>
+            <span className="hidden xs:inline">India (₹) &amp; United Kingdom (£)</span>
+            <span className="xs:hidden">IN (₹) &amp; UK (£)</span>
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -204,22 +205,23 @@ export function Header() {
       </div>
 
       {/* Main navigation */}
-      <div className="flex h-16 items-center justify-between px-3 sm:px-4 md:px-8">
-        <div className="flex items-center gap-3">
+      <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-8">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Mobile hamburger menu toggle */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC] transition-all focus:outline-none focus:ring-2 focus:ring-[#7DD3FC]"
+            className="md:hidden flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC] transition-all focus:outline-none focus:ring-2 focus:ring-[#7DD3FC]"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
           </button>
 
           {/* Brand logo */}
-          <Link href="/" className="group" title="One Store Home">
-            <OneStoreLogo variant="primary" size="md" layout="horizontal" />
+          <Link href="/" className="group flex items-center shrink-0" title="One Store Home">
+            <OneStoreLogo variant="primary" size="sm" layout="horizontal" className="sm:hidden" />
+            <OneStoreLogo variant="primary" size="md" layout="horizontal" className="hidden sm:inline-flex" />
           </Link>
         </div>
 
@@ -273,14 +275,14 @@ export function Header() {
         </nav>
 
         {/* Action icons */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <Link
             href="/search"
             prefetch={true}
             aria-label="Search"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
           </Link>
 
           {/* Wishlist Link */}
@@ -289,9 +291,9 @@ export function Header() {
             prefetch={true}
             aria-label="Wishlist"
             title="Saved Essentials"
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
+            className="hidden xs:flex relative h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
           >
-            <Heart className={`h-5 w-5 ${wishlistCount > 0 ? "text-red-400" : ""}`} />
+            <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${wishlistCount > 0 ? "text-red-400" : ""}`} />
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-[#FFFFFF]">
                 {wishlistCount}
@@ -308,13 +310,14 @@ export function Header() {
                 aria-expanded={profileMenuOpen}
                 aria-haspopup="menu"
                 aria-label="User account menu"
-                className="group flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-transparent hover:bg-[#102A43]/50 border border-transparent hover:border-[#243447]/80 text-[#FFFFFF] hover:text-[#7DD3FC] text-sm font-medium transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC]/50"
+                className="group flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 h-9 sm:h-10 rounded-xl bg-transparent hover:bg-[#102A43]/50 border border-transparent hover:border-[#243447]/80 text-[#FFFFFF] hover:text-[#7DD3FC] text-sm font-medium transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC]/50"
               >
-                <span className="max-w-[130px] sm:max-w-[160px] truncate text-sm font-medium text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
+                <User className="h-4 w-4 text-[#7DD3FC] sm:hidden" />
+                <span className="hidden sm:inline max-w-[130px] sm:max-w-[160px] truncate text-sm font-medium text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
                   {isAdmin ? "Store Admin" : (userName || "My Account")}
                 </span>
                 <ChevronDown
-                  className={`h-4 w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-transform duration-200 shrink-0 ${
+                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#9CAFC3] group-hover:text-[#7DD3FC] transition-transform duration-200 shrink-0 ${
                     profileMenuOpen ? "rotate-180 text-[#7DD3FC]" : ""
                   }`}
                 />
@@ -420,9 +423,9 @@ export function Header() {
             <Link
               href="/login"
               aria-label="Sign In"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-10 rounded-xl bg-[#0c131c] hover:bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] hover:text-[#7DD3FC] text-xs font-semibold transition-all"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 h-9 sm:h-10 rounded-xl bg-[#0c131c] hover:bg-[#102A43] text-[#FFFFFF] border border-[#243447] hover:border-[#7DD3FC] hover:text-[#7DD3FC] text-xs font-semibold transition-all shrink-0"
             >
-              <User className="h-4 w-4 text-[#7DD3FC]" />
+              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#7DD3FC]" />
               <span className="hidden xs:inline sm:inline">Sign In</span>
             </Link>
           )}
@@ -432,9 +435,9 @@ export function Header() {
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Shopping Cart"
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC] transition-all"
+            className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[#102A43] text-[#7DD3FC] border border-[#243447] hover:border-[#7DD3FC] transition-all shrink-0"
           >
-            <ShoppingBag className="h-5 w-5" />
+            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
             {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#7DD3FC] text-[10px] font-bold text-[#080B10]">
                 {itemCount}
@@ -446,7 +449,7 @@ export function Header() {
 
       {/* Mobile Navigation Drawer / Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[105px] bottom-0 z-40 flex flex-col bg-[#080B10]/98 backdrop-blur-xl border-t border-[#243447] animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="md:hidden absolute top-full left-0 right-0 w-full h-[calc(100dvh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto bg-[#080B10] border-t border-[#243447] shadow-2xl flex flex-col z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Quick Search Bar */}
             <div>
