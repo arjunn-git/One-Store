@@ -220,8 +220,7 @@ export function Header() {
 
           {/* Brand logo */}
           <Link href="/" className="group flex items-center shrink-0" title="One Store Home">
-            <OneStoreLogo variant="primary" size="sm" layout="horizontal" className="sm:hidden" />
-            <OneStoreLogo variant="primary" size="md" layout="horizontal" className="hidden sm:inline-flex" />
+            <OneStoreLogo variant="primary" size="md" layout="horizontal" />
           </Link>
         </div>
 
