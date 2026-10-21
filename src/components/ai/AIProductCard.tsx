@@ -62,26 +62,26 @@ export function AIProductCard({ product, onNavigate }: AIProductCardProps) {
 
       {/* Details */}
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] text-[#7DD3FC] font-mono truncate">
+        <div className="text-xs sm:text-[10px] text-[#7DD3FC] font-mono truncate">
           {product.categoryName}
         </div>
         <Link
           href={`/products/${product.slug}`}
           onClick={onNavigate}
-          className="font-bold text-[#FFFFFF] hover:text-[#7DD3FC] transition-colors truncate block text-xs"
+          className="font-bold text-[#FFFFFF] hover:text-[#7DD3FC] transition-colors truncate block text-sm sm:text-xs"
           title={product.name}
         >
           {product.name}
         </Link>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="font-semibold text-[#FFFFFF]">{product.formattedPrice}</span>
+          <span className="font-semibold text-sm sm:text-xs text-[#FFFFFF]">{product.formattedPrice}</span>
           {product.compareAtFormattedPrice && (
-            <span className="text-[10px] text-[#9CAFC3] line-through">
+            <span className="text-xs sm:text-[10px] text-[#9CAFC3] line-through">
               {product.compareAtFormattedPrice}
             </span>
           )}
           <span
-            className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${
+            className={`text-xs sm:text-[10px] px-2 py-0.5 rounded font-medium ${
               product.inStock
                 ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/60"
                 : "bg-red-950/60 text-red-400 border border-red-800/60"

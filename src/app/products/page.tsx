@@ -67,7 +67,7 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
       {/* Header & Breadcrumb */}
       <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#243447] pb-8 mb-8">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#9CAFC3] mb-2">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-[#9CAFC3] mb-2 font-medium">
             <Link href="/" className="hover:text-[#FFFFFF] transition-colors">
               Home
             </Link>
@@ -82,26 +82,26 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
               </>
             )}
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[#FFFFFF] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#FFFFFF] tracking-tight">
             {currentCategory
               ? categories.find((c) => c.slug === currentCategory)?.name || "Category Products"
               : "All Engineered Products"}
           </h1>
-          <p className="text-xs md:text-sm text-[#9CAFC3] mt-2 max-w-xl">
+          <p className="text-sm sm:text-base text-[#9CAFC3] mt-2 max-w-xl leading-relaxed">
             Precision-engineered essentials available for on-demand dispatch across India (INR ₹)
             and the United Kingdom (GBP £).
           </p>
         </div>
 
         <div className="mt-6 md:mt-0 flex flex-col sm:flex-row sm:items-center gap-3">
-          <span className="text-xs text-[#9CAFC3]">
+          <span className="text-xs sm:text-sm text-[#9CAFC3] font-medium">
             Showing <strong className="text-[#FFFFFF]">{products.length}</strong> items
           </span>
 
-          <div className="flex items-center gap-1.5 bg-[#102A43] border border-[#243447] p-1 rounded-xl text-xs">
+          <div className="flex items-center gap-1.5 bg-[#102A43] border border-[#243447] p-1 rounded-xl text-xs sm:text-sm">
             <Link
               href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=featured`}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all font-medium ${
                 currentSort === "featured"
                   ? "bg-[#7DD3FC] text-[#080B10] font-bold"
                   : "text-[#9CAFC3] hover:text-[#FFFFFF]"
@@ -111,7 +111,7 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
             </Link>
             <Link
               href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=price-asc`}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all font-medium ${
                 currentSort === "price-asc"
                   ? "bg-[#7DD3FC] text-[#080B10] font-bold"
                   : "text-[#9CAFC3] hover:text-[#FFFFFF]"
@@ -121,7 +121,7 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
             </Link>
             <Link
               href={`/products?${currentCategory ? `category=${currentCategory}&` : ""}sort=price-desc`}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg transition-all font-medium ${
                 currentSort === "price-desc"
                   ? "bg-[#7DD3FC] text-[#080B10] font-bold"
                   : "text-[#9CAFC3] hover:text-[#FFFFFF]"
@@ -134,12 +134,12 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
       </div>
 
       {/* Categories Tab Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 text-xs scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 text-xs sm:text-sm scrollbar-none">
         <Link
           href={`/products${currentSort !== "featured" ? `?sort=${currentSort}` : ""}`}
-          className={`px-4 py-2 rounded-lg font-medium transition-all shrink-0 ${
+          className={`px-4 py-2 rounded-xl font-medium transition-all shrink-0 ${
             !currentCategory
-              ? "bg-[#7DD3FC] text-[#080B10] font-semibold"
+              ? "bg-[#7DD3FC] text-[#080B10] font-bold shadow-sm shadow-[#7DD3FC]/20"
               : "bg-[#102A43] text-[#9CAFC3] hover:text-[#FFFFFF] border border-[#243447]"
           }`}
         >
@@ -149,9 +149,9 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
           <Link
             key={cat.id}
             href={`/products?category=${cat.slug}${currentSort !== "featured" ? `&sort=${currentSort}` : ""}`}
-            className={`px-4 py-2 rounded-lg font-medium transition-all shrink-0 ${
+            className={`px-4 py-2 rounded-xl font-medium transition-all shrink-0 ${
               currentCategory === cat.slug
-                ? "bg-[#7DD3FC] text-[#080B10] font-semibold"
+                ? "bg-[#7DD3FC] text-[#080B10] font-bold shadow-sm shadow-[#7DD3FC]/20"
                 : "bg-[#102A43] text-[#9CAFC3] hover:text-[#FFFFFF] border border-[#243447]"
             }`}
           >

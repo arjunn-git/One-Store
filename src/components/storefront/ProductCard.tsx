@@ -144,13 +144,13 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Featured or Test Data badge (3D Popped) */}
         {product.is_test_data ? (
           <div
-            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-xs sm:text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
           >
             <span>UK TEST DATA</span>
           </div>
         ) : product.is_featured ? (
           <div
-            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-xs sm:text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
           >
             <Sparkles className="h-3 w-3" />
             <span>Featured</span>
@@ -162,15 +162,15 @@ export function ProductCard({ product }: ProductCardProps) {
           className="absolute top-3 right-3 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
         >
           {isOutOfStock ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-red-950/80 text-red-400 border border-red-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs sm:text-[10px] font-medium bg-red-950/80 text-red-400 border border-red-800">
               <XCircle className="h-3 w-3" /> Out of stock
             </span>
           ) : isLowStock ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs sm:text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800">
               <AlertCircle className="h-3 w-3" /> Only {totalStock} left
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs sm:text-[10px] font-medium bg-[#102A43] text-[#7DD3FC] border border-[#243447]">
               <CheckCircle2 className="h-3 w-3" /> In Stock
             </span>
           )}
@@ -183,20 +183,20 @@ export function ProductCard({ product }: ProductCardProps) {
       >
         {/* Category tag */}
         {product.category && (
-          <span className="text-[11px] font-medium uppercase tracking-wider text-[#7DD3FC] mb-1 font-mono">
+          <span className="text-xs sm:text-[11px] font-semibold uppercase tracking-wider text-[#7DD3FC] mb-1 font-mono">
             {product.category.name}
           </span>
         )}
 
         {/* Title */}
-        <h3 className="text-base font-bold text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors line-clamp-1">
+        <h3 className="text-base sm:text-base font-bold text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors line-clamp-1">
           <Link href={productUrl} prefetch={true} className="focus:outline-none hover:underline">
             {product.name}
           </Link>
         </h3>
 
         {/* Description snippet */}
-        <p className="text-xs text-[#9CAFC3] mt-2 line-clamp-2 leading-relaxed">
+        <p className="text-sm sm:text-xs text-[#9CAFC3] mt-2 line-clamp-2 leading-relaxed">
           {product.description}
         </p>
 

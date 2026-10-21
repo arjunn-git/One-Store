@@ -63,8 +63,8 @@ export function CountrySelector({ compact = false, className = "" }: CountrySele
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={`Select shipping country and currency. Currently selected: ${currentConfig.name} (${currentConfig.currencySymbol} ${currentConfig.currency})`}
-        className={`flex items-center gap-2 rounded-lg border border-[#243447] bg-[#0c131c] text-xs font-medium text-[#FFFFFF] hover:border-[#7DD3FC] hover:bg-[#102A43] transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC] ${
-          compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5"
+        className={`flex items-center gap-2 rounded-lg border border-[#243447] bg-[#0c131c] text-xs sm:text-xs font-medium text-[#FFFFFF] hover:border-[#7DD3FC] hover:bg-[#102A43] transition-all focus:outline-none focus:ring-1 focus:ring-[#7DD3FC] ${
+          compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm sm:text-xs"
         }`}
       >
         <span className="text-sm leading-none" role="img" aria-label={currentConfig.name}>

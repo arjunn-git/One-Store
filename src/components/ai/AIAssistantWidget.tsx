@@ -499,14 +499,14 @@ export function AIAssistantWidget() {
 
       if (isBullet) {
         return (
-          <li key={idx} className="ml-4 list-disc text-xs my-1 text-[#E2E8F0] leading-relaxed">
+          <li key={idx} className="ml-4 list-disc text-sm sm:text-xs my-1 text-[#E2E8F0] leading-relaxed">
             {parsedContent}
           </li>
         );
       }
 
       return (
-        <p key={idx} className="text-xs my-0.5 text-[#E2E8F0] leading-relaxed">
+        <p key={idx} className="text-sm sm:text-xs my-0.5 text-[#E2E8F0] leading-relaxed">
           {parsedContent}
         </p>
       );
@@ -538,7 +538,7 @@ export function AIAssistantWidget() {
             setIsMinimized(false);
           }}
           aria-label="Open One Store AI Assistant"
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 group flex items-center gap-3.5 pl-2.5 pr-4 py-2 rounded-full bg-[#080B10]/90 backdrop-blur-xl border border-[#00F0FF]/40 text-[#FFFFFF] shadow-[0_0_30px_rgba(0,240,255,0.22)] hover:border-[#A855F7]/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.35)] hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00F0FF]"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 group flex items-center gap-3.5 pl-3 pr-4 py-2.5 sm:py-2 rounded-full bg-[#080B10]/95 backdrop-blur-xl border border-[#00F0FF]/40 text-[#FFFFFF] shadow-[0_0_30px_rgba(0,240,255,0.22)] hover:border-[#A855F7]/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.35)] hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00F0FF]"
         >
           {/* Glowing Siri Orb inside launcher */}
           <div className="relative flex items-center justify-center">
@@ -548,13 +548,13 @@ export function AIAssistantWidget() {
 
           {/* Text branding from design concept (Panel 1) */}
           <div className="flex flex-col text-left">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold tracking-tight text-[#FFFFFF]">One Store AI</span>
-              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40">
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-xs font-bold tracking-tight text-[#FFFFFF]">One Store AI</span>
+              <span className="text-[10px] sm:text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40">
                 AI
               </span>
             </div>
-            <span className="text-[9px] font-semibold tracking-wider uppercase text-[#818CF8]">
+            <span className="text-[10px] sm:text-[9px] font-bold tracking-wider uppercase text-[#818CF8]">
               SHOPPING ASSISTANT
             </span>
           </div>
@@ -595,15 +595,15 @@ export function AIAssistantWidget() {
 
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-[#FFFFFF] tracking-tight">
+                  <span className="text-sm sm:text-sm font-bold text-[#FFFFFF] tracking-tight">
                     One Store Concierge
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-[#102A43] border border-[#00F0FF]/30 text-[9px] font-bold text-[#7DD3FC]">
+                  <span className="px-2 py-0.5 rounded-full bg-[#102A43] border border-[#00F0FF]/30 text-[10px] sm:text-[9px] font-bold text-[#7DD3FC]">
                     {market === "IN" ? "🇮🇳 IN (₹)" : "🇬🇧 UK (£)"}
                   </span>
                 </div>
 
-                <div className="text-[10px] font-semibold flex items-center gap-1.5 mt-0.5">
+                <div className="text-xs sm:text-[10px] font-semibold flex items-center gap-1.5 mt-0.5">
                   {isListening ? (
                     <span className="text-[#00F0FF] flex items-center gap-1 animate-pulse">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#00F0FF]" />
@@ -692,7 +692,7 @@ export function AIAssistantWidget() {
           {/* Conversation Stream */}
           {!isMinimized && (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs scrollbar-thin">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm sm:text-xs scrollbar-thin">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -701,7 +701,7 @@ export function AIAssistantWidget() {
                     }`}
                   >
                     {/* Role Header & Timestamp */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-[#9CAFC3]/70 mb-1 px-1">
+                    <div className="flex items-center gap-1.5 text-xs sm:text-[10px] text-[#9CAFC3]/70 mb-1 px-1">
                       {msg.role === "assistant" ? (
                         <>
                           <SiriOrb size="xs" state="idle" />
@@ -738,7 +738,7 @@ export function AIAssistantWidget() {
                       }`}
                     >
                       {msg.role === "user" ? (
-                        <p className="text-xs font-semibold">{msg.content}</p>
+                        <p className="text-sm sm:text-xs font-semibold">{msg.content}</p>
                       ) : (
                         renderFormattedContent(msg.content)
                       )}
@@ -746,16 +746,16 @@ export function AIAssistantWidget() {
                       {/* Render Order Info Card (if returned) */}
                       {msg.orderInfo && (
                         <div className="p-3 rounded-xl bg-[#080B10] border border-emerald-800/60 text-xs space-y-1.5 mt-2">
-                          <div className="flex items-center justify-between text-[11px] font-bold text-emerald-300">
+                          <div className="flex items-center justify-between text-xs sm:text-[11px] font-bold text-emerald-300">
                             <span className="flex items-center gap-1.5">
                               <ShieldCheck className="h-3.5 w-3.5" /> Order Verified
                             </span>
                             <span>{msg.orderInfo.status.toUpperCase()}</span>
                           </div>
-                          <div className="text-[11px] text-[#9CAFC3]">
+                          <div className="text-xs sm:text-[11px] text-[#9CAFC3]">
                             Order Number: <strong className="text-[#FFFFFF]">{msg.orderInfo.orderNumber}</strong>
                           </div>
-                          <div className="text-[11px] text-[#9CAFC3]">
+                          <div className="text-xs sm:text-[11px] text-[#9CAFC3]">
                             Total: <strong className="text-[#7DD3FC]">{msg.orderInfo.total}</strong>
                           </div>
                         </div>
@@ -764,7 +764,7 @@ export function AIAssistantWidget() {
                       {/* Render Product Recommendation Cards (if returned) */}
                       {msg.products && msg.products.length > 0 && (
                         <div className="space-y-2 pt-1">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-[#7DD3FC] flex items-center justify-between">
+                          <div className="text-xs sm:text-[10px] font-bold uppercase tracking-wider text-[#7DD3FC] flex items-center justify-between">
                             <span>Recommended Gear</span>
                             <span className="text-[#9CAFC3] font-normal lowercase">in stock</span>
                           </div>
@@ -787,17 +787,17 @@ export function AIAssistantWidget() {
                         <div className="pt-1">
                           <Link
                             href={msg.actionLink.href}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#102A43] hover:bg-[#00F0FF] text-[#00F0FF] hover:text-[#080B10] font-bold text-[11px] border border-[#00F0FF]/40 transition-all shadow-sm"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#102A43] hover:bg-[#00F0FF] text-[#00F0FF] hover:text-[#080B10] font-bold text-xs sm:text-[11px] border border-[#00F0FF]/40 transition-all shadow-sm"
                           >
                             <span>{msg.actionLink.label}</span>
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-3.5 w-3.5" />
                           </Link>
                         </div>
                       )}
 
                       {/* Feedback Buttons for Assistant */}
                       {msg.role === "assistant" && msg.id !== "msg_welcome" && (
-                        <div className="flex items-center justify-between pt-1 border-t border-[#243447]/60 text-[10px] text-[#9CAFC3]">
+                        <div className="flex items-center justify-between pt-1 border-t border-[#243447]/60 text-xs sm:text-[10px] text-[#9CAFC3]">
                           <span>Was this response helpful?</span>
                           <div className="flex items-center gap-1">
                             {msg.feedback ? (
@@ -812,7 +812,7 @@ export function AIAssistantWidget() {
                                   className="p-1 hover:text-emerald-400 transition-colors"
                                   title="Helpful"
                                 >
-                                  <ThumbsUp className="h-3 w-3" />
+                                  <ThumbsUp className="h-3.5 w-3.5" />
                                 </button>
                                 <button
                                   type="button"
@@ -820,7 +820,7 @@ export function AIAssistantWidget() {
                                   className="p-1 hover:text-rose-400 transition-colors"
                                   title="Not helpful"
                                 >
-                                  <ThumbsDown className="h-3 w-3" />
+                                  <ThumbsDown className="h-3.5 w-3.5" />
                                 </button>
                               </>
                             )}
@@ -838,7 +838,7 @@ export function AIAssistantWidget() {
                             type="button"
                             onClick={() => handleSendMessage(prompt.replace(/^[🔍⇄📦⚡]\s*/, ""))}
                             disabled={isLoading}
-                            className="text-[11px] px-3 py-1.5 rounded-full bg-[#102A43]/70 hover:bg-[#00F0FF] text-[#9CAFC3] hover:text-[#080B10] border border-[#243447] hover:border-[#00F0FF] transition-all text-left flex items-center gap-1.5 shadow-sm font-medium"
+                            className="text-xs sm:text-[11px] px-3.5 py-1.5 rounded-full bg-[#102A43]/70 hover:bg-[#00F0FF] text-[#E2E8F0] hover:text-[#080B10] border border-[#243447] hover:border-[#00F0FF] transition-all text-left flex items-center gap-1.5 shadow-sm font-medium"
                           >
                             <span>{prompt}</span>
                           </button>
@@ -852,7 +852,7 @@ export function AIAssistantWidget() {
                 {isLoading && (
                   <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#0C131C] border border-[#243447] max-w-[200px] shadow-lg">
                     <SiriOrb size="xs" state="thinking" />
-                    <span className="text-xs text-[#7DD3FC] font-medium animate-pulse">
+                    <span className="text-xs sm:text-xs text-[#7DD3FC] font-medium animate-pulse">
                       Thinking...
                     </span>
                   </div>
@@ -863,12 +863,12 @@ export function AIAssistantWidget() {
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#00F0FF]/10 border border-[#00F0FF]/40 text-[#00F0FF] shadow-inner">
                     <div className="flex items-center gap-2.5">
                       <SiriOrb size="xs" state="listening" audioLevel={audioLevel} />
-                      <span className="text-xs font-semibold">Listening to your voice...</span>
+                      <span className="text-xs sm:text-xs font-semibold">Listening to your voice...</span>
                     </div>
                     <button
                       type="button"
                       onClick={stopListening}
-                      className="text-[11px] px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 font-medium"
+                      className="text-xs sm:text-[11px] px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 font-medium"
                     >
                       Stop
                     </button>
@@ -885,7 +885,7 @@ export function AIAssistantWidget() {
                     <button
                       type="button"
                       onClick={() => setMicError(null)}
-                      className="text-amber-400 hover:underline text-[11px] ml-2 font-bold"
+                      className="text-amber-400 hover:underline text-xs sm:text-[11px] ml-2 font-bold"
                     >
                       Dismiss
                     </button>
@@ -910,7 +910,7 @@ export function AIAssistantWidget() {
                     onClick={startListening}
                     title={isListening ? "Stop listening" : "Activate voice input (microphone)"}
                     aria-label="Microphone input"
-                    className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                    className={`h-11 w-11 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                       isListening
                         ? "bg-rose-500 text-[#FFFFFF] shadow-[0_0_15px_rgba(244,63,94,0.6)] animate-pulse"
                         : "bg-[#102A43] text-[#7DD3FC] hover:text-[#FFFFFF] hover:bg-[#102A43]/80 border border-[#243447]"
@@ -928,7 +928,7 @@ export function AIAssistantWidget() {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={isListening ? "Listening... speak now..." : "Ask another question..."}
                     disabled={isLoading}
-                    className="flex-1 h-10 px-3.5 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] placeholder-[#9CAFC3] focus:outline-none focus:border-[#00F0FF] focus:ring-1 focus:ring-[#00F0FF] disabled:opacity-50 transition-all"
+                    className="flex-1 h-11 sm:h-10 px-4 rounded-xl bg-[#080B10] border border-[#243447] text-sm sm:text-xs text-[#FFFFFF] placeholder-[#9CAFC3] placeholder:text-xs focus:outline-none focus:border-[#00F0FF] focus:ring-1 focus:ring-[#00F0FF] disabled:opacity-50 transition-all"
                   />
 
                   {/* Send Button */}
@@ -936,13 +936,13 @@ export function AIAssistantWidget() {
                     type="submit"
                     disabled={!input.trim() || isLoading}
                     aria-label="Send message"
-                    className="h-10 w-10 rounded-xl bg-[#00F0FF] hover:bg-[#FFFFFF] text-[#080B10] font-bold flex items-center justify-center shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-[#00F0FF]/20"
+                    className="h-11 w-11 sm:h-10 sm:w-10 rounded-xl bg-[#00F0FF] hover:bg-[#FFFFFF] text-[#080B10] font-bold flex items-center justify-center shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-[#00F0FF]/20"
                   >
                     <Send className="h-4 w-4" />
                   </button>
                 </form>
 
-                <div className="flex items-center justify-between text-[10px] text-[#9CAFC3]/70 pt-1.5 px-1">
+                <div className="flex items-center justify-between text-xs sm:text-[10px] text-[#9CAFC3]/70 pt-1.5 px-1">
                   <span>Voice or text • Enter to send</span>
                   <span>{input.length}/1000</span>
                 </div>

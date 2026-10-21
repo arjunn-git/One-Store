@@ -193,7 +193,7 @@ export function Header() {
       <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 text-xs text-[#9CAFC3] border-b border-[#243447]/60 md:px-8">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-hidden">
           <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#7DD3FC] animate-pulse"></span>
-          <span className="text-[10px] sm:text-xs truncate">
+          <span className="text-xs sm:text-xs font-medium truncate">
             <span className="hidden sm:inline">Dual Market Operations: </span>
             <span className="hidden xs:inline">India (₹) &amp; United Kingdom (£)</span>
             <span className="xs:hidden">IN (₹) &amp; UK (£)</span>
