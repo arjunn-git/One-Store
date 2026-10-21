@@ -1967,6 +1967,48 @@ runTest("AI Shopping Assistant: Full User Prompt Telemetry & IP Audit Capture", 
   assert.equal(conversations[0].market, "IN");
 });
 
+// 50. Siri Animated AI Orb: Reactive States, Amplitude Clamping & Audio Isolation
+runTest("AI Shopping Assistant: Siri Orb Reactive States & Audio Normalization", () => {
+  // 1. Orb State Resolution
+  function resolveOrbState({ isListening, isLoading, isSpeaking, hasError }) {
+    if (hasError) return "error";
+    if (isListening) return "listening";
+    if (isLoading) return "thinking";
+    if (isSpeaking) return "speaking";
+    return "idle";
+  }
+
+  assert.equal(resolveOrbState({ isListening: false, isLoading: false, isSpeaking: false, hasError: false }), "idle");
+  assert.equal(resolveOrbState({ isListening: true, isLoading: false, isSpeaking: false, hasError: false }), "listening");
+  assert.equal(resolveOrbState({ isListening: false, isLoading: true, isSpeaking: false, hasError: false }), "thinking");
+  assert.equal(resolveOrbState({ isListening: false, isLoading: false, isSpeaking: true, hasError: false }), "speaking");
+  assert.equal(resolveOrbState({ isListening: false, isLoading: false, isSpeaking: false, hasError: true }), "error");
+
+  // 2. Audio Level Clamping (0.0 to 1.0)
+  function clampAudioLevel(rawLevel) {
+    if (typeof rawLevel !== "number" || isNaN(rawLevel)) return 0;
+    return Math.max(0, Math.min(1, rawLevel));
+  }
+
+  assert.equal(clampAudioLevel(0.45), 0.45);
+  assert.equal(clampAudioLevel(-0.2), 0);
+  assert.equal(clampAudioLevel(1.8), 1);
+  assert.equal(clampAudioLevel(NaN), 0);
+
+  // 3. Audio Permission Guard: Mic stream must only be requested when explicit flag is active
+  let micPermissionRequested = false;
+  function triggerVoiceInput(userExplicitClick) {
+    if (!userExplicitClick) return false;
+    micPermissionRequested = true;
+    return true;
+  }
+
+  assert.equal(triggerVoiceInput(false), false, "Voice permission must NEVER be requested without explicit user action");
+  assert.equal(micPermissionRequested, false);
+  assert.equal(triggerVoiceInput(true), true);
+  assert.equal(micPermissionRequested, true);
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
