@@ -153,10 +153,22 @@ export function getFaviconTypeForPath(rawPathname: string): FaviconType {
   return "home";
 }
 
+import faviconData from "./favicon-data.json";
+
+export const FAVICON_DATA_URIS: Record<FaviconType, string> = faviconData as Record<FaviconType, string>;
+
 /**
  * Returns the absolute favicon SVG URL for a pathname
  */
 export function getFaviconUrlForPath(pathname: string): string {
   const type = getFaviconTypeForPath(pathname);
   return FAVICON_MAP[type]?.path || FAVICON_MAP.home.path;
+}
+
+/**
+ * Returns the inline SVG data URI for a pathname (instant, zero-latency repaint)
+ */
+export function getFaviconDataUriForPath(pathname: string): string {
+  const type = getFaviconTypeForPath(pathname);
+  return FAVICON_DATA_URIS[type] || FAVICON_DATA_URIS.home;
 }

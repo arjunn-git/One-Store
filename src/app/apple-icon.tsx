@@ -38,14 +38,10 @@ export default function AppleIcon() {
             height="80"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#7DD3FC"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
           >
-            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-            <path d="M3 6h18" />
-            <path d="M16 10a4 4 0 0 1-8 0" />
+            <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z" fill="none" stroke="#7DD3FC" strokeWidth="2.2" strokeLinejoin="round" />
+            <path d="M12 7v10" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M9.5 9.5L12 7" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
         </div>
       </div>
