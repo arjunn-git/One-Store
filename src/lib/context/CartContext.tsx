@@ -54,34 +54,59 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Load cart from localStorage on mount and hydrate images for legacy items
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("one_store_cart");
-      if (saved) {
-        const parsed: CartLineItem[] = JSON.parse(saved);
-        const hydrated = parsed.map((item) => {
-          if (!item.imageUrl) {
-            const match = FALLBACK_PRODUCTS.find(
-              (p) => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase()
-            );
-            return {
-              ...item,
-              imageUrl: match?.images?.[0] || null,
-            };
-          }
-          return item;
-        });
-        setItems(hydrated);
+    const syncFromStorage = () => {
+      try {
+        const saved = localStorage.getItem("one_store_cart");
+        if (saved) {
+          const parsed: CartLineItem[] = JSON.parse(saved);
+          const hydrated = parsed.map((item) => {
+            if (!item.imageUrl) {
+              const match = FALLBACK_PRODUCTS.find(
+                (p) => p.id === item.productId || p.name.toLowerCase() === item.productName.toLowerCase()
+              );
+              return {
+                ...item,
+                imageUrl: match?.images?.[0] || null,
+              };
+            }
+            return item;
+          });
+          setItems(hydrated);
+        } else {
+          setItems([]);
+        }
+      } catch {
+        setItems([]);
       }
-    } catch {
-      // Ignore parse errors
-    }
+    };
+
+    syncFromStorage();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "one_store_cart") {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("one_store_cart_updated", syncFromStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("one_store_cart_updated", syncFromStorage);
+    };
   }, []);
 
   // Save cart to localStorage
   const saveCart = (newItems: CartLineItem[]) => {
     setItems(newItems);
     try {
-      localStorage.setItem("one_store_cart", JSON.stringify(newItems));
+      if (newItems.length === 0) {
+        localStorage.removeItem("one_store_cart");
+      } else {
+        localStorage.setItem("one_store_cart", JSON.stringify(newItems));
+      }
+      window.dispatchEvent(new Event("one_store_cart_updated"));
     } catch {
       // Ignore storage errors
     }

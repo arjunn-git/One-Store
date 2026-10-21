@@ -15,6 +15,7 @@ export function CartDrawer() {
     setIsOpen,
     removeItem,
     updateQuantity,
+    clearCart,
     formattedSubtotal,
     formattedShippingFee,
     formattedTotal,
@@ -62,13 +63,25 @@ export function CartDrawer() {
                 <span className="text-xs text-[#9CAFC3]">{itemCount} {itemCount === 1 ? "item" : "items"}</span>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
-              aria-label="Close cart"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearCart}
+                  className="text-xs text-[#9CAFC3] hover:text-red-400 px-2 py-1 rounded hover:bg-red-950/30 transition-colors"
+                  title="Empty Cart"
+                >
+                  Clear All
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] border border-transparent hover:border-[#243447] transition-all"
+                aria-label="Close cart"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Items list */}
