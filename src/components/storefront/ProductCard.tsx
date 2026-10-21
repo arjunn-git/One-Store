@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles, Heart } from "lucide-react";
 import { PriceDisplay } from "./PriceDisplay";
 import { useWishlist } from "@/lib/context/WishlistContext";
@@ -15,10 +16,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const rafId = useRef<number | null>(null);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isFav = isInWishlist(product.id);
+  const productUrl = `/products/${product.slug}`;
 
   // Compute overall inventory from variants or product
   const totalStock = product.variants?.reduce((sum, v) => sum + v.inventory_count, 0) ?? 10;
@@ -51,6 +54,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const handleMouseEnter = () => {
+    router.prefetch(productUrl);
     if (cardRef.current) {
       cardRef.current.style.transition = "transform 0.1s ease-out";
     }
@@ -65,16 +69,26 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent card navigation if the user clicked inside the wishlist button or other interactive controls
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("[data-no-card-redirect]")) {
+      return;
+    }
+    router.push(productUrl);
+  };
+
   return (
     <div
       ref={cardRef}
+      onClick={handleCardClick}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
         transformStyle: "preserve-3d",
       }}
-      className="group relative flex flex-col rounded-2xl bg-[#102A43]/50 border border-[#243447] hover:border-[#7DD3FC]/80 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-[#7DD3FC]/10 will-change-transform"
+      className="group relative flex flex-col rounded-2xl bg-[#102A43]/50 border border-[#243447] hover:border-[#7DD3FC]/80 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-[#7DD3FC]/10 will-change-transform cursor-pointer select-none"
     >
       {/* 3D Dynamic Holographic Specular Glare */}
       <div
@@ -91,24 +105,32 @@ export function ProductCard({ product }: ProductCardProps) {
         className="relative aspect-square w-full bg-[#080B10] flex items-center justify-center p-6 overflow-hidden border-b border-[#243447]"
       >
         {/* Subtle geometric backdrop */}
-        <div className="absolute inset-0 bg-radial from-[#102A43]/60 via-transparent to-transparent opacity-60 group-hover:scale-115 transition-transform duration-700"></div>
+        <div className="absolute inset-0 bg-radial from-[#102A43]/60 via-transparent to-transparent opacity-60 group-hover:scale-115 transition-transform duration-700 pointer-events-none"></div>
 
         {/* Product Image Stage with 3D Depth */}
         {product.images && product.images[0] ? (
-          <div
-            className="relative z-10 w-full h-full flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300"
+          <Link
+            href={productUrl}
+            prefetch={true}
+            className="relative z-10 w-full h-full flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-300 focus:outline-none"
+            tabIndex={-1}
+            aria-hidden="true"
           >
             <img
               src={product.images[0]}
               alt={product.name}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover rounded-xl shadow-lg border border-[#243447]/60"
+              className="w-full h-full object-cover rounded-xl shadow-lg border border-[#243447]/60 pointer-events-none"
             />
-          </div>
+          </Link>
         ) : (
-          <div
-            className="relative z-10 flex flex-col items-center justify-center text-center p-4 group-hover:scale-105 transition-transform duration-300"
+          <Link
+            href={productUrl}
+            prefetch={true}
+            className="relative z-10 flex flex-col items-center justify-center text-center p-4 group-hover:scale-105 transition-transform duration-300 focus:outline-none"
+            tabIndex={-1}
+            aria-hidden="true"
           >
             <div className="w-20 h-20 rounded-2xl bg-[#102A43] border border-[#243447] flex items-center justify-center text-[#7DD3FC] group-hover:border-[#7DD3FC] group-hover:shadow-lg group-hover:shadow-[#7DD3FC]/20 transition-all duration-300 shadow-inner">
               <span className="font-mono text-2xl font-black">1</span>
@@ -116,19 +138,19 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="text-[11px] font-mono text-[#9CAFC3] mt-3 uppercase tracking-widest font-semibold">
               {product.sku}
             </span>
-          </div>
+          </Link>
         )}
 
         {/* Featured or Test Data badge (3D Popped) */}
         {product.is_test_data ? (
           <div
-            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200"
+            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
           >
             <span>UK TEST DATA</span>
           </div>
         ) : product.is_featured ? (
           <div
-            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200"
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-[10px] font-bold uppercase tracking-wider shadow-md flex items-center gap-1 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
           >
             <Sparkles className="h-3 w-3" />
             <span>Featured</span>
@@ -137,7 +159,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Stock status badge */}
         <div
-          className="absolute top-3 right-3 group-hover:scale-105 transition-transform duration-200"
+          className="absolute top-3 right-3 group-hover:scale-105 transition-transform duration-200 pointer-events-none"
         >
           {isOutOfStock ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-red-950/80 text-red-400 border border-red-800">
@@ -168,8 +190,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Title */}
         <h3 className="text-base font-bold text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors line-clamp-1">
-          <Link href={`/products/${product.slug}`} className="focus:outline-none">
-            <span className="absolute inset-0" aria-hidden="true" />
+          <Link href={productUrl} prefetch={true} className="focus:outline-none hover:underline">
             {product.name}
           </Link>
         </h3>
@@ -204,6 +225,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 e.stopPropagation();
                 toggleWishlist({ id: product.id, name: product.name });
               }}
+              data-no-card-redirect="true"
               aria-label={isFav ? "Remove from wishlist" : "Save to wishlist"}
               title={isFav ? "In Wishlist (Click to remove)" : "Save to Wishlist"}
               className={`relative z-20 flex h-9 w-9 items-center justify-center rounded-xl border transition-all ${
@@ -215,9 +237,14 @@ export function ProductCard({ product }: ProductCardProps) {
               <Heart className={`h-4 w-4 ${isFav ? "fill-red-400 text-red-400 scale-110" : ""}`} />
             </button>
 
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] group-hover:bg-[#7DD3FC] group-hover:text-[#080B10] group-hover:rotate-12 transition-all shadow-sm">
+            <Link
+              href={productUrl}
+              prefetch={true}
+              aria-label={`View ${product.name} details`}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#102A43] text-[#7DD3FC] border border-[#243447] group-hover:bg-[#7DD3FC] group-hover:text-[#080B10] group-hover:rotate-12 transition-all shadow-sm focus:outline-none focus:ring-1 focus:ring-[#7DD3FC]"
+            >
               <ArrowUpRight className="h-4 w-4" />
-            </div>
+            </Link>
           </div>
         </div>
       </div>
