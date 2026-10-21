@@ -58,8 +58,8 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  const isVerifiedAdmin =
-    (authenticatedEmail === OFFICIAL_ADMIN_EMAIL) || hasValidAdminToken;
+  // Admin access strictly requires a valid, cryptographic admin token issued via /admin-portal/login
+  const isVerifiedAdmin = hasValidAdminToken;
   const isCustomerAuthenticated = !!authenticatedEmail && !isVerifiedAdmin;
 
   // 1. OAuth code redirect handling (only for storefront pages, never API routes)

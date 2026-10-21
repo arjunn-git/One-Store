@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Package,
@@ -18,6 +19,21 @@ import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function AdminPortalHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (pathname === "/admin-portal/login") return;
+
+    fetch("/api/admin-portal/session")
+      .then((res) => {
+        if (!res.ok) {
+          router.replace("/admin-portal/login?next=" + encodeURIComponent(pathname));
+        }
+      })
+      .catch(() => {
+        // Fallback to middleware
+      });
+  }, [pathname, router]);
 
   // Do not render navigation on login screen
   if (pathname === "/admin-portal/login") {
@@ -39,6 +55,8 @@ export function AdminPortalHeader() {
     } catch {
       // Continue navigation
     }
+    // Delete cookie on client side with root path
+    document.cookie = "one_store_admin_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     window.location.href = "/admin-portal/login";
   };
 

@@ -147,39 +147,40 @@ export async function verifyAdminRequest(request?: Request): Promise<{
   const cookieStore = await cookies();
   const adminToken = cookieStore.get("one_store_admin_token")?.value;
 
-  let authenticatedEmail: string | null = null;
+  // 1. A cryptographically signed admin token is STRICTLY required
+  if (!adminToken) {
+    return {
+      authorized: false,
+      error: "Administrative authentication required. Please sign in at /admin-portal/login",
+      status: 401,
+    };
+  }
+
+  // 2. Verify token signature, expiration and admin email
+  const tokenResult = verifyAdminToken(adminToken);
+  if (!tokenResult.valid || tokenResult.email !== OFFICIAL_ADMIN_EMAIL) {
+    return {
+      authorized: false,
+      error: "Invalid or expired administrative session. Please sign in at /admin-portal/login",
+      status: 401,
+    };
+  }
+
+  const authenticatedEmail = tokenResult.email;
   let authUser: any = null;
 
-  // 1. Check Supabase Auth session first
+  // 3. Link Supabase user if session is also active
   if (isLiveSupabaseConfigured()) {
     try {
       const supabase = await createClient();
       const { data, error } = await supabase.auth.getUser();
 
-      if (!error && data?.user?.email) {
-        authenticatedEmail = data.user.email.toLowerCase().trim();
+      if (!error && data?.user?.email?.toLowerCase().trim() === OFFICIAL_ADMIN_EMAIL) {
         authUser = data.user;
       }
     } catch {
       // Supabase session check failed
     }
-  }
-
-  // 2. Check dedicated signed admin token
-  if (!authenticatedEmail && adminToken) {
-    const tokenResult = verifyAdminToken(adminToken);
-    if (tokenResult.valid && tokenResult.email) {
-      authenticatedEmail = tokenResult.email;
-    }
-  }
-
-  // If not authenticated at all
-  if (!authenticatedEmail) {
-    return {
-      authorized: false,
-      error: "Authentication required. Please sign in at /admin-portal/login",
-      status: 401,
-    };
   }
 
   // Enforce official admin email match

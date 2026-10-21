@@ -15,12 +15,30 @@ export async function POST() {
     }
 
     const cookieStore = await cookies();
-    cookieStore.delete("one_store_admin_token");
+    cookieStore.set("one_store_admin_token", "", {
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       redirectTo: "/admin-portal/login",
     });
+
+    response.cookies.set("one_store_admin_token", "", {
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Error logging out";
     return NextResponse.json({ error: msg }, { status: 500 });
