@@ -60,12 +60,14 @@ export function SiriOrb({
       <style jsx>{`
         @keyframes siri-breathe {
           0%, 100% {
-            transform: scale(0.96);
-            opacity: 0.88;
+            transform: scale(0.95);
+            opacity: 0.9;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.45));
           }
           50% {
-            transform: scale(1.04);
+            transform: scale(1.05);
             opacity: 1;
+            filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.65));
           }
         }
         @keyframes siri-spin-slow {
@@ -87,13 +89,13 @@ export function SiriOrb({
         @keyframes siri-pulse-thinking {
           0%, 100% {
             transform: scale(0.92) rotate(0deg);
-            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7))
-              drop-shadow(0 0 20px rgba(168, 85, 247, 0.5));
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8))
+              drop-shadow(0 0 24px rgba(168, 85, 247, 0.6));
           }
           50% {
-            transform: scale(1.1) rotate(180deg);
-            filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.9))
-              drop-shadow(0 0 30px rgba(192, 132, 252, 0.8));
+            transform: scale(1.12) rotate(180deg);
+            filter: drop-shadow(0 0 18px rgba(0, 240, 255, 1))
+              drop-shadow(0 0 35px rgba(192, 132, 252, 0.9));
           }
         }
         @keyframes siri-wave-glow {
@@ -108,36 +110,64 @@ export function SiriOrb({
         }
         @keyframes siri-flow-mesh {
           0% {
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(0deg);
           }
           33% {
-            transform: translate(-3%, 3%) scale(1.08);
+            transform: translate(-4%, 4%) scale(1.1) rotate(6deg);
           }
           66% {
-            transform: translate(3%, -3%) scale(0.96);
+            transform: translate(4%, -4%) scale(0.95) rotate(-6deg);
           }
           100% {
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(0deg);
+          }
+        }
+        @keyframes siri-ambient-aura {
+          0%, 100% {
+            opacity: 0.45;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.18);
+          }
+        }
+        @keyframes siri-core-pulse {
+          0%, 100% {
+            transform: scale(0.92);
+            opacity: 0.85;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 1;
+            filter: drop-shadow(0 0 8px #00F0FF);
           }
         }
 
         .orb-breathe {
-          animation: siri-breathe 4.5s ease-in-out infinite;
+          animation: siri-breathe 3s ease-in-out infinite;
         }
         .orb-spin-clockwise {
-          animation: siri-spin-slow ${isThinking ? "3s" : "18s"} linear infinite;
+          animation: siri-spin-slow ${isThinking ? "2.5s" : "7s"} linear infinite;
         }
         .orb-spin-counter {
-          animation: siri-spin-reverse ${isThinking ? "2.2s" : "14s"} linear infinite;
+          animation: siri-spin-reverse ${isThinking ? "1.8s" : "5s"} linear infinite;
         }
         .orb-thinking-core {
-          animation: siri-pulse-thinking 2s ease-in-out infinite;
+          animation: siri-pulse-thinking 1.8s ease-in-out infinite;
         }
         .orb-listening-wave {
-          animation: siri-wave-glow 1.2s ease-in-out infinite;
+          animation: siri-wave-glow 1.1s ease-in-out infinite;
         }
         .orb-flow-gradient {
-          animation: siri-flow-mesh ${isThinking ? "2.5s" : "8s"} ease-in-out infinite;
+          animation: siri-flow-mesh ${isThinking ? "2s" : "4.5s"} ease-in-out infinite;
+        }
+        .orb-ambient-aura {
+          animation: siri-ambient-aura 3.2s ease-in-out infinite;
+        }
+        .orb-core-pulse {
+          animation: siri-core-pulse 2.2s ease-in-out infinite;
+          transform-origin: 50px 50px;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -146,7 +176,9 @@ export function SiriOrb({
           .orb-spin-counter,
           .orb-thinking-core,
           .orb-listening-wave,
-          .orb-flow-gradient {
+          .orb-flow-gradient,
+          .orb-ambient-aura,
+          .orb-core-pulse {
             animation: none !important;
           }
         }
@@ -176,7 +208,7 @@ export function SiriOrb({
 
       {/* Ambient Outer Halo Bloom */}
       <div
-        className={`absolute inset-0 rounded-full pointer-events-none blur-lg transition-all duration-500 ${
+        className={`absolute inset-0 rounded-full pointer-events-none blur-lg orb-ambient-aura transition-all duration-500 ${
           isError
             ? "bg-rose-500/40"
             : isThinking
@@ -314,22 +346,24 @@ export function SiriOrb({
           </g>
 
           {/* Deep Center Core Glow */}
-          <circle
-            cx="50"
-            cy="50"
-            r={isListening || isSpeaking ? 16 + clampedLevel * 8 : 14}
-            fill={isError ? "#F43F5E" : "#00F0FF"}
-            opacity={isThinking ? "0.9" : "0.75"}
-            filter={`url(#${uid}_fluidGlow)`}
-          />
+          <g className="orb-core-pulse">
+            <circle
+              cx="50"
+              cy="50"
+              r={isListening || isSpeaking ? 16 + clampedLevel * 8 : 14}
+              fill={isError ? "#F43F5E" : "#00F0FF"}
+              opacity={isThinking ? "0.9" : "0.75"}
+              filter={`url(#${uid}_fluidGlow)`}
+            />
 
-          <circle
-            cx="50"
-            cy="50"
-            r={isListening || isSpeaking ? 8 + clampedLevel * 4 : 7}
-            fill="#FFFFFF"
-            opacity={isThinking ? "0.95" : "0.85"}
-          />
+            <circle
+              cx="50"
+              cy="50"
+              r={isListening || isSpeaking ? 8 + clampedLevel * 4 : 7}
+              fill="#FFFFFF"
+              opacity={isThinking ? "0.95" : "0.85"}
+            />
+          </g>
 
           {/* Realistic Specular Glare / Glass Reflection */}
           <ellipse

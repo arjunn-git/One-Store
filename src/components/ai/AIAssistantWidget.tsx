@@ -529,38 +529,125 @@ export function AIAssistantWidget() {
 
   return (
     <>
+      <style jsx>{`
+        @keyframes ai-levitate {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+        @keyframes ai-glow-breathe {
+          0%, 100% {
+            box-shadow: 0 0 24px rgba(0, 240, 255, 0.28), 0 0 45px rgba(0, 240, 255, 0.12);
+            border-color: rgba(0, 240, 255, 0.45);
+          }
+          50% {
+            box-shadow: 0 0 35px rgba(168, 85, 247, 0.45), 0 0 60px rgba(0, 240, 255, 0.25);
+            border-color: rgba(168, 85, 247, 0.75);
+          }
+        }
+        @keyframes ai-sheen-sweep {
+          0% {
+            transform: translateX(-160%) skewX(-25deg);
+          }
+          28%, 100% {
+            transform: translateX(280%) skewX(-25deg);
+          }
+        }
+        @keyframes ai-nudge {
+          0%, 100% {
+            transform: translateX(0);
+          }
+          50% {
+            transform: translateX(3px);
+          }
+        }
+        @keyframes ai-badge-glow {
+          0%, 100% {
+            opacity: 0.85;
+            box-shadow: 0 0 6px rgba(0, 240, 255, 0.35);
+          }
+          50% {
+            opacity: 1;
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.85);
+          }
+        }
+        .animate-ai-levitate {
+          animation: ai-levitate 3.8s ease-in-out infinite;
+        }
+        .animate-ai-glow {
+          animation: ai-glow-breathe 3.4s ease-in-out infinite;
+        }
+        .animate-ai-sheen {
+          animation: ai-sheen-sweep 4.8s ease-in-out infinite;
+        }
+        .animate-ai-nudge {
+          animation: ai-nudge 1.8s ease-in-out infinite;
+        }
+        .animate-ai-badge {
+          animation: ai-badge-glow 2.4s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-ai-levitate,
+          .animate-ai-glow,
+          .animate-ai-sheen,
+          .animate-ai-nudge,
+          .animate-ai-badge {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
       {/* 1. Floating Launcher Pill with Siri Animated AI Orb */}
       {!isOpen && (
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(true);
-            setIsMinimized(false);
-          }}
-          aria-label="Open One Store AI Assistant"
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 group flex items-center gap-3.5 pl-3 pr-4 py-2.5 sm:py-2 rounded-full bg-[#080B10]/95 backdrop-blur-xl border border-[#00F0FF]/40 text-[#FFFFFF] shadow-[0_0_30px_rgba(0,240,255,0.22)] hover:border-[#A855F7]/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.35)] hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00F0FF]"
-        >
-          {/* Glowing Siri Orb inside launcher */}
-          <div className="relative flex items-center justify-center">
-            <SiriOrb size="sm" state="idle" />
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#080B10] shadow-[0_0_8px_#34D399]" />
-          </div>
+        <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 animate-ai-levitate">
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(true);
+              setIsMinimized(false);
+            }}
+            aria-label="Open One Store AI Assistant"
+            className="relative group flex items-center gap-3.5 pl-3 pr-4 py-2.5 sm:py-2 rounded-full bg-[#080B10]/95 backdrop-blur-xl border border-[#00F0FF]/40 text-[#FFFFFF] animate-ai-glow hover:border-[#A855F7]/90 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] overflow-hidden"
+          >
+            {/* Shimmer Light Sheen passing across button */}
+            <div
+              className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/12 to-transparent pointer-events-none animate-ai-sheen"
+            />
 
-          {/* Text branding from design concept (Panel 1) */}
-          <div className="flex flex-col text-left">
-            <div className="flex items-center gap-2">
-              <span className="text-sm sm:text-xs font-bold tracking-tight text-[#FFFFFF]">One Store AI</span>
-              <span className="text-[10px] sm:text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40">
-                AI
+            {/* Glowing Siri Orb inside launcher */}
+            <div className="relative flex items-center justify-center">
+              {/* Outer soft aura ring */}
+              <div className="absolute -inset-1 rounded-full bg-[#00F0FF]/25 blur-sm pointer-events-none group-hover:bg-[#A855F7]/35 transition-colors" />
+              <SiriOrb size="sm" state="idle" />
+
+              {/* Live Radar Ping Active Indicator Dot */}
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-[#080B10] shadow-[0_0_10px_#34D399]" />
               </span>
             </div>
-            <span className="text-[10px] sm:text-[9px] font-bold tracking-wider uppercase text-[#818CF8]">
-              SHOPPING ASSISTANT
-            </span>
-          </div>
 
-          <ChevronRight className="h-4 w-4 text-[#7DD3FC]/80 group-hover:translate-x-0.5 transition-transform" />
-        </button>
+            {/* Text branding from design concept (Panel 1) */}
+            <div className="flex flex-col text-left relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-xs font-bold tracking-tight text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
+                  One Store AI
+                </span>
+                <span className="text-[10px] sm:text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40 animate-ai-badge">
+                  AI
+                </span>
+              </div>
+              <span className="text-[10px] sm:text-[9px] font-bold tracking-wider uppercase text-[#818CF8] group-hover:text-[#C084FC] transition-colors">
+                SHOPPING ASSISTANT
+              </span>
+            </div>
+
+            <ChevronRight className="h-4 w-4 text-[#7DD3FC]/80 group-hover:text-[#FFFFFF] animate-ai-nudge transition-colors relative z-10" />
+          </button>
+        </div>
       )}
 
       {/* 2. Glassmorphic Chat Window (Desktop Window & Mobile Bottom Sheet) */}
