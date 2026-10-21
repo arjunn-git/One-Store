@@ -140,6 +140,7 @@ import { WishlistProvider } from "@/lib/context/WishlistContext";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { WelcomeScreen } from "@/components/storefront/WelcomeScreen";
 import { DynamicFaviconManager } from "@/components/layout/DynamicFaviconManager";
+import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
 
 export default function RootLayout({
   children,
@@ -160,6 +161,7 @@ export default function RootLayout({
             <WishlistProvider>
               <WelcomeScreen />
               {children}
+              <AIAssistantWidget />
             </WishlistProvider>
           </CartProvider>
         </MarketProvider>

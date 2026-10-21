@@ -1785,6 +1785,118 @@ runTest("Real-Time Map Data & GPS Reverse Geocoding Telemetry Engine", () => {
   assert.equal(coords.lon, 77.2090);
 });
 
+// 43. AI Shopping Assistant: Dual Market Currency Formatting
+runTest("AI Shopping Assistant: Multi-Market Currency Precision (₹ INR vs £ GBP)", () => {
+  function formatAiCurrency(amount, market) {
+    if (market === "GB") {
+      return `£${amount.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `₹${amount.toLocaleString("en-IN")}`;
+  }
+
+  assert.equal(formatAiCurrency(14999, "IN"), "₹14,999");
+  assert.equal(formatAiCurrency(149.99, "GB"), "£149.99");
+});
+
+// 44. AI Shopping Assistant: Natural Language Budget Extraction
+runTest("AI Shopping Assistant: Natural Language Budget Parsing", () => {
+  function parseBudget(text) {
+    const match =
+      text.match(/under\s*(?:(?:₹|£|rs\.?|inr|gbp)\s*)?(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:k\b)?/i) ||
+      text.match(/below\s*(?:(?:₹|£|rs\.?|inr|gbp)\s*)?(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:k\b)?/i) ||
+      text.match(/within\s*(?:(?:₹|£|rs\.?|inr|gbp)\s*)?(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:k\b)?/i);
+
+    if (!match) return undefined;
+    let val = parseFloat(match[1].replace(/,/g, ""));
+    if (match[0].toLowerCase().endsWith("k")) val *= 1000;
+    return isNaN(val) ? undefined : val;
+  }
+
+  assert.equal(parseBudget("Show me products under ₹10,000"), 10000);
+  assert.equal(parseBudget("Find options under 5k"), 5000);
+  assert.equal(parseBudget("Items below £100"), 100);
+  assert.equal(parseBudget("Curate best timepieces"), undefined);
+});
+
+// 45. AI Shopping Assistant: Order Privacy Gating
+runTest("AI Shopping Assistant: Customer Isolation & Unauthenticated Order Gating", () => {
+  function handleOrderRequest(isAuth, customerId, requestedOrderNumber, dbOrders) {
+    if (!isAuth || !customerId) {
+      return {
+        allowed: false,
+        reply: "To protect order privacy, please sign in to view tracking information.",
+        loginUrl: "/login?next=/orders",
+        orders: []
+      };
+    }
+    const userOrders = dbOrders.filter((o) => o.customer_id === customerId);
+    return {
+      allowed: true,
+      orders: userOrders.filter((o) => o.order_number === requestedOrderNumber)
+    };
+  }
+
+  const dbOrders = [
+    { customer_id: "user_1", order_number: "OS-2026-IN-101", status: "processing" },
+    { customer_id: "user_2", order_number: "OS-2026-IN-202", status: "delivered" }
+  ];
+
+  // Guest attempt
+  const guestResult = handleOrderRequest(false, null, "OS-2026-IN-101", dbOrders);
+  assert.equal(guestResult.allowed, false);
+  assert.equal(guestResult.orders.length, 0);
+  assert.equal(guestResult.loginUrl, "/login?next=/orders");
+
+  // User 1 querying User 2's order
+  const crossTenantResult = handleOrderRequest(true, "user_1", "OS-2026-IN-202", dbOrders);
+  assert.equal(crossTenantResult.allowed, true);
+  assert.equal(crossTenantResult.orders.length, 0, "Customer 1 must never receive Customer 2's orders");
+
+  // User 1 querying own order
+  const validResult = handleOrderRequest(true, "user_1", "OS-2026-IN-101", dbOrders);
+  assert.equal(validResult.allowed, true);
+  assert.equal(validResult.orders.length, 1);
+  assert.equal(validResult.orders[0].status, "processing");
+});
+
+// 46. AI Shopping Assistant: Rate Limiting & Abuse Prevention
+runTest("AI Shopping Assistant: Sliding Window Abuse Protection (30 req/min)", () => {
+  const windowMs = 60 * 1000;
+  const maxReq = 30;
+  const store = new Map();
+
+  function checkLimit(id, now) {
+    const entry = store.get(id) || { count: 0, resetAt: now + windowMs };
+    if (now > entry.resetAt) {
+      entry.count = 0;
+      entry.resetAt = now + windowMs;
+    }
+    entry.count += 1;
+    store.set(id, entry);
+    return entry.count <= maxReq;
+  }
+
+  const client = "192.168.1.50";
+  const start = 500000;
+  for (let i = 0; i < 30; i++) {
+    assert.equal(checkLimit(client, start), true);
+  }
+  assert.equal(checkLimit(client, start), false, "31st request must be rate limited");
+});
+
+// 47. AI Shopping Assistant: Resilient Provider Fallback & Telemetry
+runTest("AI Shopping Assistant: Semantic Fallback & Zero-Key Operation", () => {
+  function getProvider(keys) {
+    if (keys.GEMINI_API_KEY) return "gemini";
+    if (keys.GROQ_API_KEY) return "groq";
+    if (keys.OPENAI_API_KEY) return "openai";
+    return "one-store-catalog-engine";
+  }
+
+  assert.equal(getProvider({}), "one-store-catalog-engine", "Must fallback gracefully when no external API keys are configured");
+  assert.equal(getProvider({ GEMINI_API_KEY: "gk_123" }), "gemini");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

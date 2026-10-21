@@ -5,6 +5,7 @@ import { isLiveSupabaseConfigured } from "@/lib/services/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAllStoredOrders } from "@/lib/services/payments";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
+import { getAiTelemetrySummary } from "@/lib/services/ai-assistant";
 import { ClientLiveActivityMonitor as LiveActivityMonitor } from "@/components/admin/ClientLiveActivityMonitor";
 import {
   TrendingUp,
@@ -21,6 +22,8 @@ import {
   Clock,
   Layers,
   ShoppingBag,
+  Sparkles,
+  Bot,
 } from "lucide-react";
 
 export default async function AdminPortalDashboard() {
@@ -117,6 +120,7 @@ export default async function AdminPortalDashboard() {
 
   const inrCompletedOrders = liveOrders.filter((o) => o.currency === "INR" && o.payment_status === "succeeded");
   const gbpCompletedOrders = liveOrders.filter((o) => o.currency === "GBP" && o.payment_status === "succeeded");
+  const aiSummary = getAiTelemetrySummary();
 
   return (
     <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
@@ -243,6 +247,57 @@ export default async function AdminPortalDashboard() {
             </span>
           </div>
         </Link>
+      </div>
+
+      {/* AI Assistant Telemetry & Operational Intelligence */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#243447]/60 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-[#102A43] border border-[#7DD3FC]/40 text-[#7DD3FC] flex items-center justify-center">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[#FFFFFF] tracking-tight flex items-center gap-2">
+                <span>AI Shopping Assistant Telemetry</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#102A43] border border-[#7DD3FC]/30 text-[#7DD3FC]">
+                  {aiSummary.activeProvider.toUpperCase()}
+                </span>
+              </h2>
+              <p className="text-xs text-[#9CAFC3]">
+                Autonomous catalog discovery, multi-market pricing recommendations, and privacy-isolated order tracking.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[#9CAFC3]">Provider Status:</span>
+            <span className="text-emerald-400 font-medium flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              {aiSummary.isLlmConfigured ? "Live LLM Engine" : "Curated Semantic Engine"}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-[#080B10]/60 border border-[#243447]/60">
+            <div className="text-[11px] text-[#9CAFC3]">Total Sessions</div>
+            <div className="text-lg font-bold text-[#FFFFFF] mt-0.5">{aiSummary.totalConversations}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-[#080B10]/60 border border-[#243447]/60">
+            <div className="text-[11px] text-[#9CAFC3]">Queries Handled</div>
+            <div className="text-lg font-bold text-[#FFFFFF] mt-0.5">{aiSummary.totalMessages}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-[#080B10]/60 border border-[#243447]/60">
+            <div className="text-[11px] text-[#9CAFC3]">Product Discovery Requests</div>
+            <div className="text-lg font-bold text-[#7DD3FC] mt-0.5">{aiSummary.totalRecommendationRequests}</div>
+          </div>
+          <div className="p-3 rounded-xl bg-[#080B10]/60 border border-[#243447]/60">
+            <div className="text-[11px] text-[#9CAFC3]">Markets Served</div>
+            <div className="text-sm font-semibold text-[#FFFFFF] mt-1 flex items-center gap-2">
+              <span>🇮🇳 {aiSummary.marketBreakdown.IN || 0}</span>
+              <span>🇬🇧 {aiSummary.marketBreakdown.GB || 0}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Real-time Telemetry & Shopper Activity Stream */}

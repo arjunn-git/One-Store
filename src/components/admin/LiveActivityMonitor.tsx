@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Radio,
   WifiOff,
+  Bot,
 } from "lucide-react";
 import type { ActivityEvent, ActivityEventType } from "@/lib/types/database";
 
@@ -199,6 +200,9 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
     if (selectedFilter === "BROWSING") {
       return act.type === "PRODUCT_VIEW" || act.type === "SEARCH_QUERY";
     }
+    if (selectedFilter === "AI") {
+      return ["AI_ASSISTANT_QUERY", "AI_RECOMMENDATION_CLICK", "AI_ADD_TO_CART"].includes(act.type);
+    }
     return true;
   });
 
@@ -232,6 +236,10 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
         return <Eye className="h-4 w-4 text-sky-300" />;
       case "SEARCH_QUERY":
         return <Search className="h-4 w-4 text-[#9CAFC3]" />;
+      case "AI_ASSISTANT_QUERY":
+      case "AI_RECOMMENDATION_CLICK":
+      case "AI_ADD_TO_CART":
+        return <Bot className="h-4 w-4 text-[#7DD3FC]" />;
       default:
         return <Activity className="h-4 w-4 text-[#7DD3FC]" />;
     }
@@ -381,6 +389,10 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
           {
             id: "BROWSING",
             label: `Browsing & Searches (${counts?.product ?? activities.filter((a) => a.type === "PRODUCT_VIEW" || a.type === "SEARCH_QUERY").length})`,
+          },
+          {
+            id: "AI",
+            label: `AI Assistant (${activities.filter((a) => ["AI_ASSISTANT_QUERY", "AI_RECOMMENDATION_CLICK", "AI_ADD_TO_CART"].includes(a.type)).length})`,
           },
         ].map((tab) => (
           <button

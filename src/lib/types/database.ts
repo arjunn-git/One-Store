@@ -206,7 +206,10 @@ export type ActivityEventType =
   | "PRODUCT_VIEW"
   | "INVENTORY_UPDATE"
   | "SUPPORT_INQUIRY"
-  | "SESSION_ACTIVE";
+  | "SESSION_ACTIVE"
+  | "AI_ASSISTANT_QUERY"
+  | "AI_RECOMMENDATION_CLICK"
+  | "AI_ADD_TO_CART";
 
 export interface ActivityEvent {
   id: string;
