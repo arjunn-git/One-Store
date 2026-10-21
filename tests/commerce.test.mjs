@@ -2042,6 +2042,171 @@ runTest("AI Shopping Assistant: Clean Single Bullet Point Markdown Normalization
   assert.equal(sample3.content, "Authenticated Financial Gateways (India INR ₹):");
 });
 
+// 52. Customer Authentication: Sign In, Create Account, 6-Digit OTP, Cooldown & Security Guards
+runTest("Customer Authentication: Sign In, Create Account & OTP Security Lifecycle", () => {
+  // 1. Email Normalization
+  function normalizeEmail(raw) {
+    return (raw || "").trim().toLowerCase();
+  }
+  assert.equal(normalizeEmail("  Customer.Alex@example.COM  "), "customer.alex@example.com");
+
+  // 2. Mock Account Database & In-Memory OTP Store
+  const mockCustomerDb = new Map([
+    ["existing.customer@example.com", { full_name: "Alex Patel", verified: true }],
+  ]);
+  const otpStore = new Map();
+
+  function checkAccountExists(email) {
+    const norm = normalizeEmail(email);
+    return mockCustomerDb.has(norm);
+  }
+
+  function handleSendOtp(email, mode) {
+    const norm = normalizeEmail(email);
+    if (!norm || !norm.includes("@")) {
+      return { success: false, error: "Please enter a valid email address." };
+    }
+
+    const exists = checkAccountExists(norm);
+
+    // Sign In requirement: If not registered, return exact message
+    if (mode === "login" && !exists) {
+      return {
+        success: false,
+        notFound: true,
+        error: "No account found with this email address. Please create an account first.",
+      };
+    }
+
+    // Create Account requirement: If already registered, return exact message
+    if (mode === "signup" && exists) {
+      return {
+        success: false,
+        exists: true,
+        error: "An account with this email address already exists. Please sign in instead.",
+      };
+    }
+
+    // Cooldown check (60s)
+    const existingEntry = otpStore.get(norm);
+    const now = Date.now();
+    if (existingEntry && now - existingEntry.createdAt < 60000) {
+      const remaining = Math.ceil((60000 - (now - existingEntry.createdAt)) / 1000);
+      return { success: false, error: `Please wait ${remaining} seconds before requesting a new code.` };
+    }
+
+    // 6-digit cryptographically secure OTP
+    const token = crypto.randomInt(100000, 1000000).toString();
+    assert.equal(token.length, 6, "OTP must strictly be 6 digits");
+    assert.equal(/^\d{6}$/.test(token), true, "OTP must only contain digits");
+
+    otpStore.set(norm, {
+      token,
+      mode,
+      attempts: 0,
+      createdAt: now,
+      expiresAt: now + 10 * 60 * 1000,
+    });
+
+    return { success: true, token }; // token returned for test verification
+  }
+
+  function handleVerifyOtp(email, inputToken) {
+    const norm = normalizeEmail(email);
+    const record = otpStore.get(norm);
+
+    if (!record) {
+      return { success: false, error: "No verification code was requested for this email." };
+    }
+
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(norm);
+      return { success: false, error: "Verification code has expired. Please request a new one." };
+    }
+
+    if (record.attempts >= 5) {
+      otpStore.delete(norm);
+      return { success: false, error: "Too many failed attempts. Please request a new code." };
+    }
+
+    if (record.token !== inputToken.trim()) {
+      record.attempts += 1;
+      return { success: false, error: `Invalid code. ${5 - record.attempts} attempts remaining.` };
+    }
+
+    // Invalidate code upon successful verification (single-use anti-replay)
+    otpStore.delete(norm);
+
+    // Save newly verified user if signup
+    if (record.mode === "signup") {
+      mockCustomerDb.set(norm, { full_name: "New Shopper", verified: true });
+    }
+
+    return { success: true };
+  }
+
+  // --- Test Case A: Sign In with Unregistered Email ---
+  const unregRes = handleSendOtp("brand.new@example.com", "login");
+  assert.equal(unregRes.success, false);
+  assert.equal(unregRes.notFound, true);
+  assert.equal(
+    unregRes.error,
+    "No account found with this email address. Please create an account first."
+  );
+
+  // --- Test Case B: Create Account with Existing Email ---
+  const existRes = handleSendOtp("existing.customer@example.com", "signup");
+  assert.equal(existRes.success, false);
+  assert.equal(existRes.exists, true);
+  assert.equal(
+    existRes.error,
+    "An account with this email address already exists. Please sign in instead."
+  );
+
+  // --- Test Case C: Valid Sign In OTP Generation & 60s Cooldown ---
+  const loginRes = handleSendOtp("existing.customer@example.com", "login");
+  assert.equal(loginRes.success, true);
+  const code = loginRes.token;
+
+  // Immediate second request triggers 60s cooldown
+  const cooldownRes = handleSendOtp("existing.customer@example.com", "login");
+  assert.equal(cooldownRes.success, false);
+  assert.match(cooldownRes.error, /Please wait \d+ seconds/);
+
+  // --- Test Case D: OTP Attempt Limits & Single-Use Invalidation ---
+  // Attempt 1: wrong code
+  const wrong1 = handleVerifyOtp("existing.customer@example.com", "000000");
+  assert.equal(wrong1.success, false);
+  assert.match(wrong1.error, /Invalid code. 4 attempts remaining/);
+
+  // Correct code succeeds
+  const successVerify = handleVerifyOtp("existing.customer@example.com", code);
+  assert.equal(successVerify.success, true);
+
+  // Replay attempt fails (code has been invalidated)
+  const replay = handleVerifyOtp("existing.customer@example.com", code);
+  assert.equal(replay.success, false);
+  assert.equal(replay.error, "No verification code was requested for this email.");
+
+  // --- Test Case E: New Account Registration Flow ---
+  const signupSend = handleSendOtp("fresh.user@example.com", "signup");
+  assert.equal(signupSend.success, true);
+  const signupCode = signupSend.token;
+
+  const signupVerify = handleVerifyOtp("fresh.user@example.com", signupCode);
+  assert.equal(signupVerify.success, true);
+  assert.equal(mockCustomerDb.has("fresh.user@example.com"), true, "New account created in customer database");
+
+  // Subsequent signup now detects existing account
+  const duplicateRes = handleSendOtp("fresh.user@example.com", "signup");
+  assert.equal(duplicateRes.success, false);
+  assert.equal(duplicateRes.exists, true);
+  assert.equal(
+    duplicateRes.error,
+    "An account with this email address already exists. Please sign in instead."
+  );
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

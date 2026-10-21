@@ -6,6 +6,9 @@ export interface AuthResponse<T = unknown> {
   error?: string;
   rateLimited?: boolean;
   isDevDemo?: boolean;
+  notFound?: boolean;
+  exists?: boolean;
+  retryAfter?: number;
 }
 
 export const ADMIN_EMAILS = [
@@ -48,50 +51,42 @@ export async function sendLoginOtp(email: string): Promise<AuthResponse> {
   try {
     const trimmedEmail = email.trim().toLowerCase();
 
-    // If Supabase credentials are not yet configured in .env.local, use dev sandbox mode
-    if (!isLiveSupabaseConfigured()) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("one_store_pending_auth", JSON.stringify({ email: trimmedEmail, mode: "login" }));
-      }
-      return { success: true, isDevDemo: true };
-    }
-
-    const supabase = createClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: trimmedEmail,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-      },
+    const res = await fetch("/api/auth/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: trimmedEmail, mode: "login" }),
     });
 
-    if (error) {
-      if (error.message.toLowerCase().includes("rate") || error.status === 429) {
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.success) {
+      if (res.status === 404 || data?.notFound) {
         return {
           success: false,
-          error: "Too many attempts. Please wait 60 seconds before requesting another code.",
+          notFound: true,
+          error: "No account found with this email address. Please create an account first.",
+        };
+      }
+      if (res.status === 429 || data?.rateLimited) {
+        return {
+          success: false,
           rateLimited: true,
+          retryAfter: data?.retryAfter || 60,
+          error: data?.error || "Please wait 60 seconds before requesting another code.",
         };
       }
-      if (error.message.toLowerCase().includes("signups not allowed")) {
-        return {
-          success: false,
-          error: "Account not found or new signups are disabled in your Supabase project settings. Please make sure 'Allow new users to sign up' is enabled in your Supabase Auth dashboard.",
-        };
-      }
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: data?.error || "Unable to send verification code. Please check your email address.",
+      };
     }
 
     return { success: true };
   } catch (err: unknown) {
-    // Graceful fallback to sandbox authentication if network to placeholder fails
-    const trimmedEmail = email.trim().toLowerCase();
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("one_store_pending_auth", JSON.stringify({ email: trimmedEmail, mode: "login" }));
-    }
-    return { success: true, isDevDemo: true };
+    return {
+      success: false,
+      error: "Network communication error. Please check your connection and try again.",
+    };
   }
 }
 
@@ -104,58 +99,47 @@ export async function sendSignupOtp(
   try {
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (!isLiveSupabaseConfigured()) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          "one_store_pending_auth",
-          JSON.stringify({ email: trimmedEmail, fullName, marketingConsent, mode: "signup" })
-        );
-      }
-      return { success: true, isDevDemo: true };
-    }
-
-    const supabase = createClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: trimmedEmail,
-      options: {
-        shouldCreateUser: true,
-        data: {
-          full_name: fullName || null,
-          marketing_consent: marketingConsent,
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-      },
+    const res = await fetch("/api/auth/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: trimmedEmail,
+        mode: "signup",
+        fullName,
+        marketingConsent,
+      }),
     });
 
-    if (error) {
-      if (error.message.toLowerCase().includes("rate") || error.status === 429) {
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.success) {
+      if (res.status === 409 || data?.exists) {
         return {
           success: false,
-          error: "Rate limit reached. Please wait 60 seconds before requesting a new code.",
+          exists: true,
+          error: "An account with this email address already exists. Please sign in instead.",
+        };
+      }
+      if (res.status === 429 || data?.rateLimited) {
+        return {
+          success: false,
           rateLimited: true,
+          retryAfter: data?.retryAfter || 60,
+          error: data?.error || "Rate limit reached. Please wait 60 seconds before requesting a new code.",
         };
       }
-      if (error.message.toLowerCase().includes("signups not allowed")) {
-        return {
-          success: false,
-          error: "Signups are currently disabled in your Supabase project settings. Please go to Authentication -> Configuration -> Providers -> Email in your Supabase dashboard and turn on 'Allow new users to sign up'.",
-        };
-      }
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: data?.error || "Unable to create account. Please try again.",
+      };
     }
 
     return { success: true };
-  } catch {
-    const trimmedEmail = email.trim().toLowerCase();
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(
-        "one_store_pending_auth",
-        JSON.stringify({ email: trimmedEmail, fullName, marketingConsent, mode: "signup" })
-      );
-    }
-    return { success: true, isDevDemo: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: "Network communication error. Please check your connection and try again.",
+    };
   }
 }
 
@@ -165,106 +149,49 @@ export async function verifyEmailOtp(
   token: string,
   type: "email" | "signup" = "email"
 ): Promise<AuthResponse<{ userId: string }>> {
-  const trimmedEmail = email.trim().toLowerCase();
-
-  // If in sandbox mode without Supabase credentials
-  if (!isLiveSupabaseConfigured()) {
-    const role = isAdminEmail(trimmedEmail) ? "owner" : "customer";
-    const demoUser = {
-      id: `usr_${Date.now()}`,
-      email: trimmedEmail,
-      full_name: isAdminEmail(trimmedEmail) ? "One Store Administrator" : "One Store Customer",
-      role,
-    };
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("one_store_session", JSON.stringify(demoUser));
-      document.cookie = `one_store_user_email=${trimmedEmail}; path=/; max-age=2592000; SameSite=Lax`;
-      document.cookie = `one_store_user_role=${role}; path=/; max-age=2592000; SameSite=Lax`;
-      try {
-        await fetch("/api/auth/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail }),
-        });
-      } catch {
-        // Fallback to client cookie
-      }
-    }
-
-    return {
-      success: true,
-      data: { userId: demoUser.id },
-      isDevDemo: true,
-    };
-  }
-
   try {
-    const supabase = createClient();
+    const trimmedEmail = email.trim().toLowerCase();
+    const mode = type === "signup" ? "signup" : "login";
 
-    // In Supabase Auth, signInWithOtp generates a 'magiclink' token for existing accounts,
-    // and a 'signup' token for new registrations. We test candidate types in order of likelihood.
-    const candidateTypes: Array<"magiclink" | "signup" | "email"> =
-      type === "signup"
-        ? ["signup", "magiclink", "email"]
-        : ["magiclink", "signup", "email"];
-
-    let verifyResponse: any = null;
-
-    for (const candidateType of candidateTypes) {
-      verifyResponse = await supabase.auth.verifyOtp({
+    const res = await fetch("/api/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         email: trimmedEmail,
         token,
-        type: candidateType,
-      });
+        mode,
+      }),
+    });
 
-      if (!verifyResponse.error && verifyResponse.data?.user) {
-        break; // Successfully authenticated!
-      }
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.success) {
+      return {
+        success: false,
+        error: data?.error || "Verification failed. The code may be invalid or expired.",
+      };
     }
 
-    const { data, error } = verifyResponse;
-
-    if (error) {
-      if (error.message.toLowerCase().includes("expired")) {
-        return { success: false, error: "This verification code has expired. Please request a new 6-digit code." };
-      }
-      if (error.message.toLowerCase().includes("invalid")) {
-        return { success: false, error: "Incorrect verification code. Please check the 6 digits in your email." };
-      }
-      return { success: false, error: error.message };
-    }
-
-    if (!data.user) {
-      return { success: false, error: "Authentication failed. No session established." };
-    }
-
-    // Ensure customer_profiles has a matching record
-    try {
-      await supabase.from("customer_profiles").upsert(
-        {
-          auth_user_id: data.user.id,
-          email: trimmedEmail,
-          is_email_verified: true,
-          full_name: data.user.user_metadata?.full_name || null,
-          role: isAdminEmail(trimmedEmail) ? "owner" : "customer",
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "auth_user_id" }
-      );
-    } catch {
-      // Continue even if database sync encounters a network delay
-    }
-
-    const role = isAdminEmail(trimmedEmail) ? "owner" : "customer";
+    // Set client local storage for immediate UI synchronization
     if (typeof window !== "undefined") {
-      document.cookie = `one_store_user_email=${trimmedEmail}; path=/; max-age=2592000; SameSite=Lax`;
-      document.cookie = `one_store_user_role=${role}; path=/; max-age=2592000; SameSite=Lax`;
+      const user = data.user;
+      localStorage.setItem(
+        "one_store_session",
+        JSON.stringify({
+          id: user.id || `usr_${Date.now()}`,
+          email: trimmedEmail,
+          full_name: user.fullName || "",
+          role: user.role || (isAdminEmail(trimmedEmail) ? "owner" : "customer"),
+        })
+      );
+      if (user.fullName) {
+        localStorage.setItem("one_store_user_name", user.fullName);
+      }
     }
 
     return {
       success: true,
-      data: { userId: data.user.id },
+      data: { userId: data.user?.id || `usr_${Date.now()}` },
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Verification error occurred.";
@@ -411,6 +338,15 @@ export async function signOutUser(): Promise<AuthResponse> {
     localStorage.removeItem("one_store_user_name");
     document.cookie = "one_store_user_email=; path=/; max-age=0";
     document.cookie = "one_store_user_role=; path=/; max-age=0";
+    document.cookie = "one_store_user_name=; path=/; max-age=0";
+    document.cookie = "one_store_admin_authenticated=; path=/; max-age=0";
+  }
+
+  try {
+    // Notify server to clear HTTP-only/secure cookies
+    await fetch("/auth/signout", { method: "POST" }).catch(() => {});
+  } catch {
+    // Non-blocking
   }
 
   try {

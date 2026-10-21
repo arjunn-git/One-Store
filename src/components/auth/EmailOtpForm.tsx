@@ -56,6 +56,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAccountNotFound, setIsAccountNotFound] = useState(false);
+  const [isAccountAlreadyExists, setIsAccountAlreadyExists] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
   // Countdown timer for OTP resend
@@ -73,6 +75,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setIsAccountNotFound(false);
+    setIsAccountAlreadyExists(false);
 
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !trimmedEmail.includes("@")) {
@@ -95,6 +99,16 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     setIsLoading(false);
 
     if (!res.success) {
+      if (res.notFound) {
+        setIsAccountNotFound(true);
+        setErrorMessage("No account found with this email address. Please create an account first.");
+        return;
+      }
+      if (res.exists) {
+        setIsAccountAlreadyExists(true);
+        setErrorMessage("An account with this email address already exists. Please sign in instead.");
+        return;
+      }
       setErrorMessage(res.error || "Unable to send verification code. Please try again.");
       return;
     }
@@ -109,8 +123,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (otpCode.length !== 6 && otpCode.length !== 8) {
-      setErrorMessage("Please enter your complete verification code.");
+    if (otpCode.length !== 6) {
+      setErrorMessage("Please enter your complete 6-digit verification code.");
       return;
     }
 
@@ -174,6 +188,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               onClick={() => {
                 setCurrentMode("login");
                 setErrorMessage(null);
+                setIsAccountNotFound(false);
+                setIsAccountAlreadyExists(false);
               }}
               className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${
                 currentMode === "login"
@@ -188,6 +204,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
               onClick={() => {
                 setCurrentMode("signup");
                 setErrorMessage(null);
+                setIsAccountNotFound(false);
+                setIsAccountAlreadyExists(false);
               }}
               className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${
                 currentMode === "signup"
@@ -211,9 +229,39 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-800 text-xs text-red-300 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
-              <span>{errorMessage}</span>
+            <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-800 text-xs text-red-300 flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+                <span className="flex-1">{errorMessage}</span>
+              </div>
+              {isAccountNotFound && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("signup");
+                    setErrorMessage(null);
+                    setIsAccountNotFound(false);
+                    setIsAccountAlreadyExists(false);
+                  }}
+                  className="self-start text-[#7DD3FC] hover:underline font-semibold text-xs ml-6"
+                >
+                  Create an account with this email →
+                </button>
+              )}
+              {isAccountAlreadyExists && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("login");
+                    setErrorMessage(null);
+                    setIsAccountNotFound(false);
+                    setIsAccountAlreadyExists(false);
+                  }}
+                  className="self-start text-[#7DD3FC] hover:underline font-semibold text-xs ml-6"
+                >
+                  Sign in with this email →
+                </button>
+              )}
             </div>
           )}
 
@@ -331,6 +379,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                   onClick={() => {
                     setCurrentMode("login");
                     setErrorMessage(null);
+                    setIsAccountNotFound(false);
+                    setIsAccountAlreadyExists(false);
                   }}
                   className="text-[#7DD3FC] font-semibold hover:underline"
                 >
@@ -345,6 +395,8 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                   onClick={() => {
                     setCurrentMode("signup");
                     setErrorMessage(null);
+                    setIsAccountNotFound(false);
+                    setIsAccountAlreadyExists(false);
                   }}
                   className="text-[#7DD3FC] font-semibold hover:underline"
                 >
@@ -409,7 +461,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
             </div>
           )}
 
-          {/* Numeric OTP Input (Supports 6 or 8 digits) */}
+          {/* Numeric OTP Input (6 digits) */}
           <div className="py-1">
             <div className="text-center text-[11px] text-[#FFFFFF] mb-2 font-semibold">
               Enter Verification Code:
@@ -417,7 +469,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
             <OtpInput
               value={otpCode}
               onChange={setOtpCode}
-              length={8}
+              length={6}
               disabled={isLoading}
               hasError={!!errorMessage}
             />
@@ -426,7 +478,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
           {/* Verify Button */}
           <button
             type="submit"
-            disabled={isLoading || (otpCode.length !== 6 && otpCode.length !== 8)}
+            disabled={isLoading || otpCode.length !== 6}
             className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-sm hover:bg-[#FFFFFF] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isLoading ? (

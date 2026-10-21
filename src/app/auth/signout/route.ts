@@ -27,6 +27,8 @@ async function handleSignOut(request: Request) {
   const cookieStore = await cookies();
   cookieStore.delete("one_store_user_email");
   cookieStore.delete("one_store_user_role");
+  cookieStore.delete("one_store_user_name");
+  cookieStore.delete("one_store_admin_authenticated");
 
   return NextResponse.redirect(`${origin}${next}`, {
     status: 303,

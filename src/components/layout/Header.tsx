@@ -112,12 +112,14 @@ export function Header() {
       const userEmail = match && match[1] ? decodeURIComponent(match[1]).toLowerCase().trim() : "";
       const hasAdmin = isAdminEmail(userEmail) || (session ? isAdminEmail(session) : false);
       const savedName = localStorage.getItem("one_store_user_name");
+      const cookieNameMatch = document.cookie.match(/one_store_user_name=([^;]+)/);
+      const cookieName = cookieNameMatch ? decodeURIComponent(cookieNameMatch[1]).trim() : "";
 
       if (emailCookie || session) {
         if (isMounted) {
           setIsLoggedIn(true);
           setIsAdmin(hasAdmin);
-          setUserName(hasAdmin ? "Store Admin" : (savedName || null));
+          setUserName(hasAdmin ? "Store Admin" : (savedName || cookieName || null));
         }
       }
 
