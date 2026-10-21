@@ -61,12 +61,44 @@ export function AIAssistantWidget() {
   const speechRecognitionRef = useRef<any | null>(null);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Initialize session ID and load saved conversation history
+  // Initialize session ID, restore open state across page refreshes, and load saved conversation history
   useEffect(() => {
     const sid = getOrCreateAnonymousSessionId();
     setSessionId(sid);
 
     try {
+      const savedOpen = sessionStorage.getItem("one_store_ai_open") === "true";
+      const savedMinimized = sessionStorage.getItem("one_store_ai_minimized") === "true";
+      const justRefreshed = sessionStorage.getItem("one_store_ai_just_refreshed") === "true";
+
+      if (savedOpen) {
+        setIsOpen(true);
+        setIsMinimized(savedMinimized);
+      }
+
+      if (justRefreshed) {
+        sessionStorage.removeItem("one_store_ai_just_refreshed");
+        localStorage.removeItem(STORAGE_KEY);
+        setMessages([
+          {
+            id: `msg_refreshed_${Date.now()}`,
+            role: "assistant",
+            content: `✨ **Website & catalogue refreshed successfully!**\n\nAll live products, inventory, and pricing for **${
+              market === "IN" ? "India (₹ INR)" : "the UK (£ GBP)"
+            }** are up-to-date. How can I assist your shopping?`,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            quickPrompts: [
+              "🔍 Find a product",
+              "⇄ Compare items",
+              "📦 Track my order",
+              market === "IN" ? "⚡ Under ₹10,000" : "⚡ Under £100",
+            ],
+            provider: "one-store-siri-engine",
+          },
+        ]);
+        return;
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -98,6 +130,16 @@ export function AIAssistantWidget() {
       },
     ]);
   }, [market]);
+
+  // Sync open/minimized state to sessionStorage so page refreshes never close the assistant
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("one_store_ai_open", isOpen ? "true" : "false");
+      sessionStorage.setItem("one_store_ai_minimized", isMinimized ? "true" : "false");
+    } catch {
+      // Storage unavailable
+    }
+  }, [isOpen, isMinimized]);
 
   // Save history on change
   useEffect(() => {
@@ -332,6 +374,42 @@ export function AIAssistantWidget() {
     stopListening();
     stopSpeaking();
 
+    // Natural language command to refresh the website
+    const lower = textToSend.toLowerCase();
+    if (
+      lower === "refresh" ||
+      lower === "refresh website" ||
+      lower === "refresh the website" ||
+      lower === "reload website" ||
+      lower === "reload the website" ||
+      lower === "refresh page" ||
+      lower === "reload page" ||
+      lower === "refresh store" ||
+      lower === "reload store"
+    ) {
+      const userMessage: AIChatMessage = {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: textToSend,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      const assistantMessage: AIChatMessage = {
+        id: `asst_${Date.now()}`,
+        role: "assistant",
+        content: `Refreshing One Store website for you now with the latest live products, pricing, and catalogue for **${
+          market === "IN" ? "India (₹ INR)" : "the UK (£ GBP)"
+        }**...`,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        provider: "one-store-siri-engine",
+      };
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      if (!customText) setInput("");
+      setTimeout(() => {
+        handleRefreshWebsite();
+      }, 700);
+      return;
+    }
+
     const userMessage: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: "user",
@@ -407,6 +485,18 @@ export function AIAssistantWidget() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRefreshWebsite = () => {
+    stopListening();
+    stopSpeaking();
+    try {
+      sessionStorage.setItem("one_store_ai_open", "true");
+      sessionStorage.setItem("one_store_ai_minimized", "false");
+      sessionStorage.setItem("one_store_ai_just_refreshed", "true");
+    } catch {}
+    // Reloads website and storefront products cleanly
+    window.location.reload();
   };
 
   const handleClearHistory = () => {
@@ -771,14 +861,14 @@ export function AIAssistantWidget() {
                     {isVoiceEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
                   </button>
 
-                  {/* Reset Chat History */}
+                  {/* Refresh Website & Assistant */}
                   <button
                     type="button"
-                    onClick={handleClearHistory}
-                    title="Start fresh conversation"
-                    className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#FFFFFF] hover:bg-[#102A43] transition-colors"
+                    onClick={handleRefreshWebsite}
+                    title="Refresh website & storefront data"
+                    className="p-1.5 rounded-lg text-[#9CAFC3] hover:text-[#00F0FF] hover:bg-[#102A43] hover:border-[#00F0FF]/30 border border-transparent transition-all group"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5 group-hover:-rotate-180 transition-transform duration-500" />
                   </button>
 
                   {/* Minimize Panel: cleanly collapses back to floating launcher pill */}
