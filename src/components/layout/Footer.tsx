@@ -158,7 +158,7 @@ export function Footer() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p>© 2026 One Store. All rights reserved.</p>
           <p className="text-[11px] text-[#9CAFC3]">
-            Designed with dark `#080B10`, `#102A43`, and `#7DD3FC`. Strictly zero purple/magenta.
+            Curated flagship commerce engineered for India (INR ₹) &amp; the United Kingdom (GBP £).
           </p>
         </div>
       </div>
