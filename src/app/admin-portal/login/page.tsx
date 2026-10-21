@@ -23,7 +23,7 @@ export default function AdminPortalLoginPage() {
   const nextUrl = searchParams.get("next") || "/admin-portal/dashboard";
   const errorParam = searchParams.get("error");
 
-  const [email, setEmail] = useState("onestore.auth@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -136,7 +136,7 @@ export default function AdminPortalLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-[#080B10] border border-[#243447] focus:border-[#7DD3FC] focus:ring-1 focus:ring-[#7DD3FC] rounded-xl text-xs text-[#FFFFFF] placeholder-[#9CAFC3]/60 transition-all outline-none"
-                  placeholder="onestore.auth@gmail.com"
+                  placeholder="admin@example.com"
                 />
               </div>
             </div>
