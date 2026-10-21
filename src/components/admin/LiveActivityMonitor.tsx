@@ -17,8 +17,8 @@ import {
   AlertTriangle,
   Radio,
   WifiOff,
-  Bot,
 } from "lucide-react";
+import { CreepyAttractiveBotIcon } from "@/components/ai/CreepyAttractiveBotIcon";
 import type { ActivityEvent, ActivityEventType } from "@/lib/types/database";
 
 interface LiveActivityMonitorProps {
@@ -48,6 +48,7 @@ const FILTER_LABELS: Record<string, string> = {
   MARKET: "Market Switches",
   AUTH: "Logins / Signups",
   BROWSING: "Browsing & Searches",
+  AI: "Nocturne AI Assistant",
 };
 
 export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivityMonitorProps) {
@@ -239,7 +240,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       case "AI_ASSISTANT_QUERY":
       case "AI_RECOMMENDATION_CLICK":
       case "AI_ADD_TO_CART":
-        return <Bot className="h-4 w-4 text-[#7DD3FC]" />;
+        return <CreepyAttractiveBotIcon size="sm" />;
       default:
         return <Activity className="h-4 w-4 text-[#7DD3FC]" />;
     }
@@ -548,7 +549,19 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                           Tracking: {String(act.details?.trackingNumber)}
                         </span>
                       )}
+                      {Boolean(act.details?.feedback) && (
+                        <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-800/50">
+                          Feedback: {String(act.details?.feedback)}
+                        </span>
+                      )}
                     </div>
+
+                    {Boolean(act.details?.userMessage) && (
+                      <div className="mt-1 text-xs text-[#FFFFFF] bg-[#102A43]/40 border border-[#7DD3FC]/20 px-2.5 py-1 rounded-lg">
+                        <span className="text-[#7DD3FC] font-semibold text-[11px]">User Asked:</span>{" "}
+                        &ldquo;{String(act.details?.userMessage)}&rdquo;
+                      </div>
+                    )}
                   </div>
                 </div>
 

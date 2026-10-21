@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Sparkles,
   X,
   Minus,
   RotateCcw,
@@ -16,9 +15,9 @@ import {
   ShieldCheck,
   ExternalLink,
   ChevronRight,
-  Bot,
   User,
 } from "lucide-react";
+import { CreepyAttractiveBotIcon } from "./CreepyAttractiveBotIcon";
 import { useMarket } from "@/lib/context/MarketContext";
 import { getOrCreateAnonymousSessionId } from "@/lib/services/session";
 import { AIProductCard } from "./AIProductCard";
@@ -56,23 +55,23 @@ export function AIAssistantWidget() {
       // Ignore storage errors
     }
 
-    // Default welcome message
+    // Default welcome message with Nocturne cyber persona
     setMessages([
       {
         id: "msg_welcome",
         role: "assistant",
-        content: `Welcome to **One Store**. I am your personal AI Shopping Concierge.\n\nI can help you discover flagship studio acoustics, engineered minimalist carry, and precision timepieces tailored for **${
+        content: `I am **Nocturne** — One Store's synthetic intelligence concierge. I watch over our darkest studio acoustics, surgical chronographs, and engineered minimalist carry across **${
           market === "IN" ? "India (₹ INR)" : "the UK (£ GBP)"
-        }**, compare technical specs, or track your verified orders.`,
+        }**.\n\nI perceive your intent before your fingers touch the keys. Tell me... what desire brings you into my domain today?`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         quickPrompts: [
-          "Find products for me",
-          market === "IN" ? "Recommend something under ₹10,000" : "Recommend something under £100",
-          "Track my order",
-          "Compare products",
-          "Help me choose a gift",
+          "Curate studio audio 🎧",
+          market === "IN" ? "Items under ₹10,000 ⚡" : "Items under £100 ⚡",
+          "Track my active order 📦",
+          "Compare flagship specs ⚖️",
+          "Suggest a luxury gift 🎁",
         ],
-        provider: "one-store-concierge",
+        provider: "nocturne-neural-engine",
       },
     ]);
   }, [market]);
@@ -185,17 +184,17 @@ export function AIAssistantWidget() {
       {
         id: "msg_new",
         role: "assistant",
-        content: `Conversation reset. How can I assist you with your **${
-          market === "IN" ? "India" : "UK"
-        }** shopping today?`,
+        content: `Neural memory flushed. I am **Nocturne** — standing by for your next inquiry in **${
+          market === "IN" ? "India (₹ INR)" : "the UK (£ GBP)"
+        }**. What shall we summon?`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         quickPrompts: [
-          "Find products for me",
-          market === "IN" ? "Show items under ₹10,000" : "Show items under £100",
-          "Track my order",
-          "Compare flagship products",
+          "Curate studio audio 🎧",
+          market === "IN" ? "Items under ₹10,000 ⚡" : "Items under £100 ⚡",
+          "Track my active order 📦",
+          "Compare flagship specs ⚖️",
         ],
-        provider: "one-store-concierge",
+        provider: "nocturne-neural-engine",
       },
     ]);
   };
@@ -204,6 +203,23 @@ export function AIAssistantWidget() {
     setMessages((prev) =>
       prev.map((m) => (m.id === messageId ? { ...m, feedback: type } : m))
     );
+    // Send feedback event to activity stream so admin can see user satisfaction
+    try {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "AI_ASSISTANT_QUERY",
+          action: `Shopper rated AI response: ${type === "up" ? "👍 Helpful" : "👎 Unhelpful"}`,
+          actor: "Storefront Shopper",
+          anonymousSessionId: sessionId,
+          market,
+          currency: market === "GB" ? "GBP" : "INR",
+          resourceType: "ai_feedback",
+          details: { messageId, rating: type },
+        }),
+      }).catch(() => {});
+    } catch {}
   };
 
   // Helper to render bold markdown (**text**) and bullet lists
@@ -257,7 +273,7 @@ export function AIAssistantWidget() {
 
   return (
     <>
-      {/* 1. Floating Launcher Button */}
+      {/* 1. Floating Launcher Button with Creepy / Attractive Cyber Bot */}
       {!isOpen && (
         <button
           type="button"
@@ -265,18 +281,21 @@ export function AIAssistantWidget() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          aria-label="Open AI Shopping Assistant"
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 group flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-[#102A43] via-[#0c141e] to-[#102A43] border border-[#7DD3FC]/50 text-[#FFFFFF] shadow-2xl shadow-[#7DD3FC]/20 hover:scale-105 hover:border-[#7DD3FC] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#7DD3FC]"
+          aria-label="Summon Nocturne Cybernetic Assistant"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 group flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-[#080B10] via-[#0c141e] to-[#102A43] border border-[#7DD3FC]/60 text-[#FFFFFF] shadow-[0_0_25px_rgba(125,211,252,0.3)] hover:scale-105 hover:border-[#A855F7] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#7DD3FC]"
         >
-          {/* Subtle Ambient Pulse Ring */}
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7DD3FC] opacity-75" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#7DD3FC]" />
-          </span>
+          <CreepyAttractiveBotIcon size="sm" isThinking={false} />
 
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#7DD3FC] animate-pulse" />
-            <span className="text-xs font-bold tracking-tight">AI Assistant</span>
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black tracking-tight text-[#FFFFFF]">Nocturne</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#7DD3FC]/20 text-[#7DD3FC] border border-[#7DD3FC]/40 font-bold">
+                AI
+              </span>
+            </div>
+            <span className="text-[9px] text-[#A855F7] font-semibold tracking-wider uppercase">
+              Cyber Concierge
+            </span>
           </div>
         </button>
       )}
@@ -285,7 +304,7 @@ export function AIAssistantWidget() {
       {isOpen && (
         <div
           role="dialog"
-          aria-label="One Store AI Shopping Assistant"
+          aria-label="Nocturne Cybernetic Shopping Concierge"
           className={`fixed z-50 transition-all duration-300 flex flex-col bg-[#080B10] border border-[#243447] shadow-2xl backdrop-blur-2xl ${
             isMinimized
               ? "bottom-5 right-5 sm:bottom-6 sm:right-6 w-72 rounded-2xl p-3 border-[#7DD3FC]/40 cursor-pointer"
@@ -298,21 +317,21 @@ export function AIAssistantWidget() {
             className="flex items-center justify-between p-3.5 sm:p-4 border-b border-[#243447] bg-gradient-to-r from-[#102A43]/80 via-[#0c141e] to-[#080B10] rounded-t-3xl sm:rounded-t-2xl shrink-0"
           >
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-[#102A43] border border-[#7DD3FC]/40 text-[#7DD3FC] flex items-center justify-center shadow-inner">
-                <Sparkles className="h-4 w-4" />
+              <div className="h-9 w-9 rounded-xl bg-[#080B10] border border-[#7DD3FC]/50 flex items-center justify-center shadow-lg relative">
+                <CreepyAttractiveBotIcon size="md" isThinking={isLoading} />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-[#FFFFFF] tracking-tight">
-                    One Store AI
+                  <span className="text-xs font-black text-[#FFFFFF] tracking-tight">
+                    Nocturne AI
                   </span>
-                  <span className="px-1.5 py-0.2 rounded-full bg-[#102A43] border border-[#7DD3FC]/30 text-[9px] font-semibold text-[#7DD3FC]">
+                  <span className="px-1.5 py-0.5 rounded-full bg-[#102A43] border border-[#7DD3FC]/30 text-[9px] font-bold text-[#7DD3FC]">
                     {market === "IN" ? "🇮🇳 IN (₹)" : "🇬🇧 UK (£)"}
                   </span>
                 </div>
-                <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  <span>Verified Concierge</span>
+                <div className="text-[10px] text-[#A855F7] font-semibold flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#A855F7] animate-pulse" />
+                  <span>Cybernetic Concierge</span>
                 </div>
               </div>
             </div>
@@ -368,8 +387,8 @@ export function AIAssistantWidget() {
                     <div className="flex items-center gap-1 text-[10px] text-[#9CAFC3]/70 mb-1 px-1">
                       {msg.role === "assistant" ? (
                         <>
-                          <Bot className="h-3 w-3 text-[#7DD3FC]" />
-                          <span>AI Concierge</span>
+                          <CreepyAttractiveBotIcon size="sm" />
+                          <span className="font-bold text-[#7DD3FC]">Nocturne AI</span>
                         </>
                       ) : (
                         <>

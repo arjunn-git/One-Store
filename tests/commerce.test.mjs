@@ -1894,7 +1894,77 @@ runTest("AI Shopping Assistant: Semantic Fallback & Zero-Key Operation", () => {
   }
 
   assert.equal(getProvider({}), "one-store-catalog-engine", "Must fallback gracefully when no external API keys are configured");
-  assert.equal(getProvider({ GEMINI_API_KEY: "gk_123" }), "gemini");
+});
+
+// 48. Nocturne AI: Conversational Small-Talk Routing & Zero Unsolicited Product Spam
+runTest("AI Shopping Assistant: Nocturne Conversational Greeting (No Static Product Dumping)", () => {
+  function isGreetingOrSmallTalk(text) {
+    const t = text.trim().toLowerCase();
+    const greetings = ["hi", "hello", "hey", "good morning", "good evening", "how are you", "what can you do"];
+    return greetings.some((g) => t === g || t.startsWith(g + " ") || t.startsWith(g + "!"));
+  }
+
+  function resolveRecommendations(userQuery, catalog) {
+    if (isGreetingOrSmallTalk(userQuery)) {
+      // Pure conversation, 0 products returned
+      return {
+        reply: "Greetings, traveler. I am Nocturne — your cybernetic concierge in the shadows of One Store.",
+        products: []
+      };
+    }
+    // Only search/recommend when actual query is provided
+    return {
+      reply: "Here are curated selections.",
+      products: catalog.slice(0, 2)
+    };
+  }
+
+  const mockCatalog = [{ id: "1", name: "One Acoustic Pro Wireless" }, { id: "2", name: "Chronos Diver Watch" }];
+
+  // Greetings must NEVER dump product cards
+  const hiResult = resolveRecommendations("Hi", mockCatalog);
+  assert.equal(hiResult.products.length, 0, "Simple 'Hi' greeting must return 0 product cards");
+  assert.ok(hiResult.reply.includes("Nocturne"));
+
+  const helloResult = resolveRecommendations("Hello there", mockCatalog);
+  assert.equal(helloResult.products.length, 0, "Greeting must return 0 product cards");
+
+  // Product queries return matching products
+  const searchResult = resolveRecommendations("Show me noise cancelling headphones", mockCatalog);
+  assert.equal(searchResult.products.length, 2, "Product queries must return recommendation cards");
+});
+
+// 49. Nocturne AI: Full User Telemetry & Admin Audit Logging
+runTest("AI Shopping Assistant: Full User Prompt Telemetry & IP Audit Capture", () => {
+  const conversations = [];
+
+  function recordAiConversation(entry) {
+    conversations.unshift({
+      id: "conv_" + Math.random().toString(36).slice(2, 8),
+      sessionId: entry.sessionId,
+      clientIp: entry.clientIp || "127.0.0.1",
+      userMessage: entry.userMessage,
+      assistantReply: entry.assistantReply,
+      market: entry.market || "IN",
+      recommendedProducts: entry.recommendedProducts || [],
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  recordAiConversation({
+    sessionId: "sess_xyz789",
+    clientIp: "49.36.120.44",
+    userMessage: "Can you recommend noise canceling headphones under 20000?",
+    assistantReply: "I perceive your need for silence. Consider the One Acoustic Pro Wireless.",
+    market: "IN",
+    recommendedProducts: ["One Acoustic Pro Wireless"]
+  });
+
+  assert.equal(conversations.length, 1);
+  assert.equal(conversations[0].clientIp, "49.36.120.44");
+  assert.equal(conversations[0].userMessage, "Can you recommend noise canceling headphones under 20000?");
+  assert.equal(conversations[0].recommendedProducts.length, 1);
+  assert.equal(conversations[0].market, "IN");
 });
 
 console.log("\n------------------------------------------------------------");

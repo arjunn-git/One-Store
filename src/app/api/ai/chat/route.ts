@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import {
   processAiAssistantChat,
   checkAiRateLimit,
+  recordAiConversation,
 } from "@/lib/services/ai-assistant";
 import { recordActivity } from "@/lib/services/activity";
 import type { AIChatRequest } from "@/lib/types/ai";
@@ -58,11 +59,35 @@ export async function POST(request: Request) {
     // Execute chat processing
     const result = await processAiAssistantChat(body, userAuth);
 
-    // Record privacy-safe telemetry event into genuine operational stream
+    // 1. Record detailed conversation for Admin Intelligence Inspector
     try {
+      recordAiConversation({
+        id: `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        sessionId: body.sessionId || "guest",
+        actor: authEmail || "Storefront Shopper",
+        authUserId,
+        ip,
+        market: body.market === "GB" ? "GB" : "IN",
+        query: body.message,
+        reply: result.reply,
+        productsRecommended: result.products?.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.formattedPrice,
+        })),
+        provider: result.provider,
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    // 2. Record privacy-safe telemetry event into genuine operational activity stream
+    try {
+      const cleanPrompt = body.message.length > 55 ? `${body.message.slice(0, 55)}...` : body.message;
       await recordActivity({
         type: "AI_ASSISTANT_QUERY",
-        action: `Customer inquired about ${result.products?.[0]?.name || "store services"}`,
+        action: `AI Prompt: "${cleanPrompt}"`,
         actor: authEmail ? `Customer (${authEmail.split("@")[0]})` : "Storefront Shopper",
         authUserId,
         anonymousSessionId: body.sessionId,
@@ -70,7 +95,10 @@ export async function POST(request: Request) {
         currency: body.market === "GB" ? "GBP" : "INR",
         resourceType: "ai_assistant",
         details: {
+          userPrompt: body.message,
+          aiReply: result.reply,
           provider: result.provider,
+          recommendedProducts: result.products?.map((p) => p.name).join(", ") || "None",
           hasRecommendations: (result.products?.length || 0) > 0,
         },
         ipAddress: ip,

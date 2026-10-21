@@ -7,6 +7,8 @@ import { getAllStoredOrders } from "@/lib/services/payments";
 import { FALLBACK_PRODUCTS } from "@/lib/services/products";
 import { getAiTelemetrySummary } from "@/lib/services/ai-assistant";
 import { ClientLiveActivityMonitor as LiveActivityMonitor } from "@/components/admin/ClientLiveActivityMonitor";
+import { ClientAiConversationInspector } from "@/components/admin/ClientAiConversationInspector";
+import { CreepyAttractiveBotIcon } from "@/components/ai/CreepyAttractiveBotIcon";
 import {
   TrendingUp,
   Package,
@@ -257,17 +259,17 @@ export default async function AdminPortalDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#243447]/60 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-[#102A43] border border-[#7DD3FC]/40 text-[#7DD3FC] flex items-center justify-center">
-              <Sparkles className="h-4 w-4" />
+              <CreepyAttractiveBotIcon size="sm" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-[#FFFFFF] tracking-tight flex items-center gap-2">
-                <span>AI Shopping Assistant Telemetry</span>
+                <span>Nocturne AI Assistant Telemetry</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#102A43] border border-[#7DD3FC]/30 text-[#7DD3FC]">
                   {aiSummary.activeProvider.toUpperCase()}
                 </span>
               </h2>
               <p className="text-xs text-[#9CAFC3]">
-                Autonomous catalog discovery, multi-market pricing recommendations, and privacy-isolated order tracking.
+                Full conversational transcripts, prompts, user IPs, recommended products, and feedback audit trail.
               </p>
             </div>
           </div>
@@ -305,6 +307,9 @@ export default async function AdminPortalDashboard() {
 
       {/* Real-time Telemetry & Shopper Activity Stream */}
       <LiveActivityMonitor />
+
+      {/* Real-time User AI Conversation & Prompt Inspector */}
+      <ClientAiConversationInspector />
 
       {/* Orders Table */}
       <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-5 shadow-xl">
