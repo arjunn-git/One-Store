@@ -454,12 +454,29 @@ export function AIAssistantWidget() {
     } catch {}
   };
 
-  // Helper to render bold markdown (**text**) and code blocks
+  // Helper to render bold markdown (**text**), code blocks, and list items without double bullets
   const renderFormattedContent = (content: string) => {
     const lines = content.split("\n");
     return lines.map((line, idx) => {
-      const parts = line.split(/(\*\*[^*]+\*\*)/g);
-      const parsedLine = parts.map((part, pIdx) => {
+      const trimmed = line.trim();
+
+      if (trimmed === "") {
+        return <div key={idx} className="h-2" />;
+      }
+
+      // Check for bullet list item: •, -, or *
+      const isBullet =
+        trimmed.startsWith("• ") ||
+        trimmed.startsWith("- ") ||
+        trimmed.startsWith("* ") ||
+        /^•\s*/.test(trimmed);
+
+      // Strip leading bullet symbol + whitespace so the browser's <li> disc doesn't produce double bullets
+      // Use \s+ so bold markdown syntax (**text**) is never accidentally stripped
+      const contentToParse = isBullet ? trimmed.replace(/^([•\-]\s+|\*\s+)/, "") : line;
+
+      const parts = contentToParse.split(/(\*\*[^*]+\*\*)/g);
+      const parsedContent = parts.map((part, pIdx) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
             <strong key={pIdx} className="font-bold text-[#FFFFFF]">
@@ -480,21 +497,17 @@ export function AIAssistantWidget() {
         return <span key={pIdx}>{part}</span>;
       });
 
-      if (line.trim().startsWith("• ") || line.trim().startsWith("- ")) {
+      if (isBullet) {
         return (
-          <li key={idx} className="ml-4 list-disc text-xs my-0.5 text-[#E2E8F0]">
-            {parsedLine}
+          <li key={idx} className="ml-4 list-disc text-xs my-1 text-[#E2E8F0] leading-relaxed">
+            {parsedContent}
           </li>
         );
       }
 
-      if (line.trim() === "") {
-        return <div key={idx} className="h-2" />;
-      }
-
       return (
         <p key={idx} className="text-xs my-0.5 text-[#E2E8F0] leading-relaxed">
-          {parsedLine}
+          {parsedContent}
         </p>
       );
     });

@@ -2009,6 +2009,39 @@ runTest("AI Shopping Assistant: Siri Orb Reactive States & Audio Normalization",
   assert.equal(micPermissionRequested, true);
 });
 
+// 51. AI Shopping Assistant: Bullet Normalization & Prevention of Double Bullet Points
+runTest("AI Shopping Assistant: Clean Single Bullet Point Markdown Normalization", () => {
+  function formatBulletLine(line) {
+    const trimmed = line.trim();
+    const isBullet =
+      trimmed.startsWith("• ") ||
+      trimmed.startsWith("- ") ||
+      trimmed.startsWith("* ") ||
+      /^•\s*/.test(trimmed);
+
+    if (!isBullet) {
+      return { isBullet: false, content: line };
+    }
+
+    // Must strip bullet prefix from content so the <li> disc doesn't double-render
+    // Use \s+ so bold markdown syntax (**text**) is never accidentally stripped
+    const content = trimmed.replace(/^([•\-]\s+|\*\s+)/, "");
+    return { isBullet: true, content };
+  }
+
+  const sample1 = formatBulletLine("• **Instant UPI:** Google Pay, PhonePe, Paytm, BHIM");
+  assert.equal(sample1.isBullet, true);
+  assert.equal(sample1.content, "**Instant UPI:** Google Pay, PhonePe, Paytm, BHIM", "Leading bullet symbol must be stripped from list content");
+
+  const sample2 = formatBulletLine("- Card Networks: Visa, Mastercard");
+  assert.equal(sample2.isBullet, true);
+  assert.equal(sample2.content, "Card Networks: Visa, Mastercard");
+
+  const sample3 = formatBulletLine("Authenticated Financial Gateways (India INR ₹):");
+  assert.equal(sample3.isBullet, false);
+  assert.equal(sample3.content, "Authenticated Financial Gateways (India INR ₹):");
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");
