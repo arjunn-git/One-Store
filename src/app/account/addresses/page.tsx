@@ -70,6 +70,23 @@ export default function AddressesPage() {
     }));
   };
 
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+    setErrorMsg(null);
+    setNewAddr({
+      label: "Home",
+      recipient_name: "",
+      phone: "",
+      line1: "",
+      line2: "",
+      city: "",
+      state_or_province: "",
+      postal_code: "",
+      country_code: "IN",
+      is_default: false,
+    });
+  };
+
   const fetchAddresses = async () => {
     setIsLoading(true);
     try {
@@ -229,7 +246,7 @@ export default function AddressesPage() {
               <h2 className="text-sm font-bold text-[#FFFFFF]">Add Delivery Address</h2>
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleCloseAddForm}
                 className="text-[#9CAFC3] hover:text-[#FFFFFF] p-1"
               >
                 <X className="h-4 w-4" />
@@ -418,7 +435,7 @@ export default function AddressesPage() {
             <div className="flex justify-end gap-3 pt-3">
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleCloseAddForm}
                 className="px-4 py-2 rounded-xl bg-[#080B10] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold"
               >
                 Cancel

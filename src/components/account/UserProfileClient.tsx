@@ -508,17 +508,38 @@ export function UserProfileClient({
     }
   };
 
-  const handleOpenAddAddress = () => {
+  const handleCloseAddressModal = () => {
+    setIsAddingAddress(false);
     setEditingAddressId(null);
+    setAddressFormLocality("");
+    setAddressErrorMsg(null);
     setAddressForm({
       label: "Home",
       recipient_name: fullName || "",
       phone: phone || "",
-      line1: apartmentUnit ? `${apartmentUnit}, ${streetAddress}` : streetAddress || "",
+      line1: "",
       line2: "",
-      city: city || "",
-      state_or_province: stateOrProvince || "",
-      postal_code: postalCode || "",
+      city: "",
+      state_or_province: "",
+      postal_code: "",
+      country_code: country === "GB" ? "GB" : "IN",
+      is_default: addresses.length === 0,
+    });
+  };
+
+  const handleOpenAddAddress = () => {
+    setEditingAddressId(null);
+    setAddressFormLocality("");
+    setAddressErrorMsg(null);
+    setAddressForm({
+      label: "Home",
+      recipient_name: fullName || "",
+      phone: phone || "",
+      line1: "",
+      line2: "",
+      city: "",
+      state_or_province: "",
+      postal_code: "",
       country_code: country === "GB" ? "GB" : "IN",
       is_default: addresses.length === 0,
     });
@@ -582,8 +603,7 @@ export function UserProfileClient({
         });
       }
 
-      setIsAddingAddress(false);
-      setEditingAddressId(null);
+      handleCloseAddressModal();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error saving address";
       setAddressErrorMsg(msg);
@@ -990,7 +1010,7 @@ export function UserProfileClient({
                 </h3>
                 <button
                   type="button"
-                  onClick={() => setIsAddingAddress(false)}
+                  onClick={handleCloseAddressModal}
                   className="text-[#9CAFC3] hover:text-[#FFFFFF] p-1"
                 >
                   <X className="h-4 w-4" />
@@ -1201,7 +1221,7 @@ export function UserProfileClient({
               <div className="flex justify-end gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => setIsAddingAddress(false)}
+                  onClick={handleCloseAddressModal}
                   className="px-4 py-2 rounded-xl bg-[#080B10] text-[#9CAFC3] hover:text-[#FFFFFF] text-xs font-semibold"
                 >
                   Cancel
