@@ -1,43 +1,29 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  resolveServerSession,
+  getOrCreateCustomerProfile,
+  getCustomerAddresses,
+  saveCustomerAddress,
+  updateCustomerAddress,
+  deleteCustomerAddress,
+} from "@/lib/services/server-auth";
 import {
   validatePostalCode,
   validatePhoneNumber,
-  calculateProfileCompletion,
 } from "@/lib/services/profile-validation";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const session = await resolveServerSession();
 
-    if (authError || !authData.user) {
+    if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from("customer_profiles")
-      .select("id")
-      .eq("auth_user_id", authData.user.id)
-      .maybeSingle();
+    const profile = await getOrCreateCustomerProfile(session);
+    const addresses = await getCustomerAddresses(profile.id);
 
-    if (!profile) {
-      return NextResponse.json({ success: true, addresses: [] });
-    }
-
-    const { data: addresses, error } = await supabase
-      .from("addresses")
-      .select("*")
-      .eq("customer_id", profile.id)
-      .order("is_default", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({ success: true, addresses: addresses || [] });
+    return NextResponse.json({ success: true, addresses });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
@@ -46,52 +32,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const session = await resolveServerSession();
 
-    if (authError || !authData.user) {
+    if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    let { data: profile } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("auth_user_id", authData.user.id)
-      .maybeSingle();
-
-    if (!profile) {
-      // Auto-create profile if missing
-      const { data: newProf, error: pErr } = await supabase
-        .from("customer_profiles")
-        .insert({
-          auth_user_id: authData.user.id,
-          email: authData.user.email,
-          is_email_verified: !!authData.user.email_confirmed_at,
-        })
-        .select()
-        .single();
-      if (pErr) {
-        try {
-          const adminProf = await createAdminClient()
-            .from("customer_profiles")
-            .insert({
-              auth_user_id: authData.user.id,
-              email: authData.user.email,
-              is_email_verified: !!authData.user.email_confirmed_at,
-            })
-            .select()
-            .single();
-          if (adminProf.data) {
-            profile = adminProf.data;
-          } else {
-            return NextResponse.json({ success: false, error: pErr.message }, { status: 400 });
-          }
-        } catch {
-          return NextResponse.json({ success: false, error: pErr.message }, { status: 400 });
-        }
-      } else {
-        profile = newProf;
-      }
     }
 
     const body = await request.json();
@@ -149,91 +93,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check count of existing addresses: if 0, force is_default = true
-    const { count: existingCount } = await supabase
-      .from("addresses")
-      .select("*", { count: "exact", head: true })
-      .eq("customer_id", profile.id);
-
-    const makeDefault = is_default || existingCount === 0;
-
-    if (makeDefault) {
-      await supabase
-        .from("addresses")
-        .update({ is_default: false })
-        .eq("customer_id", profile.id);
-    }
-
     const validLabels = ["Home", "Work", "Other", "Office", "Warehouse"];
     const safeLabel = validLabels.includes(label) ? label : "Home";
 
-    let newAddress = null;
-    const { data: insertedAddress, error } = await supabase
-      .from("addresses")
-      .insert({
-        customer_id: profile.id,
-        label: safeLabel,
-        recipient_name: recipient_name.trim(),
-        phone: phone.trim(),
-        line1: line1.trim(),
-        line2: line2?.trim() || null,
-        city: city.trim(),
-        state_or_province: state_or_province.trim(),
-        postal_code: postal_code.trim().toUpperCase(),
-        country_code: targetCountry,
-        is_default: makeDefault,
-      })
-      .select()
-      .single();
+    const { address, completion } = await saveCustomerAddress(session, {
+      label: safeLabel,
+      recipient_name: recipient_name.trim(),
+      phone: phone.trim(),
+      line1: line1.trim(),
+      line2: line2?.trim() || null,
+      city: city.trim(),
+      state_or_province: state_or_province.trim(),
+      postal_code: postal_code.trim().toUpperCase(),
+      country_code: targetCountry,
+      is_default: !!is_default,
+    });
 
-    if (error) {
-      try {
-        const adminRes = await createAdminClient()
-          .from("addresses")
-          .insert({
-            customer_id: profile.id,
-            label: safeLabel,
-            recipient_name: recipient_name.trim(),
-            phone: phone.trim(),
-            line1: line1.trim(),
-            line2: line2?.trim() || null,
-            city: city.trim(),
-            state_or_province: state_or_province.trim(),
-            postal_code: postal_code.trim().toUpperCase(),
-            country_code: targetCountry,
-            is_default: makeDefault,
-          })
-          .select()
-          .single();
-        if (adminRes.data) {
-          newAddress = adminRes.data;
-        } else {
-          return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-        }
-      } catch {
-        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-      }
-    } else {
-      newAddress = insertedAddress;
-    }
-
-    // Recalculate profile completion
-    const { data: allAddresses } = await supabase
-      .from("addresses")
-      .select("*")
-      .eq("customer_id", profile.id);
-
-    const completion = calculateProfileCompletion(profile, allAddresses || []);
-    await supabase
-      .from("customer_profiles")
-      .update({
-        is_profile_complete: completion.isComplete,
-        profile_completion_percentage: completion.percentage,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", profile.id);
-
-    return NextResponse.json({ success: true, address: newAddress, completion });
+    return NextResponse.json({ success: true, address, completion });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
@@ -242,21 +118,10 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const session = await resolveServerSession();
 
-    if (authError || !authData.user) {
+    if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("auth_user_id", authData.user.id)
-      .single();
-
-    if (!profile) {
-      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -278,18 +143,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: "Address ID required" }, { status: 400 });
     }
 
-    // Security: Verify that this address belongs to this customer
-    const { data: existingAddress } = await supabase
-      .from("addresses")
-      .select("id")
-      .eq("id", id)
-      .eq("customer_id", profile.id)
-      .maybeSingle();
-
-    if (!existingAddress) {
-      return NextResponse.json({ success: false, error: "Address not found or unauthorized" }, { status: 404 });
-    }
-
     const targetCountry: "IN" | "GB" = country_code?.toUpperCase() === "GB" ? "GB" : "IN";
 
     if (phone && !validatePhoneNumber(phone, targetCountry)) {
@@ -299,57 +152,27 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: "Invalid postal code" }, { status: 400 });
     }
 
-    if (is_default) {
-      await supabase
-        .from("addresses")
-        .update({ is_default: false })
-        .eq("customer_id", profile.id);
-    }
-
     const validLabels = ["Home", "Work", "Other", "Office", "Warehouse"];
     const safeLabel = label && validLabels.includes(label) ? label : undefined;
 
-    const { data: updatedAddress, error } = await supabase
-      .from("addresses")
-      .update({
-        label: safeLabel,
-        recipient_name: recipient_name?.trim(),
-        phone: phone?.trim(),
-        line1: line1?.trim(),
-        line2: line2?.trim() !== undefined ? line2.trim() || null : undefined,
-        city: city?.trim(),
-        state_or_province: state_or_province?.trim(),
-        postal_code: postal_code?.trim().toUpperCase(),
-        country_code: targetCountry,
-        is_default: is_default !== undefined ? !!is_default : undefined,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("customer_id", profile.id)
-      .select()
-      .single();
+    const result = await updateCustomerAddress(session, id, {
+      label: safeLabel,
+      recipient_name: recipient_name?.trim(),
+      phone: phone?.trim(),
+      line1: line1?.trim(),
+      line2: line2?.trim() !== undefined ? line2.trim() || null : undefined,
+      city: city?.trim(),
+      state_or_province: state_or_province?.trim(),
+      postal_code: postal_code?.trim().toUpperCase(),
+      country_code: targetCountry,
+      is_default: is_default !== undefined ? !!is_default : undefined,
+    });
 
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    if (!result) {
+      return NextResponse.json({ success: false, error: "Address not found or unauthorized" }, { status: 404 });
     }
 
-    // Recalculate profile completion
-    const { data: allAddresses } = await supabase
-      .from("addresses")
-      .select("*")
-      .eq("customer_id", profile.id);
-
-    const completion = calculateProfileCompletion(profile, allAddresses || []);
-    await supabase
-      .from("customer_profiles")
-      .update({
-        is_profile_complete: completion.isComplete,
-        profile_completion_percentage: completion.percentage,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", profile.id);
-
-    return NextResponse.json({ success: true, address: updatedAddress, completion });
+    return NextResponse.json({ success: true, address: result.address, completion: result.completion });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
@@ -358,21 +181,10 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const session = await resolveServerSession();
 
-    if (authError || !authData.user) {
+    if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("customer_profiles")
-      .select("id")
-      .eq("auth_user_id", authData.user.id)
-      .single();
-
-    if (!profile) {
-      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -382,52 +194,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: "Address ID required" }, { status: 400 });
     }
 
-    // Security: Only delete if the address belongs to this customer
-    const { error } = await supabase
-      .from("addresses")
-      .delete()
-      .eq("id", id)
-      .eq("customer_id", profile.id);
+    const result = await deleteCustomerAddress(session, id);
 
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json({ success: false, error: "Address not found" }, { status: 404 });
     }
 
-    // If deleted address was default, set another address as default if one exists
-    const { data: remainingAddresses } = await supabase
-      .from("addresses")
-      .select("*")
-      .eq("customer_id", profile.id)
-      .order("created_at", { ascending: false });
-
-    if (remainingAddresses && remainingAddresses.length > 0) {
-      const hasDefault = remainingAddresses.some((a) => a.is_default);
-      if (!hasDefault) {
-        await supabase
-          .from("addresses")
-          .update({ is_default: true })
-          .eq("id", remainingAddresses[0].id);
-      }
-    }
-
-    // Recalculate profile completion
-    const { data: freshProfile } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("id", profile.id)
-      .single();
-
-    const completion = calculateProfileCompletion(freshProfile, remainingAddresses || []);
-    await supabase
-      .from("customer_profiles")
-      .update({
-        is_profile_complete: completion.isComplete,
-        profile_completion_percentage: completion.percentage,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", profile.id);
-
-    return NextResponse.json({ success: true, completion });
+    return NextResponse.json({ success: true, completion: result.completion });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

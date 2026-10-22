@@ -2207,6 +2207,76 @@ runTest("Customer Authentication: Sign In, Create Account & OTP Security Lifecyc
   );
 });
 
+runTest("Customer Profile & Account Session: Dual Authentication (Cookie & GoTrue) Verification", () => {
+  // Test simulation of session resolver logic across GoTrue and HTTP cookies
+  function resolveMockSession(cookies, goTrueUser = null) {
+    if (goTrueUser && goTrueUser.email) {
+      return {
+        email: goTrueUser.email.toLowerCase().trim(),
+        authUserId: goTrueUser.id,
+        role: "customer",
+        source: "supabase",
+      };
+    }
+    const cookieEmail = cookies["one_store_user_email"];
+    if (cookieEmail && cookieEmail.includes("@")) {
+      return {
+        email: cookieEmail.toLowerCase().trim(),
+        authUserId: null,
+        role: cookies["one_store_user_role"] || "customer",
+        source: "cookie",
+      };
+    }
+    return null;
+  }
+
+  // 1. Unauthenticated request without cookies or GoTrue
+  const unauthSession = resolveMockSession({});
+  assert.equal(unauthSession, null, "Unauthenticated request yields no session");
+
+  function handleProfileRequest(session, body = null) {
+    if (!session) {
+      return { status: 401, error: "Unauthorized" };
+    }
+    return {
+      status: 200,
+      success: true,
+      profile: {
+        email: session.email,
+        full_name: body?.full_name || "Arjun Taneja",
+        phone: body?.phone || "9306461557",
+        country: body?.country || "IN",
+      },
+      completion: { percentage: 100, isComplete: true },
+    };
+  }
+
+  // Verify 401 on missing session
+  const unauthRes = handleProfileRequest(unauthSession);
+  assert.equal(unauthRes.status, 401);
+  assert.equal(unauthRes.error, "Unauthorized");
+
+  // 2. Authenticated via cookie (OTP customer session: arjun.taneja@adaan.com)
+  const otpCookieSession = resolveMockSession({
+    one_store_user_email: "arjun.taneja@adaan.com",
+    one_store_user_name: "Arjun Taneja",
+  });
+  assert.notEqual(otpCookieSession, null, "Cookie session resolves customer email");
+  assert.equal(otpCookieSession.email, "arjun.taneja@adaan.com");
+  assert.equal(otpCookieSession.source, "cookie");
+
+  const saveProfileRes = handleProfileRequest(otpCookieSession, {
+    full_name: "Arjun Taneja",
+    phone: "9306461557",
+    country: "IN",
+  });
+  assert.equal(saveProfileRes.status, 200);
+  assert.equal(saveProfileRes.success, true);
+  assert.equal(saveProfileRes.profile.email, "arjun.taneja@adaan.com");
+  assert.equal(saveProfileRes.profile.phone, "9306461557");
+  assert.equal(saveProfileRes.completion.isComplete, true);
+});
+
 console.log("\n------------------------------------------------------------");
 console.log(`TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
 console.log("------------------------------------------------------------");

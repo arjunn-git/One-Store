@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { processCheckout, type CheckoutPayload } from "@/lib/services/checkout";
 import { recordActivity } from "@/lib/services/activity";
 import { notifyAdminOrderPlaced } from "@/lib/services/admin-notifications";
-import { createClient } from "@/lib/supabase/server";
-import { isLiveSupabaseConfigured } from "@/lib/services/auth";
+import {
+  resolveServerSession,
+  getOrCreateCustomerProfile,
+  getCustomerAddresses,
+} from "@/lib/services/server-auth";
 import {
   calculateProfileCompletion,
   validatePostalCode,
@@ -14,75 +17,60 @@ export async function POST(request: Request) {
   try {
     const body: CheckoutPayload = await request.json();
 
-    let authUser: any = null;
-    let customerProfile: any = null;
+    const session = await resolveServerSession();
 
-    if (isLiveSupabaseConfigured()) {
-      const supabase = await createClient();
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+    // 1. Mandatory Authentication Check
+    if (!session) {
+      return NextResponse.json(
+        {
+          error: "Authentication required. Please sign in or register before checking out.",
+          requireLogin: true,
+        },
+        { status: 401 }
+      );
+    }
 
-      // 1. Mandatory Authentication Check
-      if (authError || !authData.user) {
-        return NextResponse.json(
-          {
-            error: "Authentication required. Please sign in or register before checking out.",
-            requireLogin: true,
-          },
-          { status: 401 }
-        );
-      }
+    const authUser = {
+      id: session.authUserId || undefined,
+      email: session.email,
+    };
 
-      authUser = authData.user;
+    // 2. Fetch Customer Profile & Addresses
+    const customerProfile = await getOrCreateCustomerProfile(session);
+    const addresses = await getCustomerAddresses(customerProfile.id);
 
-      // 2. Fetch Customer Profile & Addresses
-      const { data: profile } = await supabase
-        .from("customer_profiles")
-        .select("*")
-        .eq("auth_user_id", authUser.id)
-        .maybeSingle();
+    // 3. Email Verification Requirement
+    const isEmailVerified = session.isEmailVerified || !!customerProfile.is_email_verified;
+    if (!isEmailVerified) {
+      return NextResponse.json(
+        {
+          error: "Email verification required. Please verify your email before proceeding with checkout.",
+          requireEmailVerification: true,
+        },
+        { status: 403 }
+      );
+    }
 
-      customerProfile = profile;
+    // 4. Mandatory 100% Profile Completion Check
+    const effectiveProfile = {
+      ...customerProfile,
+      email: session.email,
+      is_email_verified: isEmailVerified,
+    };
 
-      let addresses: any[] = [];
-      if (profile?.id) {
-        const { data: addrData } = await supabase
-          .from("addresses")
-          .select("*")
-          .eq("customer_id", profile.id);
-        addresses = addrData || [];
-      }
+    const completion = calculateProfileCompletion(effectiveProfile, addresses);
 
-      // 3. Email Verification Requirement
-      const isEmailVerified = !!authUser.email_confirmed_at || profile?.is_email_verified;
-      if (!isEmailVerified) {
-        return NextResponse.json(
-          {
-            error: "Email verification required. Please verify your email before proceeding with checkout.",
-            requireEmailVerification: true,
-          },
-          { status: 403 }
-        );
-      }
-
-      // 4. Mandatory 100% Profile Completion Check
-      const effectiveProfile = profile
-        ? { ...profile, email: authUser.email, is_email_verified: isEmailVerified }
-        : { auth_user_id: authUser.id, email: authUser.email, is_email_verified: isEmailVerified };
-
-      const completion = calculateProfileCompletion(effectiveProfile, addresses);
-
-      if (!completion.isComplete) {
-        return NextResponse.json(
-          {
-            error: `Profile incomplete (${completion.percentage}% complete). 100% complete profile is mandatory before checkout. Missing: ${completion.missingFields.join(", ")}.`,
-            profileIncomplete: true,
-            percentage: completion.percentage,
-            missingFields: completion.missingFields,
-            fieldErrors: completion.fieldErrors,
-          },
-          { status: 403 }
-        );
-      }
+    if (!completion.isComplete) {
+      return NextResponse.json(
+        {
+          error: `Profile incomplete (${completion.percentage}% complete). 100% complete profile is mandatory before checkout. Missing: ${completion.missingFields.join(", ")}.`,
+          profileIncomplete: true,
+          percentage: completion.percentage,
+          missingFields: completion.missingFields,
+          fieldErrors: completion.fieldErrors,
+        },
+        { status: 403 }
+      );
     }
 
     // 5. Server-Side Address & Contact Validation

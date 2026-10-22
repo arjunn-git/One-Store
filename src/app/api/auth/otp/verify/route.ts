@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyCustomerOtp } from "@/lib/services/customer-auth";
+import { getOrCreateCustomerProfile } from "@/lib/services/server-auth";
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +50,17 @@ export async function POST(request: Request) {
         httpOnly: false,
       });
     }
+
+    // Ensure customer profile is initialized
+    await getOrCreateCustomerProfile({
+      authUserId: null,
+      email: user.email,
+      role: user.role || "customer",
+      isAdmin: user.role === "owner",
+      name: user.fullName || null,
+      isEmailVerified: true,
+      source: "cookie",
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,
