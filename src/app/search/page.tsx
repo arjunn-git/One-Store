@@ -112,7 +112,7 @@ async function SearchResults({ searchParams }: SearchPageProps) {
         <div className="border-t border-[#243447] pt-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-sm font-semibold text-[#9CAFC3]">
-              Search results for: <span className="text-[#FFFFFF]">"{q}"</span>
+              Search results for: <span className="text-[#FFFFFF]">&ldquo;{q}&rdquo;</span>
             </h2>
             <span className="text-xs text-[#7DD3FC]">
               {products.length} {products.length === 1 ? "result" : "results"} found
@@ -124,7 +124,7 @@ async function SearchResults({ searchParams }: SearchPageProps) {
               <PackageX className="h-12 w-12 text-[#9CAFC3] mb-4" />
               <h3 className="text-lg font-bold text-[#FFFFFF]">No Matching Products Found</h3>
               <p className="text-xs text-[#9CAFC3] max-w-sm mt-1">
-                We couldn't find any items matching your query. Try searching for broader terms like "Audio" or "Pack".
+                We couldn&apos;t find any items matching your query. Try searching for broader terms like &ldquo;Audio&rdquo; or &ldquo;Pack&rdquo;.
               </p>
               <Link
                 href="/products"

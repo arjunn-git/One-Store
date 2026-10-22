@@ -36,7 +36,7 @@ export function GoogleAnalytics() {
 
 // Client helper for tracking non-PII e-commerce events
 export function trackEcommerceEvent(eventName: string, params: Record<string, unknown>) {
-  if (typeof window !== "undefined" && (window as unknown as { gtag?: Function }).gtag) {
-    (window as unknown as { gtag: Function }).gtag("event", eventName, params);
+  if (typeof window !== "undefined" && (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag) {
+    (window as unknown as { gtag: (...args: unknown[]) => void }).gtag("event", eventName, params);
   }
 }

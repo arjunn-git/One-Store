@@ -1212,7 +1212,7 @@ export default function CheckoutPage() {
                   </button>
 
                   <div className="text-[11px] text-[#9CAFC3] text-center pt-2 leading-relaxed">
-                    By placing your order, you agree to One Store's Terms of Service and 14-day
+                    By placing your order, you agree to One Store&apos;s Terms of Service and 14-day
                     protected return policy.
                   </div>
                 </div>

@@ -26,6 +26,22 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
   // Mode State (allows switching between Sign In & Sign Up in the same UI)
   const [currentMode, setCurrentMode] = useState<"login" | "signup">(mode);
 
+  // Form Inputs
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // OTP State
+  const [step, setStep] = useState<"input" | "verify">("input");
+  const [otpCode, setOtpCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAccountNotFound, setIsAccountNotFound] = useState(false);
+  const [isAccountAlreadyExists, setIsAccountAlreadyExists] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+
   useEffect(() => {
     setCurrentMode(mode);
   }, [mode]);
@@ -43,22 +59,6 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
       }
     }
   }, [searchParams]);
-
-  // Form Inputs
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
-
-  // OTP State
-  const [step, setStep] = useState<"input" | "verify">("input");
-  const [otpCode, setOtpCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isAccountNotFound, setIsAccountNotFound] = useState(false);
-  const [isAccountAlreadyExists, setIsAccountAlreadyExists] = useState(false);
-  const [countdown, setCountdown] = useState(60);
 
   // Countdown timer for OTP resend
   useEffect(() => {

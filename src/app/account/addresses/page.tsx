@@ -441,7 +441,7 @@ export default function AddressesPage() {
             <MapPin className="h-10 w-10 text-[#9CAFC3] mx-auto opacity-40" />
             <h3 className="text-base font-bold text-[#FFFFFF]">No saved addresses found</h3>
             <p className="text-xs text-[#9CAFC3] max-w-sm mx-auto">
-              You haven't saved any delivery addresses yet. Add one to enable 100% profile completion and express checkout.
+              You haven&apos;t saved any delivery addresses yet. Add one to enable 100% profile completion and express checkout.
             </p>
             <button
               onClick={() => setShowAddForm(true)}

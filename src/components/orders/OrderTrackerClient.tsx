@@ -332,7 +332,7 @@ export function OrderTrackerClient({ initialOrders }: OrderTrackerClientProps) {
             <Package className="h-12 w-12 text-[#9CAFC3] mx-auto opacity-40" />
             <h3 className="text-base font-bold text-[#FFFFFF]">No Recorded Orders</h3>
             <p className="text-xs text-[#9CAFC3] max-w-sm mx-auto">
-              You haven't placed any orders in this session yet. Complete checkout to track your items here.
+              You haven&apos;t placed any orders in this session yet. Complete checkout to track your items here.
             </p>
             <Link
               href="/products"

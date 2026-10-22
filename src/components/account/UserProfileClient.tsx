@@ -890,7 +890,7 @@ export function UserProfileClient({
               <div className="max-w-md mx-auto space-y-2">
                 <h3 className="text-lg font-bold text-[#FFFFFF]">No orders placed yet</h3>
                 <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                  You haven't made any purchases yet. Complete your profile to enable express checkout across India and the UK.
+                  You haven&apos;t made any purchases yet. Complete your profile to enable express checkout across India and the UK.
                 </p>
               </div>
               <div className="pt-2">

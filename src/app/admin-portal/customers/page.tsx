@@ -381,7 +381,7 @@ export default function AdminPortalCustomersPage() {
                                         <div className="text-[10px] uppercase font-bold text-[#7DD3FC] mb-0.5">
                                           Delivery Gate Instructions
                                         </div>
-                                        <div className="text-xs text-[#9CAFC3] italic">"{c.delivery_instructions}"</div>
+                                        <div className="text-xs text-[#9CAFC3] italic">&ldquo;{c.delivery_instructions}&rdquo;</div>
                                       </div>
                                     )}
                                   </div>
