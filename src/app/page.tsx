@@ -1,32 +1,26 @@
-import { cookies } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Hero3DStage } from "@/components/storefront/Hero3DStage";
 import { getProducts } from "@/lib/services/products";
 import Link from "next/link";
-import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, ShieldCheck, Truck, Zap, Star } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "One Store — Curated Commerce for India & the UK",
+  title: "One Store — India's Premier Curated Luxury Store",
   description:
-    "Engineered lifestyle, studio acoustics, minimalist carry, and precision chronographs. Dual-market checkout in INR (₹) and GBP (£) with fully insured express delivery.",
+    "Engineered lifestyle, studio acoustics, minimalist carry, and precision chronographs. Instant UPI checkout in INR (₹) with insured Blue Dart express delivery across India.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app",
     languages: {
-      "en-IN": "https://one-store-gray.vercel.app/?country=IN",
-      "en-GB": "https://one-store-gray.vercel.app/?country=UK",
+      "en-IN": "https://one-store-gray.vercel.app",
     },
   },
 };
 
 export default async function Home() {
-  const cookieStore = await cookies();
-  const rawMarket = cookieStore.get("one_store_market")?.value;
-  const market = (rawMarket === "GB" ? "GB" : "IN") as "IN" | "GB";
-
-  const featuredProducts = await getProducts({ featuredOnly: true, market });
+  const featuredProducts = await getProducts({ featuredOnly: true, market: "IN" });
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080B10]">
@@ -39,7 +33,7 @@ export default async function Home() {
             {/* Promotional launch ribbon */}
             <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-2xl sm:rounded-full bg-[#102A43] border border-[#7DD3FC]/40 text-xs font-medium text-[#FFFFFF] mb-6 shadow-md text-center">
               <span className="flex h-2 w-2 rounded-full bg-[#7DD3FC] animate-ping" />
-              <span className="text-[#7DD3FC] font-semibold">Special Launch Offer:</span>
+              <span className="text-[#7DD3FC] font-semibold">Special India Launch Offer:</span>
               <span>Use code <strong className="font-mono text-[#FFFFFF] bg-[#080B10] px-2 py-0.5 rounded border border-[#7DD3FC]/30">LAUNCH10</strong> for 10% off</span>
             </div>
 
@@ -50,9 +44,9 @@ export default async function Home() {
               </span>
             </h1>
 
-            <p className="mt-6 text-sm sm:text-base md:text-lg text-[#9CAFC3] max-w-2xl leading-relaxed [text-wrap:balance]">
+            <p className="mt-6 text-sm sm:text-base md:text-lg text-[#CBD5E1] max-w-2xl leading-relaxed [text-wrap:balance]">
               Curated studio acoustics, engineered minimalist carry, and precision chronographs.
-              Seamless dual-market checkout in INR (₹) and GBP (£) with fully insured express delivery.
+              Seamless instant UPI &amp; 0-cost EMI checkout in INR (₹) with fully insured Blue Dart express delivery across India.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -71,17 +65,17 @@ export default async function Home() {
               </Link>
             </div>
 
-            {/* 3D Interactive Floating Dual-Market Stage */}
+            {/* 3D Interactive Floating Stage */}
             <Hero3DStage />
 
-            {/* Customer Value Propositions (Marketing Features) */}
+            {/* Customer Value Propositions */}
             <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left w-full max-w-4xl border-t border-[#243447]/60 pt-8">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#7DD3FC] shrink-0 mt-0.5" />
                 <div>
                   <h3 className="text-sm font-bold text-[#FFFFFF]">100% Certified Authentic</h3>
-                  <p className="text-xs text-[#9CAFC3] mt-0.5 leading-relaxed">
-                    Individually hand-inspected, serialized, and backed by a comprehensive 1-year warranty.
+                  <p className="text-xs text-[#CBD5E1] mt-0.5 leading-relaxed">
+                    Individually serialized and backed by an official 1-year manufacturer warranty.
                   </p>
                 </div>
               </div>
@@ -89,9 +83,9 @@ export default async function Home() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#7DD3FC] shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-bold text-[#FFFFFF]">14-Day Risk-Free Returns</h3>
-                  <p className="text-xs text-[#9CAFC3] mt-0.5 leading-relaxed">
-                    Try your flagship gear at home. Enjoy zero-hassle doorstep pickup and prompt refund.
+                  <h3 className="text-sm font-bold text-[#FFFFFF]">14-Day Doorstep Returns</h3>
+                  <p className="text-xs text-[#CBD5E1] mt-0.5 leading-relaxed">
+                    Experience your flagship gear at home. Enjoy zero-hassle doorstep pickup and prompt refund.
                   </p>
                 </div>
               </div>
@@ -99,20 +93,26 @@ export default async function Home() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#7DD3FC] shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-bold text-[#FFFFFF]">Zero Hidden Import Duties</h3>
-                  <p className="text-xs text-[#9CAFC3] mt-0.5 leading-relaxed">
-                    All taxes, customs clearance, and insured express delivery are included at checkout.
+                  <h3 className="text-sm font-bold text-[#FFFFFF]">GST Invoice &amp; Tax Credit</h3>
+                  <p className="text-xs text-[#CBD5E1] mt-0.5 leading-relaxed">
+                    All prices include 18% GST. Download compliant tax invoices with ITC for business accounts.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Social Proof & Customer Trust Bar */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-[#9CAFC3] bg-[#102A43]/30 px-4 sm:px-6 py-2.5 rounded-2xl sm:rounded-full border border-[#243447] text-center max-w-full">
-              <span className="text-amber-400 font-bold tracking-wider">★★★★★</span>
-              <span className="text-[#FFFFFF] font-semibold">4.9/5 Customer Satisfaction</span>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-[#CBD5E1] bg-[#102A43]/30 px-4 sm:px-6 py-2.5 rounded-2xl sm:rounded-full border border-[#243447] text-center max-w-full">
+              <span className="text-amber-400 font-bold tracking-wider flex items-center gap-0.5">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              </span>
+              <span className="text-[#FFFFFF] font-semibold">4.9/5 Rating</span>
               <span className="hidden sm:inline">•</span>
-              <span>Trusted by 2,400+ creators across India &amp; the UK</span>
+              <span>Trusted by 5,000+ creators &amp; audiophiles across India</span>
             </div>
           </div>
         </section>
@@ -192,7 +192,7 @@ export default async function Home() {
                     <h3 className="text-xl font-bold text-[#FFFFFF] group-hover:text-[#7DD3FC] transition-colors">
                       {cat.title}
                     </h3>
-                    <p className="text-xs text-[#9CAFC3] mt-2 leading-relaxed">{cat.desc}</p>
+                    <p className="text-xs text-[#CBD5E1] mt-2 leading-relaxed">{cat.desc}</p>
                   </div>
                   <div className="text-xs font-semibold text-[#7DD3FC] flex items-center gap-1.5 mt-6">
                     Browse Selection <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-2 transition-transform duration-300" />

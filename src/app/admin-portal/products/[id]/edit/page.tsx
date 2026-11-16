@@ -662,26 +662,6 @@ export default function AdminPortalEditProductPage() {
                 />
                 <span>Available for Customers in India (₹ INR)</span>
               </label>
-
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#FFFFFF]">
-                <input
-                  type="checkbox"
-                  checked={availableInGb}
-                  onChange={(e) => setAvailableInGb(e.target.checked)}
-                  className="rounded border-[#243447] text-[#7DD3FC] focus:ring-0"
-                />
-                <span>Available for Customers in United Kingdom (£ GBP)</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-amber-300">
-                <input
-                  type="checkbox"
-                  checked={isTestData}
-                  onChange={(e) => setIsTestData(e.target.checked)}
-                  className="rounded border-amber-800 text-amber-500 focus:ring-0"
-                />
-                <span>Mark as Development Test Record</span>
-              </label>
             </div>
           </div>
         </div>

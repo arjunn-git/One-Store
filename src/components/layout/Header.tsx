@@ -196,9 +196,8 @@ export function Header() {
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-hidden">
           <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#7DD3FC] animate-pulse"></span>
           <span className="text-xs sm:text-xs font-medium truncate">
-            <span className="hidden sm:inline">Dual Market Operations: </span>
-            <span className="hidden xs:inline">India (₹) &amp; United Kingdom (£)</span>
-            <span className="xs:hidden">IN (₹) &amp; UK (£)</span>
+            <span className="hidden sm:inline">🇮🇳 Republic of India Flagship: </span>
+            <span className="text-[#FFFFFF]">Free Blue Dart Delivery over ₹1,999 • Instant UPI</span>
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -673,10 +672,10 @@ export function Header() {
             </div>
 
             {/* Market & Region Info for Mobile */}
-            <div className="pt-2 border-t border-[#243447]/60 text-xs text-[#9CAFC3] flex items-center justify-between px-2">
+            <div className="pt-2 border-t border-[#243447]/60 text-xs text-[#CBD5E1] flex items-center justify-between px-2">
               <span>Active Market:</span>
               <span className="font-semibold text-[#FFFFFF] flex items-center gap-1.5">
-                <span>{market === "IN" ? "🇮🇳 India (INR ₹)" : "🇬🇧 United Kingdom (GBP £)"}</span>
+                <span>🇮🇳 India (INR ₹)</span>
               </span>
             </div>
           </div>

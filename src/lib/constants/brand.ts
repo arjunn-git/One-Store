@@ -1,6 +1,6 @@
 export const BRAND = {
   name: "One Store",
-  tagline: "Curated Excellence for India & the UK",
+  tagline: "India's Premier Destination for Curated Audio, Carry & Studio Essentials",
   colors: {
     black: "#080B10",
     darkBlue: "#102A43",
@@ -19,15 +19,15 @@ export const BRAND = {
       phoneCode: "+91",
     },
     GB: {
-      code: "GB",
-      name: "United Kingdom",
-      currency: "GBP",
-      symbol: "£",
-      phoneCode: "+44",
+      code: "IN",
+      name: "India",
+      currency: "INR",
+      symbol: "₹",
+      phoneCode: "+91",
     },
   },
   defaultCurrency: "INR",
 } as const;
 
-export type SupportedMarket = keyof typeof BRAND.markets;
+export type SupportedMarket = "IN" | "GB";
 export type SupportedCurrency = "INR" | "GBP";

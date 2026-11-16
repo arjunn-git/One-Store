@@ -5,15 +5,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "14-Day Returns & Refund Policy — One Store",
+  title: "14-Day Doorstep Returns & Refund Policy — One Store India",
   description:
-    "Risk-free shopping with 14-day hassle-free returns across India and the United Kingdom. Simple prepaid returns and 1-year product warranty.",
+    "Risk-free shopping with 14-day hassle-free doorstep returns across India. Simple prepaid returns and 1-year product warranty.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app/returns-policy",
   },
   openGraph: {
-    title: "14-Day Returns & Refund Policy — One Store",
-    description: "Hassle-free return guarantees in India and the UK.",
+    title: "14-Day Returns & Refund Policy — One Store India",
+    description: "Hassle-free doorstep return guarantees across India.",
     url: "https://one-store-gray.vercel.app/returns-policy",
     type: "website",
   },
@@ -33,8 +33,8 @@ export default function ReturnsPolicyPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#FFFFFF] tracking-tight">
               Returns &amp; Refunds Policy
             </h1>
-            <p className="text-xs md:text-sm text-[#9CAFC3]">
-              14-day hassle-free returns across all orders in India and the United Kingdom.
+            <p className="text-xs md:text-sm text-[#CBD5E1]">
+              14-day hassle-free doorstep returns across all orders in India.
             </p>
           </div>
 
@@ -44,7 +44,7 @@ export default function ReturnsPolicyPage() {
             </div>
             <div className="space-y-1">
               <h2 className="text-base font-bold text-[#FFFFFF]">14-Day Return Window</h2>
-              <p className="text-xs text-[#9CAFC3] leading-relaxed">
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">
                 If you are not completely satisfied with your purchase, you may initiate a return
                 within 14 calendar days of confirmed delivery for a full refund to your original
                 payment method.
@@ -52,7 +52,7 @@ export default function ReturnsPolicyPage() {
             </div>
           </div>
 
-          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#9CAFC3] space-y-6 leading-relaxed">
+          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#CBD5E1] space-y-6 leading-relaxed">
             <h2 className="text-lg font-bold text-[#FFFFFF]">Eligibility Requirements</h2>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>Item must be in original, unblemished condition with all packaging and accessories.</li>
@@ -67,14 +67,13 @@ export default function ReturnsPolicyPage() {
                 Order History
               </Link>{" "}
               page and click <strong>Request Return</strong> next to the applicable order. Our
-              support team will provide a pre-paid return shipping label within 24 hours.
+              support team will schedule a prepaid courier doorstep pickup within 24 hours.
             </p>
 
             <h2 className="text-lg font-bold text-[#FFFFFF]">Refund Processing Times</h2>
             <p>
-              Once your returned item is received and inspected at our regional hub, your refund will
-              be credited back via Razorpay (India: 3-5 banking days) or Stripe (UK: 2-4 business
-              days).
+              Once your returned item is received and inspected at our Mumbai or Bengaluru hub, your refund will
+              be credited back via Razorpay (UPI: Instant to 2 hours, NetBanking/Cards: 2-4 banking days).
             </p>
           </div>
         </div>

@@ -141,11 +141,9 @@ export function calculateProfileCompletion(
   }
 
   // 3. Mobile Phone Number (15%)
-  const hasValidPhone = validatePhoneNumber(effectivePhone, country);
+  const hasValidPhone = validatePhoneNumber(effectivePhone, "IN");
   if (!hasValidPhone) {
-    fieldErrors.phone = country === "IN" 
-      ? "Valid 10-digit Indian mobile number is required (e.g. +91 98765 43210)."
-      : "Valid UK mobile number is required (e.g. +44 7911 123456).";
+    fieldErrors.phone = "Valid 10-digit Indian mobile number is required (e.g. +91 98765 43210).";
     missingFields.push("Mobile phone number");
   }
 
@@ -171,11 +169,9 @@ export function calculateProfileCompletion(
   }
 
   // 7. Country-specific Postal / PIN Code (15%)
-  const hasValidPostal = validatePostalCode(effectivePostal, effectiveCountry);
+  const hasValidPostal = validatePostalCode(effectivePostal, "IN");
   if (!hasValidPostal) {
-    fieldErrors.postal_code = effectiveCountry === "IN"
-      ? "Valid 6-digit Indian PIN code is required (e.g. 400001)."
-      : "Valid UK alphanumeric postcode is required (e.g. SW1A 1AA).";
+    fieldErrors.postal_code = "Valid 6-digit Indian PIN code is required (e.g. 400001).";
     missingFields.push("Postal / PIN code");
   }
 

@@ -197,8 +197,7 @@ export async function GET(request: Request) {
         const feat = pJson?.features?.[0];
         if (feat) {
           const p = feat.properties || {};
-          const cCode = (p.countrycode || "").toUpperCase();
-          const country: "IN" | "GB" = cCode === "GB" || cCode === "UK" ? "GB" : "IN";
+          const country: "IN" | "GB" = "IN";
 
           const result: RealTimeMapDataResponse = {
             success: true,
@@ -212,7 +211,7 @@ export async function GET(request: Request) {
             state: p.state || undefined,
             postalCode: p.postcode || undefined,
             country,
-            countryName: p.country || (country === "GB" ? "United Kingdom" : "India"),
+            countryName: p.country || "India",
             attribution: "© OpenStreetMap / Photon contributors",
             fallback: true,
           };

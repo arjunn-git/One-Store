@@ -145,22 +145,13 @@ export default function AddressesPage() {
     e.preventDefault();
     setErrorMsg(null);
 
-    const country = newAddr.country_code;
-    if (!validatePhoneNumber(newAddr.phone, country)) {
-      setErrorMsg(
-        country === "IN"
-          ? "Please enter a valid 10-digit Indian mobile number."
-          : "Please enter a valid UK mobile number."
-      );
+    if (!validatePhoneNumber(newAddr.phone, "IN")) {
+      setErrorMsg("Please enter a valid 10-digit Indian mobile number.");
       return;
     }
 
-    if (!validatePostalCode(newAddr.postal_code, country)) {
-      setErrorMsg(
-        country === "IN"
-          ? "Please enter a valid 6-digit Indian PIN code."
-          : "Please enter a valid UK postcode (e.g. SW1A 1AA)."
-      );
+    if (!validatePostalCode(newAddr.postal_code, "IN")) {
+      setErrorMsg("Please enter a valid 6-digit Indian PIN code.");
       return;
     }
 
@@ -222,7 +213,7 @@ export default function AddressesPage() {
           <div>
             <h1 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">Saved Addresses</h1>
             <p className="text-xs text-[#9CAFC3] mt-1">
-              Store multiple verified delivery addresses for express dual-market checkout in India &amp; the UK.
+              Store multiple verified delivery addresses for express all-India delivery via Blue Dart &amp; Delhivery.
             </p>
           </div>
 
@@ -307,15 +298,8 @@ export default function AddressesPage() {
                   {
                     value: "IN",
                     label: "India",
-                    subtitle: "₹ INR • Express domestic delivery",
+                    subtitle: "₹ INR • All-India Express Air delivery (Blue Dart / Delhivery)",
                     badge: "₹ INR",
-                    icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
-                  },
-                  {
-                    value: "GB",
-                    label: "United Kingdom",
-                    subtitle: "£ GBP • Royal Mail Tracked dispatch",
-                    badge: "£ GBP",
                     icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
                   },
                 ]}
@@ -345,7 +329,7 @@ export default function AddressesPage() {
                   required
                   value={newAddr.phone}
                   onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })}
-                  placeholder={newAddr.country_code === "IN" ? "+91 98765 43210" : "+44 7911 123456"}
+                  placeholder="+91 98765 43210"
                   className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 />
               </div>
@@ -386,7 +370,7 @@ export default function AddressesPage() {
                   required
                   value={newAddr.city}
                   onChange={(e) => setNewAddr({ ...newAddr, city: e.target.value })}
-                  placeholder={newAddr.country_code === "IN" ? "Mumbai" : "London"}
+                  placeholder="Mumbai"
                   className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 />
               </div>
@@ -400,21 +384,21 @@ export default function AddressesPage() {
                   required
                   value={newAddr.state_or_province}
                   onChange={(e) => setNewAddr({ ...newAddr, state_or_province: e.target.value })}
-                  placeholder={newAddr.country_code === "IN" ? "Maharashtra" : "Greater London"}
+                  placeholder="Maharashtra"
                   className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 />
               </div>
 
               <div>
                 <label className="text-[#9CAFC3] uppercase font-semibold text-[10px] block mb-1">
-                  {newAddr.country_code === "IN" ? "PIN Code (6 Digits)" : "Postcode (UK format)"}
+                  PIN Code (6 Digits)
                 </label>
                 <input
                   type="text"
                   required
                   value={newAddr.postal_code}
                   onChange={(e) => setNewAddr({ ...newAddr, postal_code: e.target.value })}
-                  placeholder={newAddr.country_code === "IN" ? "400050" : "SW1A 1AA"}
+                  placeholder="400050"
                   className="w-full h-10 px-3 rounded-lg bg-[#080B10] border border-[#243447] text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                 />
               </div>
@@ -513,7 +497,7 @@ export default function AddressesPage() {
                   </div>
                   <div className="text-[#FFFFFF] mt-1 font-mono">{addr.phone}</div>
                   <div className="text-[10px] text-[#7DD3FC]">
-                    {addr.country_code === "GB" ? "United Kingdom (£)" : "India (₹)"}
+                    India (₹ INR)
                   </div>
                 </div>
 

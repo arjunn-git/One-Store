@@ -48,14 +48,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   // Variant adjustments
   const adjInr = selectedVariant ? selectedVariant.price_inr_adjustment : 0;
-  const adjGbp = selectedVariant ? selectedVariant.price_gbp_adjustment : 0;
 
   // Inventory logic
   const currentStock = selectedVariant ? selectedVariant.inventory_count : 10;
   const isOutOfStock = currentStock <= 0;
   const isLowStock = currentStock > 0 && currentStock <= 5;
-  const isAvailableInCurrentMarket =
-    market === "IN" ? product.available_in_in !== false : product.available_in_gb !== false;
+  const isAvailableInCurrentMarket = true;
 
   const router = useRouter();
 
@@ -76,7 +74,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           action: `Viewed Product: ${product.name}`,
           actor: realActor,
           market,
-          currency: market === "GB" ? "GBP" : "INR",
+          currency: "INR",
           resourceType: "products",
           resourceId: product.id,
           anonymousSessionId: sessionId,
@@ -136,15 +134,15 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             )}
 
             {/* Badges */}
-            {product.is_test_data ? (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800 text-xs font-mono font-bold tracking-wider shadow-lg">
-                UK TEST DATA RECORD
-              </span>
-            ) : product.is_featured ? (
+            {product.is_featured ? (
               <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#7DD3FC] text-[#080B10] text-xs font-bold uppercase tracking-wider shadow-lg">
                 Featured Flagship
               </span>
-            ) : null}
+            ) : (
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#102A43]/90 text-[#7DD3FC] border border-[#243447] text-xs font-mono font-bold tracking-wider shadow-lg">
+                🇮🇳 India Stock
+              </span>
+            )}
           </div>
 
           {/* Thumbnail Gallery */}
@@ -191,54 +189,14 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <div className="p-4 rounded-xl bg-[#102A43]/30 border border-[#243447]">
             <PriceDisplay
               priceInr={product.price_inr}
-              priceGbp={product.price_gbp}
               compareAtPriceInr={product.compare_at_price_inr}
-              compareAtPriceGbp={product.compare_at_price_gbp}
               adjustmentInr={adjInr}
-              adjustmentGbp={adjGbp}
               size="xl"
             />
-            <div className="text-[11px] text-[#9CAFC3] mt-1">
-              Includes applicable taxes &amp; standard domestic dispatch.
+            <div className="text-[11px] text-[#CBD5E1] mt-1 font-mono">
+              Includes 18% GST &amp; Blue Dart Express Air Dispatch across India.
             </div>
           </div>
-
-          {/* Test Record Notice */}
-          {product.is_test_data && (
-            <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/80 text-xs flex items-start gap-3 text-amber-300 shadow-sm">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
-              <div>
-                <span className="font-bold uppercase tracking-wider text-[11px] block">
-                  Development Test Record
-                </span>
-                <p className="text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
-                  This item is an illustrative development seed record for the UK market. Stock, prices, and specifications are for testing and evaluation.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Market Mismatch Alert */}
-          {!isAvailableInCurrentMarket && (
-            <div className="p-4 rounded-xl bg-[#102A43] border border-[#7DD3FC]/50 text-xs space-y-2.5 shadow-md">
-              <div className="flex items-center gap-2 font-bold text-[#7DD3FC]">
-                <Globe className="h-4 w-4 shrink-0" />
-                <span>Regional Market Availability</span>
-              </div>
-              <p className="text-[#9CAFC3] text-xs leading-relaxed">
-                {market === "IN"
-                  ? "This item is configured for the United Kingdom catalogue and dispatched in GBP (£)."
-                  : "This item is configured for the India catalogue and dispatched in INR (₹)."}
-              </p>
-              <button
-                type="button"
-                onClick={() => setMarket(market === "IN" ? "GB" : "IN")}
-                className="px-4 py-2 rounded-lg bg-[#7DD3FC] text-[#080B10] font-bold text-xs hover:bg-[#FFFFFF] transition-all flex items-center gap-2"
-              >
-                <span>Switch to {market === "IN" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}</span>
-              </button>
-            </div>
-          )}
 
           {/* Description */}
           <p className="text-sm text-[#9CAFC3] leading-relaxed">{product.description}</p>
@@ -289,20 +247,14 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             )}
           </div>
 
-          {/* Dual-Market Logistics Banner */}
+          {/* Logistics Banner */}
           <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-2">
             <div className="flex items-center gap-2 font-semibold text-[#FFFFFF]">
               <Truck className="h-4 w-4 text-[#7DD3FC]" />
-              <span>
-                {market === "IN"
-                  ? "India Express Logistics (INR ₹)"
-                  : "UK Royal Mail / DPD Tracked (GBP £)"}
-              </span>
+              <span>All-India Air Express Logistics (INR ₹)</span>
             </div>
-            <p className="text-[#9CAFC3] text-[11px] leading-relaxed">
-              {market === "IN"
-                ? "Air express dispatch from regional domestic hubs. Estimated arrival: 3-5 business days across all Indian PIN codes."
-                : "Next-day dispatch from UK fulfillment centre. Estimated arrival: 2-4 business days across England, Scotland, Wales & NI."}
+            <p className="text-[#CBD5E1] text-[11px] leading-relaxed">
+              Air express dispatch via Blue Dart &amp; Delhivery. Estimated arrival: 2-4 business days across 19,000+ Indian PIN codes.
             </p>
           </div>
 

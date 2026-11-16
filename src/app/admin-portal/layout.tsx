@@ -29,7 +29,7 @@ export default function AdminPortalLayout({
           <span className="font-medium text-[#9CAFC3]">One Store Operations Command • Confidential</span>
           <span className="text-[11px] text-[#7DD3FC] font-medium flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-            <span>Dual Market Telemetry Active (INR ₹ &amp; GBP £)</span>
+            <span>India Flagship Telemetry Active (INR ₹)</span>
           </span>
         </div>
       </footer>

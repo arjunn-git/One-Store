@@ -92,8 +92,8 @@ export function CartDrawer() {
                   <ShoppingBag className="h-8 w-8 opacity-60" />
                 </div>
                 <div className="text-base font-semibold text-[#FFFFFF]">Your cart is empty</div>
-                <p className="text-xs text-[#9CAFC3] max-w-xs mx-auto leading-relaxed">
-                  Explore our curated flagship essentials for dual-market dispatch across India &amp; the UK.
+                <p className="text-xs text-[#CBD5E1] max-w-xs mx-auto leading-relaxed">
+                  Explore our curated flagship essentials delivered express across India.
                 </p>
                 <button
                   onClick={() => setIsOpen(false)}

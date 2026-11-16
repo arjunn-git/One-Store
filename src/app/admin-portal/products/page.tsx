@@ -130,7 +130,7 @@ export default function AdminPortalProductsPage() {
             Product Catalog Management
           </h1>
           <p className="text-xs text-[#9CAFC3] mt-1">
-            Manage luxury inventory across India (₹) and the UK Flagship (£), configure variants, and control regional catalog publication.
+            Manage luxury inventory across the India Flagship (₹ INR), configure variants, and control regional catalog publication.
           </p>
         </div>
 
@@ -165,20 +165,8 @@ export default function AdminPortalProductsPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-1 bg-[#080B10] p-1 rounded-xl border border-[#243447]">
-            {(["all", "IN", "GB"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMarketFilter(m)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium uppercase transition-colors ${
-                  marketFilter === m
-                    ? "bg-[#7DD3FC]/10 text-[#7DD3FC] border border-[#7DD3FC]/30 shadow-sm font-semibold"
-                    : "text-[#9CAFC3] hover:text-[#FFFFFF]"
-                }`}
-              >
-                {m === "all" ? "All Markets" : m === "IN" ? "🇮🇳 India (₹)" : "🇬🇧 UK (£)"}
-              </button>
-            ))}
+          <div className="flex items-center gap-1 bg-[#080B10] px-3 py-1.5 rounded-xl border border-[#243447] text-xs font-semibold text-[#7DD3FC]">
+            <span>🇮🇳 India Flagship Market (₹ INR)</span>
           </div>
         </div>
 

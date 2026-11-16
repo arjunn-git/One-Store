@@ -81,8 +81,8 @@ export default function CartPage() {
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#FFFFFF] tracking-tight">
               Shopping Cart
             </h1>
-            <p className="text-xs text-[#9CAFC3] mt-1.5">
-              Review selected models before proceeding to dual-currency checkout.
+            <p className="text-xs text-[#CBD5E1] mt-1.5">
+              Review selected items before proceeding to secure UPI &amp; card checkout.
             </p>
           </div>
 
@@ -90,8 +90,8 @@ export default function CartPage() {
             <div className="py-24 text-center border border-dashed border-[#243447] rounded-2xl bg-[#102A43]/20 space-y-4">
               <PackageOpen className="h-14 w-14 text-[#9CAFC3] mx-auto opacity-40" />
               <h2 className="text-xl font-bold text-[#FFFFFF]">Your cart is currently empty</h2>
-              <p className="text-xs text-[#9CAFC3] max-w-sm mx-auto">
-                Discover engineered audio, carry, and timepieces designed for India &amp; the UK.
+              <p className="text-xs text-[#CBD5E1] max-w-sm mx-auto">
+                Discover engineered audio, carry, and timepieces crafted for India.
               </p>
               <Link
                 href="/products"
@@ -240,7 +240,7 @@ export default function CartPage() {
                     )}
 
                     <div className="flex justify-between">
-                      <span>Logistics ({market === "IN" ? "India" : "UK"})</span>
+                      <span>Logistics (India Air Express)</span>
                       <span className="text-[#7DD3FC] font-semibold">{formattedShippingFee}</span>
                     </div>
 

@@ -64,7 +64,7 @@ export function getClientActor(market: "IN" | "GB" = "IN"): string {
     // 2. Fallback to identifiable session identifier
     const sessionId = getOrCreateAnonymousSessionId();
     const shortId = sessionId.slice(-5);
-    const marketLabel = market === "GB" ? "UK" : "India";
+    const marketLabel = "India";
     return `${marketLabel} Shopper (#${shortId})`;
   } catch {
     return "Storefront Visitor";

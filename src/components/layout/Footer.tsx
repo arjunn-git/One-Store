@@ -4,7 +4,7 @@ import { OneStoreLogo } from "@/components/brand/OneStoreLogo";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-[#243447] bg-[#080B10] text-[#9CAFC3] text-sm mt-auto">
+    <footer className="w-full border-t border-[#243447] bg-[#080B10] text-[#CBD5E1] text-sm mt-auto">
       {/* Guarantees banner */}
       <div className="border-b border-[#243447] py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -14,9 +14,9 @@ export function Footer() {
             </div>
             <div>
               <div className="font-semibold text-[#FFFFFF] text-xs uppercase tracking-wider">
-                Authentic Quality
+                100% Certified Authentic
               </div>
-              <div className="text-xs text-[#9CAFC3]">Vetted supplier inventory</div>
+              <div className="text-xs text-[#94A3B8]">Vetted flagship inventory</div>
             </div>
           </div>
 
@@ -26,9 +26,9 @@ export function Footer() {
             </div>
             <div>
               <div className="font-semibold text-[#FFFFFF] text-xs uppercase tracking-wider">
-                India &amp; UK Logistics
+                All-India Air Express
               </div>
-              <div className="text-xs text-[#9CAFC3]">Real-time tracked dispatch</div>
+              <div className="text-xs text-[#94A3B8]">Blue Dart &amp; Delhivery tracked</div>
             </div>
           </div>
 
@@ -38,9 +38,9 @@ export function Footer() {
             </div>
             <div>
               <div className="font-semibold text-[#FFFFFF] text-xs uppercase tracking-wider">
-                Protected Returns
+                14-Day Doorstep Returns
               </div>
-              <div className="text-xs text-[#9CAFC3]">Hassle-free 14-day policy</div>
+              <div className="text-xs text-[#94A3B8]">Zero-hassle pickup across India</div>
             </div>
           </div>
 
@@ -52,7 +52,7 @@ export function Footer() {
               <div className="font-semibold text-[#FFFFFF] text-xs uppercase tracking-wider">
                 Dedicated Support
               </div>
-              <div className="text-xs text-[#9CAFC3]">Prompt customer assistance</div>
+              <div className="text-xs text-[#94A3B8]">Email, WhatsApp &amp; phone help</div>
             </div>
           </div>
         </div>
@@ -64,13 +64,11 @@ export function Footer() {
           <div className="mb-3">
             <OneStoreLogo variant="primary" size="sm" layout="horizontal" />
           </div>
-          <p className="text-xs leading-relaxed max-w-sm mb-4">
-            A bespoke, high-performance commerce platform engineered for selective shoppers in India
-            and the United Kingdom. Powered by modern Next.js and Supabase architecture.
+          <p className="text-xs leading-relaxed max-w-sm mb-4 text-[#CBD5E1]">
+            India&apos;s premier curated luxury store engineered for discerning creators, audiophiles, and professionals across the Republic of India.
           </p>
-          <div className="text-xs text-[#9CAFC3]">
-            Currencies supported: <span className="text-[#FFFFFF]">INR (₹)</span> and{" "}
-            <span className="text-[#FFFFFF]">GBP (£)</span>
+          <div className="text-xs text-[#CBD5E1]">
+            Currency: <span className="text-[#FFFFFF] font-bold">Indian Rupee (₹ INR)</span> • Instant UPI, RuPay, EMI &amp; NetBanking
           </div>
         </div>
 
@@ -154,11 +152,11 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[#243447] py-6 px-4 md:px-8 text-center text-xs text-[#9CAFC3]">
+      <div className="border-t border-[#243447] py-6 px-4 md:px-8 text-center text-xs text-[#94A3B8]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>© 2026 One Store. All rights reserved.</p>
-          <p className="text-[11px] text-[#9CAFC3]">
-            Curated flagship commerce engineered for India (INR ₹) &amp; the United Kingdom (GBP £).
+          <p>© 2026 One Store India. All rights reserved.</p>
+          <p className="text-[11px] text-[#94A3B8]">
+            Curated flagship commerce engineered exclusively for the Indian Market (INR ₹).
           </p>
         </div>
       </div>

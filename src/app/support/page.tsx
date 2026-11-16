@@ -69,8 +69,8 @@ export default function SupportPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#FFFFFF] tracking-tight">
               One Store Customer Support
             </h1>
-            <p className="text-xs md:text-sm text-[#9CAFC3] max-w-xl mx-auto leading-relaxed">
-              Our concierge team in India &amp; the United Kingdom is active to assist with
+            <p className="text-xs md:text-sm text-[#CBD5E1] max-w-xl mx-auto leading-relaxed">
+              Our concierge team in India is active to assist with
               orders, tracking, delivery status, and warranty requests.
             </p>
 
@@ -269,16 +269,16 @@ export default function SupportPage() {
               <div className="space-y-4">
                 {[
                   {
-                    q: "How do I track my delivery in India or the UK?",
-                    a: "Once dispatched, you will receive an SMS and email notification with your tracking number (Blue Dart / Delhivery in India, Royal Mail / DPD in the UK). You can also track your shipment live on our Order Tracking portal with your OS-2026 reference.",
+                    q: "How do I track my delivery in India?",
+                    a: "Once dispatched, you will receive an SMS and email notification with your tracking number (Blue Dart Express or Delhivery). You can also track your shipment live on our Order Tracking portal with your OS-2026 reference.",
                   },
                   {
                     q: "Where does my support inquiry go?",
                     a: "Every customer support message is delivered directly to our active support mailbox at onestore.auth@gmail.com and logged in our real-time concierge dashboard.",
                   },
                   {
-                    q: "Are customs duties and taxes included in my payment?",
-                    a: "Yes. All prices displayed in INR (₹) and GBP (£) are fully inclusive of all applicable VAT, GST, and import duties. You will never be asked to pay additional charges upon delivery.",
+                    q: "Are GST and delivery taxes included in my payment?",
+                    a: "Yes. All prices displayed in INR (₹) are fully inclusive of 18% GST and delivery fees. You will never be asked to pay additional charges upon doorstep delivery.",
                   },
                   {
                     q: "How does the 14-day return process work?",

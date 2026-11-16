@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || searchParams.get("query") || "";
-    const country = (searchParams.get("country")?.toUpperCase() === "GB" ? "GB" : "IN") as "IN" | "GB";
+    const country: "IN" | "GB" = "IN";
 
     const cleanQuery = query.trim();
 

@@ -71,9 +71,7 @@ export default function CheckoutPage() {
     countryCode: market,
   });
 
-  const [paymentProvider, setPaymentProvider] = useState<"razorpay" | "stripe">(
-    market === "IN" ? "razorpay" : "stripe"
-  );
+  const [paymentProvider, setPaymentProvider] = useState<"razorpay">("razorpay");
   const [selectedPaymentTab, setSelectedPaymentTab] = useState<
     "upi" | "card" | "netbanking" | "applepay" | "klarna"
   >(market === "IN" ? "upi" : "card");
@@ -217,13 +215,8 @@ export default function CheckoutPage() {
 
   // Dynamically keep payment provider aligned with active market
   useEffect(() => {
-    if (market === "IN") {
-      setPaymentProvider("razorpay");
-      setSelectedPaymentTab("upi");
-    } else {
-      setPaymentProvider("stripe");
-      setSelectedPaymentTab("card");
-    }
+    setPaymentProvider("razorpay");
+    setSelectedPaymentTab("upi");
   }, [market]);
 
   const handleCompleteSandboxPayment = async () => {
@@ -249,7 +242,7 @@ export default function CheckoutPage() {
           discount_amount: discountAmount,
           shipping_fee: shippingFee,
           total_amount: checkoutGrandTotal,
-          currency: market === "IN" ? "INR" : "GBP",
+          currency: "INR",
           payment_status: "succeeded",
           status: "processing",
           created_at: new Date().toISOString(),
@@ -257,8 +250,8 @@ export default function CheckoutPage() {
             product_name: i.productName,
             variant_name: i.variantName,
             quantity: i.quantity,
-            unit_price: market === "IN" ? i.priceInr : i.priceGbp,
-            total_price: (market === "IN" ? i.priceInr : i.priceGbp) * i.quantity,
+            unit_price: i.priceInr,
+            total_price: i.priceInr * i.quantity,
             image_url: getCartItemImage(i),
           })),
           shipping_address: {
@@ -268,7 +261,7 @@ export default function CheckoutPage() {
             city: formData.city,
             stateOrProvince: formData.stateOrProvince,
             postalCode: formData.postalCode,
-            countryCode: market,
+            countryCode: "IN",
           },
         };
         try {
@@ -296,17 +289,10 @@ export default function CheckoutPage() {
   const checkoutGrandTotal = Math.max(0, total - discountAmount);
 
   const formatCurrency = (amount: number) => {
-    if (market === "IN") {
-      return new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-      }).format(amount);
-    }
-    return new Intl.NumberFormat("en-GB", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "GBP",
-      minimumFractionDigits: 2,
+      currency: "INR",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -352,12 +338,8 @@ export default function CheckoutPage() {
       );
       return;
     }
-    if (!validatePostalCode(formData.postalCode, market)) {
-      setErrorMessage(
-        market === "IN"
-          ? "Please provide a valid 6-digit Indian PIN code."
-          : "Please provide a valid UK postcode (e.g. SW1A 1AA)."
-      );
+    if (!validatePostalCode(formData.postalCode, "IN")) {
+      setErrorMessage("Please provide a valid 6-digit Indian PIN code.");
       return;
     }
 
@@ -373,8 +355,8 @@ export default function CheckoutPage() {
             variantId: i.variantId,
             quantity: i.quantity,
           })),
-          market,
-          currency: market === "IN" ? "INR" : "GBP",
+          market: "IN",
+          currency: "INR",
           customerEmail: formData.email,
           recipientName: formData.recipientName,
           phone: formData.phone,
@@ -480,7 +462,7 @@ export default function CheckoutPage() {
                   discount_amount: discountAmount,
                   shipping_fee: shippingFee,
                   total_amount: checkoutGrandTotal,
-                  currency: market === "IN" ? "INR" : "GBP",
+                  currency: "INR",
                   payment_status: "succeeded",
                   status: "processing",
                   created_at: new Date().toISOString(),
@@ -488,8 +470,8 @@ export default function CheckoutPage() {
                     product_name: i.productName,
                     variant_name: i.variantName,
                     quantity: i.quantity,
-                    unit_price: market === "IN" ? i.priceInr : i.priceGbp,
-                    total_price: (market === "IN" ? i.priceInr : i.priceGbp) * i.quantity,
+                    unit_price: i.priceInr,
+                    total_price: i.priceInr * i.quantity,
                     image_url: getCartItemImage(i),
                   })),
                   shipping_address: {
@@ -590,7 +572,7 @@ export default function CheckoutPage() {
               <span className="text-xs text-[#9CAFC3]">
                 Market:{" "}
                 <strong className="text-[#FFFFFF]">
-                  {market === "IN" ? "India (₹ INR)" : "United Kingdom (£ GBP)"}
+                  India (₹ INR)
                 </strong>
               </span>
               {isAuthenticated && (
@@ -613,8 +595,8 @@ export default function CheckoutPage() {
               </div>
               <div className="max-w-md mx-auto space-y-2">
                 <h2 className="text-xl font-bold text-[#FFFFFF]">Sign in Required for Checkout</h2>
-                <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                  To protect your orders and guarantee verified delivery across India and the UK, you must be signed in with a 100% complete profile before completing purchase.
+                <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                  To protect your orders and guarantee verified delivery across India, you must be signed in with a complete profile before completing purchase.
                 </p>
                 <p className="text-[11px] text-emerald-400 font-medium">
                   Your cart items ({itemCount}) are safely preserved.
@@ -703,11 +685,11 @@ export default function CheckoutPage() {
                       <div className="bg-[#102A43] p-5 border-b border-[#243447] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-xl bg-[#080B10] border border-[#243447] flex items-center justify-center text-[#7DD3FC] font-black text-lg">
-                            {market === "IN" ? "₹" : "£"}
+                            ₹
                           </div>
                           <div>
                             <div className="text-sm font-bold text-[#FFFFFF]">
-                              {market === "IN" ? "Razorpay India Checkout" : "Stripe UK & Global Checkout"}
+                              Razorpay India Checkout
                             </div>
                             <div className="text-[11px] font-mono text-[#7DD3FC]">
                               Order {pendingTestOrder.orderNumber}
@@ -727,9 +709,7 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-950/40 border border-blue-800/80 text-[11px] text-blue-200">
                           <ShieldCheck className="h-4 w-4 text-[#7DD3FC] shrink-0" />
                           <span>
-                            {market === "IN"
-                              ? "Razorpay Sandbox Gateway: RBI 2FA Verified Test Mode"
-                              : "Stripe Sandbox Gateway: UK FCA & 3DS2 Verified Test Mode"}
+                            Razorpay Sandbox Gateway: RBI 2FA Verified Test Mode (India)
                           </span>
                         </div>
 
@@ -762,35 +742,6 @@ export default function CheckoutPage() {
                                 </div>
                               )}
                             </>
-                          ) : (
-                            <>
-                              {selectedPaymentTab === "card" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">UK &amp; Global Card (Visa, Mastercard, Amex)</div>
-                                  <div className="text-[11px] font-mono text-[#7DD3FC]">4242 •••• •••• 4242 (Expires 12/28 • CVC 888)</div>
-                                  <div className="text-[10px] text-[#9CAFC3]">UK FCA &amp; 3D-Secure 2 authentication verified</div>
-                                </div>
-                              )}
-                              {selectedPaymentTab === "applepay" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">Apple Pay / Google Pay (1-Touch Express)</div>
-                                  <div className="text-[11px] text-[#7DD3FC]">Biometric TouchID / FaceID Authorization</div>
-                                  <div className="text-[10px] text-[#9CAFC3]">Direct GBP debit linked to UK bank account</div>
-                                </div>
-                              )}
-                              {selectedPaymentTab === "klarna" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">Klarna — Pay in 3 (0% Interest)</div>
-                                  <div className="text-[11px] font-mono text-[#7DD3FC]">
-                                    3 monthly instalments of £{(total / 3).toFixed(2)}
-                                  </div>
-                                  <div className="text-[10px] text-[#9CAFC3]">
-                                    £{(total / 3).toFixed(2)} charged today, rest in 30 and 60 days
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          )}
                         </div>
 
                         {/* Action Buttons */}
@@ -807,7 +758,7 @@ export default function CheckoutPage() {
                               <>
                                 <CheckCircle2 className="h-4 w-4" />
                                 <span>
-                                  Simulate Successful {market === "IN" ? "Razorpay" : "Stripe"} Payment: Pay {formatCurrency(total)}
+                                  Simulate Successful Razorpay Payment: Pay {formatCurrency(total)}
                                 </span>
                               </>
                             )}
@@ -879,7 +830,7 @@ export default function CheckoutPage() {
                       <span className="h-6 w-6 rounded-full bg-[#102A43] text-[#7DD3FC] border border-[#243447] flex items-center justify-center text-xs font-mono">
                         2
                       </span>
-                      <span>Delivery Destination ({market === "IN" ? "India" : "United Kingdom"})</span>
+                      <span>Delivery Destination (Republic of India)</span>
                     </h2>
 
                     <Link
@@ -1032,7 +983,7 @@ export default function CheckoutPage() {
 
                         <div className="space-y-1.5">
                           <label className="font-semibold text-[#FFFFFF]">
-                            {market === "IN" ? "PIN Code (6 Digits) *" : "Postcode (UK format) *"}
+                            PIN Code (6 Digits) *
                           </label>
                           <input
                             type="text"
@@ -1058,49 +1009,26 @@ export default function CheckoutPage() {
                     <span>Payment Gateway</span>
                   </h2>
 
-                  {market === "IN" ? (
-                    <div className="p-5 rounded-xl border border-[#7DD3FC] bg-[#102A43]/50 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <span className="font-bold text-sm text-[#FFFFFF]">Razorpay India Gateway</span>
-                          <span className="text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
-                            Active for India (₹ INR)
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-[#7DD3FC]">INR (₹)</span>
+                  <div className="p-5 rounded-xl border border-[#7DD3FC] bg-[#102A43]/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-bold text-sm text-[#FFFFFF]">Razorpay India Gateway</span>
+                        <span className="text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
+                          Active for India (₹ INR)
+                        </span>
                       </div>
-                      <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                        Authorized Indian payment gateway supporting UPI (Google Pay, PhonePe, Paytm, BHIM, QR code), Debit/Credit Cards (RuPay, Visa, Mastercard), NetBanking (HDFC, ICICI, SBI, Axis), and 0-Cost EMI.
-                      </p>
-                      <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#7DD3FC]">
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">UPI / QR</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">RuPay &amp; Cards</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">NetBanking</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">0% EMI</span>
-                      </div>
+                      <span className="text-xs font-bold text-[#7DD3FC]">INR (₹)</span>
                     </div>
-                  ) : (
-                    <div className="p-5 rounded-xl border border-[#7DD3FC] bg-[#102A43]/50 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <span className="font-bold text-sm text-[#FFFFFF]">Stripe UK &amp; Global Gateway</span>
-                          <span className="text-[10px] font-bold text-[#7DD3FC] bg-[#7DD3FC]/10 px-2 py-0.5 rounded border border-[#7DD3FC]/30">
-                            Active for United Kingdom (£ GBP)
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-[#7DD3FC]">GBP (£)</span>
-                      </div>
-                      <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                        Authorized UK payment gateway supporting Visa, Mastercard, American Express, Maestro, 1-Touch Apple Pay &amp; Google Pay, and Klarna Pay in 3 (0% interest).
-                      </p>
-                      <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#7DD3FC]">
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Cards (Visa, MC, Amex)</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Apple Pay</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Google Pay</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">Klarna Pay in 3</span>
-                      </div>
+                    <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                      Authorized Indian payment gateway supporting UPI (Google Pay, PhonePe, Paytm, BHIM, QR code), Debit/Credit Cards (RuPay, Visa, Mastercard), NetBanking (HDFC, ICICI, SBI, Axis), and 0-Cost EMI.
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#7DD3FC]">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">UPI / QR</span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">RuPay &amp; Cards</span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">NetBanking</span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#080B10] border border-[#243447]">0% EMI</span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
@@ -1138,7 +1066,7 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                           <span className="font-mono text-[#FFFFFF] shrink-0">
-                            {formatCurrency((market === "IN" ? item.priceInr : item.priceGbp) * item.quantity)}
+                            {formatCurrency(item.priceInr * item.quantity)}
                           </span>
                         </div>
                       );

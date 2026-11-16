@@ -1,18 +1,18 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Truck, ShieldCheck, Clock, Globe } from "lucide-react";
+import { Truck, ShieldCheck, Clock, MapPin, Zap } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shipping & Fulfillment Policy — India & UK Express Delivery",
+  title: "Shipping & Fulfillment Policy — All-India Express Delivery",
   description:
-    "Comprehensive dual-market shipping policy for One Store. Expedited air transit via Blue Dart in India and Royal Mail / DPD in the United Kingdom.",
+    "Official Indian shipping and logistics policy for One Store. Expedited air transit via Blue Dart and Delhivery Express across 19,000+ PIN codes.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app/shipping-policy",
   },
   openGraph: {
-    title: "Shipping & Fulfillment Policy — One Store",
-    description: "Insured express delivery terms across India and the United Kingdom.",
+    title: "Shipping & Fulfillment Policy — One Store India",
+    description: "Insured express delivery terms across 19,000+ Indian PIN codes.",
     url: "https://one-store-gray.vercel.app/shipping-policy",
     type: "website",
   },
@@ -33,8 +33,8 @@ export default function ShippingPolicyPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#FFFFFF] tracking-tight">
               Shipping &amp; Fulfillment Policy
             </h1>
-            <p className="text-xs md:text-sm text-[#9CAFC3]">
-              Dual-market dispatch standards engineered for India and the United Kingdom.
+            <p className="text-xs md:text-sm text-[#CBD5E1]">
+              National express air dispatch standards engineered exclusively for the Republic of India.
             </p>
           </div>
 
@@ -43,58 +43,51 @@ export default function ShippingPolicyPage() {
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
               <Clock className="h-6 w-6 text-[#7DD3FC]" />
               <h3 className="text-base font-bold text-[#FFFFFF]">Processing Time</h3>
-              <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                Orders undergo quality inspection and are dispatched within 24 business hours.
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                Orders undergo quality inspection and are dispatched within 24 business hours from our central Indian hubs.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
               <Truck className="h-6 w-6 text-[#7DD3FC]" />
-              <h3 className="text-base font-bold text-[#FFFFFF]">India Express Air</h3>
-              <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                3 to 5 business days transit across metro &amp; tier 1/2 Indian PIN codes via air
-                express.
+              <h3 className="text-base font-bold text-[#FFFFFF]">Blue Dart Air Express</h3>
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                2 to 4 business days transit across metro &amp; tier 1/2 Indian PIN codes via air express.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
-              <Globe className="h-6 w-6 text-[#7DD3FC]" />
-              <h3 className="text-base font-bold text-[#FFFFFF]">UK Domestic Delivery</h3>
-              <p className="text-xs text-[#9CAFC3] leading-relaxed">
-                2 to 4 business days transit across the UK via Royal Mail Tracked 24/48 and DPD.
+              <MapPin className="h-6 w-6 text-[#7DD3FC]" />
+              <h3 className="text-base font-bold text-[#FFFFFF]">19,000+ PIN Codes</h3>
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                Comprehensive pan-India coverage spanning Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, and beyond.
               </p>
             </div>
           </div>
 
           {/* Detailed Policy Text */}
-          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#9CAFC3] space-y-6 leading-relaxed">
-            <h2 className="text-lg font-bold text-[#FFFFFF]">1. Dual Market Logistics Operations</h2>
+          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#CBD5E1] space-y-6 leading-relaxed">
+            <h2 className="text-lg font-bold text-[#FFFFFF]">1. Domestic Indian Logistics Operations</h2>
             <p>
-              One Store operates specialized, dedicated fulfillment workflows for our customers in
-              both the Republic of India and the United Kingdom. All customs clearance, import duties,
-              and local VAT / GST are included in the checkout price — meaning zero unexpected fees
-              upon parcel delivery.
+              One Store operates specialized, dedicated fulfillment workflows for our customers across the Republic of India.
+              All orders are dispatched in tamper-evident security packaging with live tracking. All prices shown on our store
+              are strictly inclusive of 18% GST (CGST + SGST) — meaning zero surprise surcharges or octroi upon delivery.
             </p>
 
             <h2 className="text-lg font-bold text-[#FFFFFF]">2. Shipping Rates &amp; Free Delivery Thresholds</h2>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>
-                <strong className="text-[#FFFFFF]">India (INR):</strong> Orders over ₹5,000 qualify
-                for complimentary Air Express delivery. Standard delivery is ₹250 for orders below
-                the threshold.
+                <strong className="text-[#FFFFFF]">Free Shipping:</strong> All orders over ₹1,999 qualify for complimentary Blue Dart / Delhivery Air Express delivery anywhere in India.
               </li>
               <li>
-                <strong className="text-[#FFFFFF]">United Kingdom (GBP):</strong> Orders over £50
-                qualify for complimentary Royal Mail Tracked delivery. Standard delivery is £5.00 for
-                orders below the threshold.
+                <strong className="text-[#FFFFFF]">Standard Shipping:</strong> For orders below ₹1,999, a nominal flat rate of ₹149 is applied to cover insured domestic air cargo.
               </li>
             </ul>
 
             <h2 className="text-lg font-bold text-[#FFFFFF]">3. Real-Time Tracking &amp; SMS Dispatch Updates</h2>
             <p>
-              Upon handover to our carrier partners (Blue Dart, Delhivery, Royal Mail, DPD), an
-              automated dispatch confirmation containing your live tracking number will be sent via
-              email and SMS. You can monitor progress anytime on our{" "}
+              Upon handover to our carrier partners (Blue Dart Express &amp; Delhivery), an automated dispatch confirmation
+              containing your AWB tracking number will be sent via email and SMS. You can monitor transit milestones 24/7 on our{" "}
               <a href="/orders" className="text-[#7DD3FC] underline">
                 Order Tracking Portal
               </a>

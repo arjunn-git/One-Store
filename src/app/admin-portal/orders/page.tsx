@@ -337,15 +337,9 @@ export default function AdminPortalOrdersPage() {
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-[#9CAFC3]">
-                        {ord.currency === "GBP" ? (
-                          <span className="inline-flex items-center gap-1 font-medium text-[#FFFFFF]">
-                            🇬🇧 UK (£)
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 font-medium text-[#FFFFFF]">
-                            🇮🇳 India (₹)
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 font-medium text-[#FFFFFF]">
+                          🇮🇳 India (₹)
+                        </span>
                       </td>
                       <td className="py-3.5 px-4 text-[#9CAFC3]">
                         {ord.items && ord.items.length > 0 ? (
@@ -471,9 +465,7 @@ export default function AdminPortalOrdersPage() {
                   {selectedOrder.shipping_address?.postalCode}
                 </div>
                 <div className="text-[#7DD3FC] font-semibold">
-                  {selectedOrder.shipping_address?.countryCode === "GB"
-                    ? "United Kingdom"
-                    : "India"}
+                  India (₹ INR)
                 </div>
               </div>
             </div>

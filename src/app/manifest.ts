@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "One Store — Curated Commerce for India & the UK",
+    name: "One Store — India's Premier Curated Luxury Store",
     short_name: "One Store",
     description:
-      "Curated studio acoustics, engineered minimalist carry, and precision chronographs for India (INR) and the UK (GBP).",
+      "Curated studio acoustics, engineered minimalist carry, and precision chronographs for India (INR ₹).",
     start_url: "/",
     display: "standalone",
     background_color: "#080B10",

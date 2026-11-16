@@ -4,15 +4,15 @@ import { ShieldCheck, Lock, Eye } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy & Data Protection (GDPR / DPDP) — One Store",
+  title: "Privacy Policy & Data Protection (DPDP Act) — One Store India",
   description:
-    "Learn how One Store protects customer data across India (DPDP Act) and the UK (UK-GDPR). Zero telemetry tracking without consent, bank-grade encrypted checkout.",
+    "Learn how One Store protects customer data under India's Digital Personal Data Protection (DPDP) Act. Bank-grade encrypted checkout, zero advertiser sharing.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app/privacy",
   },
   openGraph: {
-    title: "Privacy Policy — One Store",
-    description: "Data security and privacy commitments for India and the UK.",
+    title: "Privacy Policy — One Store India",
+    description: "Data security and privacy commitments for the Indian Market.",
     url: "https://one-store-gray.vercel.app/privacy",
     type: "website",
   },
@@ -27,13 +27,13 @@ export default function PrivacyPage() {
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="border-b border-[#243447] pb-6 space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#7DD3FC]">
-              Data Protection &amp; GDPR / DPDP
+              Data Protection &amp; DPDP Act Compliance
             </span>
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#FFFFFF] tracking-tight">
               Privacy Policy
             </h1>
-            <p className="text-xs md:text-sm text-[#9CAFC3]">
-              How One Store collects, safeguards, and handles your personal identity and order data.
+            <p className="text-xs md:text-sm text-[#CBD5E1]">
+              How One Store India collects, safeguards, and handles your personal identity and order data.
             </p>
           </div>
 
@@ -41,15 +41,15 @@ export default function PrivacyPage() {
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
               <Lock className="h-6 w-6 text-[#7DD3FC]" />
               <h3 className="text-sm font-bold text-[#FFFFFF]">Zero Raw Card Storage</h3>
-              <p className="text-xs text-[#9CAFC3]">
-                Payments are processed directly via PCI-DSS Level 1 compliant gateways (Razorpay &amp; Stripe).
+              <p className="text-xs text-[#CBD5E1]">
+                Payments are processed directly via Razorpay PCI-DSS Level 1 compliant gateway with tokenization.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
               <Eye className="h-6 w-6 text-[#7DD3FC]" />
               <h3 className="text-sm font-bold text-[#FFFFFF]">No Third-Party Ad Tracking</h3>
-              <p className="text-xs text-[#9CAFC3]">
+              <p className="text-xs text-[#CBD5E1]">
                 Your personal details, email, and phone numbers are never rented, sold, or shared with advertisers.
               </p>
             </div>
@@ -57,18 +57,18 @@ export default function PrivacyPage() {
             <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-2">
               <ShieldCheck className="h-6 w-6 text-[#7DD3FC]" />
               <h3 className="text-sm font-bold text-[#FFFFFF]">Data Rights &amp; Deletion</h3>
-              <p className="text-xs text-[#9CAFC3]">
-                Full compliance with India DPDP Act and UK GDPR rights to access, rectify, or erase your account data.
+              <p className="text-xs text-[#CBD5E1]">
+                Full compliance with India&apos;s DPDP Act rights to access, rectify, or erase your account data.
               </p>
             </div>
           </div>
 
-          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#9CAFC3] space-y-6 leading-relaxed">
+          <div className="prose prose-invert max-w-none text-xs md:text-sm text-[#CBD5E1] space-y-6 leading-relaxed">
             <h2 className="text-lg font-bold text-[#FFFFFF]">1. Information We Collect</h2>
             <p>
               We collect information provided directly by you when signing up or placing an order:
-              your name, email address, shipping destination, and mobile phone number for logistics
-              dispatch notifications.
+              your name, email address, Indian shipping address, PIN code, and mobile phone number for logistics
+              dispatch notifications via Blue Dart and Delhivery.
             </p>
 
             <h2 className="text-lg font-bold text-[#FFFFFF]">2. Explicit Marketing Consent</h2>
@@ -78,10 +78,14 @@ export default function PrivacyPage() {
               clicking the unsubscribe link in any marketing email.
             </p>
 
-            <h2 className="text-lg font-bold text-[#FFFFFF]">3. Contacting the Data Protection Officer</h2>
+            <h2 className="text-lg font-bold text-[#FFFFFF]">3. Contacting the Grievance Officer</h2>
             <p>
-              For privacy queries, GDPR requests, or data deletion requests, contact our Data
-              Protection team at <span className="text-[#7DD3FC]">privacy@onestore.com</span>.
+              Under the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021,
+              you may contact our Grievance Officer at{" "}
+              <a href="mailto:onestore.auth@gmail.com" className="text-[#7DD3FC] underline">
+                onestore.auth@gmail.com
+              </a>{" "}
+              for any data inquiries.
             </p>
           </div>
         </div>

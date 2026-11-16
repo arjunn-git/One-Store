@@ -218,7 +218,6 @@ export async function markOrderPaymentStatus(
     }
   }
 
-  const isUK = orderNumber.includes("-GB-");
   const currentTotal = storedOrder?.total ?? storedOrder?.total_amount ?? metadata?.amount ?? 0;
   const customerIdent = storedOrder?.customer_email || (metadata?.customerEmail as string);
   const actorName = customerIdent ? `Customer (${customerIdent})` : `Customer (${orderNumber})`;
@@ -228,25 +227,25 @@ export async function markOrderPaymentStatus(
       orderNumber,
       paymentId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string) || "N/A",
       totalAmount: currentTotal,
-      currency: storedOrder?.currency || (isUK ? "GBP" : "INR"),
-      market: storedOrder?.market || (isUK ? "GB" : "IN"),
-      paymentProvider: (metadata?.provider as string) || storedOrder?.payment_provider || (isUK ? "stripe" : "razorpay"),
+      currency: "INR",
+      market: "IN",
+      paymentProvider: "razorpay",
       customerEmail: customerIdent,
     }).catch((e) => console.error("Admin payment notification error:", e));
 
     recordActivity({
       type: "PAYMENT_SUCCESS",
-      action: isUK ? "Stripe Payment Settled" : "Razorpay Payment Verified",
+      action: "Razorpay Payment Verified",
       actor: actorName,
-      market: isUK ? "GB" : "IN",
-      currency: isUK ? "GBP" : "INR",
+      market: "IN",
+      currency: "INR",
       resourceType: "payments",
       resourceId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string) || orderNumber,
       details: {
         orderNumber,
         paymentId: (metadata?.paymentId as string) || (storedOrder?.payment_reference as string),
         totalAmount: currentTotal,
-        paymentProvider: (metadata?.provider as string) || storedOrder?.payment_provider || (isUK ? "stripe" : "razorpay"),
+        paymentProvider: "razorpay",
         verifiedVia: metadata?.verifiedVia || "gateway",
         status: "succeeded",
       },
@@ -254,16 +253,16 @@ export async function markOrderPaymentStatus(
   } else if (paymentStatus === "failed") {
     recordActivity({
       type: "PAYMENT_FAILED",
-      action: isUK ? "Stripe Payment Failed" : "Razorpay Payment Failed",
+      action: "Razorpay Payment Failed",
       actor: actorName,
-      market: isUK ? "GB" : "IN",
-      currency: isUK ? "GBP" : "INR",
+      market: "IN",
+      currency: "INR",
       resourceType: "payments",
       resourceId: (metadata?.paymentId as string) || orderNumber,
       details: {
         orderNumber,
         reason: metadata?.reason || metadata?.failureReason || "Gateway rejected or verification failed",
-        paymentProvider: isUK ? "stripe" : "razorpay",
+        paymentProvider: "razorpay",
         status: "failed",
       },
     }).catch(() => {});

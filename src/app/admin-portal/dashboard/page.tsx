@@ -186,23 +186,27 @@ export default async function AdminPortalDashboard() {
           </div>
         </div>
 
-        {/* Metric 2: UK Revenue */}
+        {/* Metric 2: Orders Settled */}
         <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-3 shadow-lg">
           <div className="flex justify-between items-center text-xs text-[#9CAFC3]">
-            <span className="font-medium">Gross Volume (UK)</span>
+            <span className="font-medium">Total Orders Completed</span>
             <div className="p-2 rounded-xl bg-[#102A43]/40 border border-[#243447]/60 text-[#7DD3FC]">
-              <DollarSign className="h-3.5 w-3.5" />
+              <Package className="h-3.5 w-3.5" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
-            £{grossVolumeGbp.toFixed(2)}
+            {liveOrders.length}
           </div>
           <div className="text-xs text-[#9CAFC3]">
-            {gbpCompletedOrders.length > 0 ? (
+            {liveOrders.length > 0 ? (
               <span className="text-emerald-400 font-medium">
-                {gbpCompletedOrders.length} settled transaction{gbpCompletedOrders.length > 1 ? "s" : ""}
+                {liveOrders.length} live order{liveOrders.length > 1 ? "s" : ""} tracked
               </span>
             ) : (
+              <span>Awaiting first customer order</span>
+            )}
+          </div>
+        </div>
               <span>No settled transactions yet</span>
             )}
           </div>
@@ -317,7 +321,7 @@ export default async function AdminPortalDashboard() {
           <div>
             <h2 className="text-base font-bold text-[#FFFFFF] tracking-tight">Live Orders Queue</h2>
             <p className="text-xs text-[#9CAFC3]">
-              Real-time transaction queue synchronized with Razorpay (India) and Stripe (UK) webhooks.
+              Real-time transaction queue synchronized with Razorpay (India) webhooks and express dispatch.
             </p>
           </div>
 
@@ -527,8 +531,8 @@ export default async function AdminPortalDashboard() {
                 time: "Active",
               },
               {
-                action: "DUAL_CURRENCY_ISOLATION",
-                detail: "India (₹ Razorpay) and UK (£ Stripe) payment gateways separated",
+                action: "PAYMENT_GATEWAY_RAZORPAY",
+                detail: "India (₹ INR) Razorpay payment gateway secured for Instant UPI & RuPay",
                 time: "Active",
               },
             ].map((log, i) => (

@@ -56,29 +56,23 @@ export async function processCheckout(
       return { success: false, error: "Cannot process an empty cart." };
     }
 
-    // Validate phone and postal code for target country
-    const validatedMarket: "IN" | "GB" = payload.market === "GB" ? "GB" : "IN";
-    if (payload.postalCode && !validatePostalCode(payload.postalCode, validatedMarket)) {
+    // Validate phone and postal code for India
+    const validatedMarket: "IN" | "GB" = "IN";
+    if (payload.postalCode && !validatePostalCode(payload.postalCode, "IN")) {
       return {
         success: false,
-        error:
-          validatedMarket === "IN"
-            ? "Invalid 6-digit Indian PIN code."
-            : "Invalid UK postcode format (e.g. SW1A 1AA).",
+        error: "Invalid 6-digit Indian PIN code.",
       };
     }
 
-    if (payload.phone && !validatePhoneNumber(payload.phone, validatedMarket)) {
+    if (payload.phone && !validatePhoneNumber(payload.phone, "IN")) {
       return {
         success: false,
-        error:
-          validatedMarket === "IN"
-            ? "Invalid 10-digit Indian mobile number."
-            : "Invalid UK mobile number (e.g. +44 7911 123456).",
+        error: "Invalid 10-digit Indian mobile number.",
       };
     }
-    const validatedCurrency: "INR" | "GBP" = validatedMarket === "GB" ? "GBP" : "INR";
-    const validatedProvider: "razorpay" | "stripe" = validatedMarket === "GB" ? "stripe" : "razorpay";
+    const validatedCurrency: "INR" | "GBP" = "INR";
+    const validatedProvider: "razorpay" | "stripe" = "razorpay";
 
     // 1. Fetch available products from live database (or fallback)
     let dbProducts: (Product & { variants: ProductVariant[] })[] = [];
@@ -139,12 +133,8 @@ export async function processCheckout(
         };
       }
 
-      const basePrice = validatedCurrency === "INR" ? catalogItem.price_inr : catalogItem.price_gbp;
-      const adj = variant
-        ? validatedCurrency === "INR"
-          ? variant.price_inr_adjustment || 0
-          : variant.price_gbp_adjustment || 0
-        : 0;
+      const basePrice = catalogItem.price_inr;
+      const adj = variant ? variant.price_inr_adjustment || 0 : 0;
 
       const unitPrice = Math.max(0, basePrice + adj);
       const itemTotal = unitPrice * item.quantity;
