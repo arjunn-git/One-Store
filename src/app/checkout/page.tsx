@@ -715,33 +715,30 @@ export default function CheckoutPage() {
 
                         {/* Selected Method Details */}
                         <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] text-xs space-y-3">
-                          {market === "IN" ? (
-                            <>
-                              {selectedPaymentTab === "upi" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">Unified Payments Interface (UPI)</div>
-                                  <div className="text-[11px] font-mono text-emerald-400">
-                                    onestore.auth@okhdfcbank
-                                  </div>
-                                  <div className="text-[10px] text-[#9CAFC3]">
-                                    Instant UPI intent or dynamic QR settlement
-                                  </div>
-                                </div>
-                              )}
-                              {selectedPaymentTab === "card" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">Indian Debit / Credit Card (RuPay, Visa, MC)</div>
-                                  <div className="text-[11px] font-mono text-[#7DD3FC]">4111 •••• •••• 4242 (Expires 12/28 • CVV 123)</div>
-                                  <div className="text-[10px] text-[#9CAFC3]">RBI 2FA OTP verification simulation</div>
-                                </div>
-                              )}
-                              {selectedPaymentTab === "netbanking" && (
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-[#FFFFFF]">NetBanking (HDFC, ICICI, SBI, Axis)</div>
-                                  <div className="text-[11px] text-[#9CAFC3]">Instant direct Indian bank settlement</div>
-                                </div>
-                              )}
-                            </>
+                          {selectedPaymentTab === "upi" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">Unified Payments Interface (UPI)</div>
+                              <div className="text-[11px] font-mono text-emerald-400">
+                                onestore.auth@okhdfcbank
+                              </div>
+                              <div className="text-[10px] text-[#9CAFC3]">
+                                Instant UPI intent or dynamic QR settlement
+                              </div>
+                            </div>
+                          )}
+                          {selectedPaymentTab === "card" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">Indian Debit / Credit Card (RuPay, Visa, MC)</div>
+                              <div className="text-[11px] font-mono text-[#7DD3FC]">4111 •••• •••• 4242 (Expires 12/28 • CVV 123)</div>
+                              <div className="text-[10px] text-[#9CAFC3]">RBI 2FA OTP verification simulation</div>
+                            </div>
+                          )}
+                          {selectedPaymentTab === "netbanking" && (
+                            <div className="space-y-1">
+                              <div className="font-semibold text-[#FFFFFF]">NetBanking (HDFC, ICICI, SBI, Axis)</div>
+                              <div className="text-[11px] text-[#9CAFC3]">Instant direct Indian bank settlement</div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Action Buttons */}

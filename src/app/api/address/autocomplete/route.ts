@@ -103,15 +103,12 @@ export async function GET(request: Request) {
       const json = await res.json();
       const features: any[] = json?.features || [];
 
-      // Filter and normalize items matching the selected shopping country
+      // Filter and normalize items matching India
       const filtered = features.filter((feat) => {
         const cCode = (feat.properties?.countrycode || "").toUpperCase();
-        if (country === "IN" && cCode === "IN") return true;
-        if (country === "GB" && (cCode === "GB" || cCode === "UK")) return true;
-        // If countrycode is omitted, check country string
+        if (cCode === "IN") return true;
         const cName = (feat.properties?.country || "").toLowerCase();
-        if (country === "IN" && cName.includes("india")) return true;
-        if (country === "GB" && (cName.includes("united kingdom") || cName.includes("britain") || cName.includes("england") || cName.includes("scotland") || cName.includes("wales"))) return true;
+        if (cName.includes("india")) return true;
         return false;
       });
 

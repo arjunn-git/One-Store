@@ -207,10 +207,6 @@ export default async function AdminPortalDashboard() {
             )}
           </div>
         </div>
-              <span>No settled transactions yet</span>
-            )}
-          </div>
-        </div>
 
         {/* Metric 3: Pending Fulfillment */}
         <div className="p-5 sm:p-6 rounded-2xl bg-[#0C131C] border border-[#243447]/80 space-y-3 shadow-lg">

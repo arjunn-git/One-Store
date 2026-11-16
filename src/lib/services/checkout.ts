@@ -396,8 +396,8 @@ export async function processCheckout(
       }
     }
 
-    // Process UK / Stripe
-    if (validatedProvider === "stripe") {
+    // Process UK / Stripe (legacy support)
+    if ((validatedProvider as string) === "stripe") {
       if (stripeSecretKey && !stripeSecretKey.includes("placeholder")) {
         try {
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
