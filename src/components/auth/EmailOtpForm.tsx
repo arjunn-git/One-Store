@@ -333,7 +333,7 @@ export function EmailOtpForm({ mode }: EmailOtpFormProps) {
                   className="mt-0.5 h-4 w-4 rounded border-[#243447] bg-[#080B10] text-[#7DD3FC] focus:ring-0"
                 />
                 <span className="leading-relaxed">
-                  Keep me updated on exclusive flagship releases, dual-market shipping promotions,
+                  Keep me updated on exclusive flagship releases, express shipping updates,
                   and curated offers. (Optional)
                 </span>
               </label>

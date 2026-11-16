@@ -11,14 +11,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "All Products — Curated Lifestyle, Audio & Minimalist Gear",
   description:
-    "Explore our complete dual-market catalogue: studio acoustics, minimalist carry, and precision timepieces with fast tracked shipping to India & the UK.",
+    "Explore our complete catalogue: studio acoustics, minimalist carry, and precision timepieces with fast tracked shipping across India.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app/products",
   },
   openGraph: {
     title: "All Products — One Store Curated Commerce",
     description:
-      "Browse curated studio audio, daily minimalist carry, and precision chronographs with dual-market pricing in INR (₹) and GBP (£).",
+      "Browse curated studio audio, daily minimalist carry, and precision chronographs with flagship pricing in INR (₹).",
     url: "https://one-store-gray.vercel.app/products",
     type: "website",
   },
@@ -88,8 +88,7 @@ async function ProductsList({ searchParams }: ProductsPageProps) {
               : "All Engineered Products"}
           </h1>
           <p className="text-sm sm:text-base text-[#9CAFC3] mt-2 max-w-xl leading-relaxed">
-            Precision-engineered essentials available for on-demand dispatch across India (INR ₹)
-            and the United Kingdom (GBP £).
+            Precision-engineered essentials available for on-demand dispatch across 19,000+ Indian PIN codes via Blue Dart Air Express.
           </p>
         </div>
 

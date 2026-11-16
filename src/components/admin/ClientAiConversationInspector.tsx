@@ -265,7 +265,7 @@ export function ClientAiConversationInspector() {
               <div className="p-2 rounded-lg bg-[#080B10] border border-[#243447]/60">
                 <span className="text-[#9CAFC3] block text-[10px]">Storefront Market</span>
                 <strong className="text-emerald-400 block">
-                  {activeModalItem.market === "GB" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}
+                  India (₹ INR)
                 </strong>
               </div>
               <div className="p-2 rounded-lg bg-[#080B10] border border-[#243447]/60">

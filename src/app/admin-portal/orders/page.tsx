@@ -537,7 +537,7 @@ export default function AdminPortalOrdersPage() {
                     type="text"
                     value={carrierName}
                     onChange={(e) => setCarrierName(e.target.value)}
-                    placeholder="e.g. Blue Dart / Royal Mail"
+                    placeholder="e.g. Blue Dart / Delhivery Express"
                     className="w-full h-10 px-3 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
                   />
                 </div>

@@ -12,10 +12,11 @@ const ALLOWED_CLIENT_EVENT_TYPES = new Set<ActivityEventType>([
   "CART_UPDATED",
   "CART_CLEARED",
   "CHECKOUT_INITIATED",
-  "MARKET_SWITCH",
   "PRODUCT_VIEW",
   "SEARCH_QUERY",
   "SESSION_ACTIVE",
+  "AI_ASSISTANT_QUERY",
+  "SUPPORT_INQUIRY",
 ]);
 
 export async function POST(request: Request) {
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       request.headers.get("x-session-id") ||
       (typeof anonymousSessionId === "string" ? anonymousSessionId.trim() : undefined);
 
-    const safeMarket = market === "GB" ? "GB" : "IN";
+    const safeMarket = "IN";
 
     // 1. Resolve Genuine Customer Identity (Real Full Name & Email)
     let resolvedActor = actor && typeof actor === "string" && actor.trim() !== "Guest Shopper"
@@ -103,8 +104,7 @@ export async function POST(request: Request) {
         resolvedActor = `${cookieEmail.split("@")[0]} (${cookieEmail})`;
       } else {
         const shortId = (sessionId || "").slice(-5);
-        const marketLabel = safeMarket === "GB" ? "UK" : "India";
-        resolvedActor = shortId ? `${marketLabel} Shopper (#${shortId})` : `${marketLabel} Shopper`;
+        resolvedActor = shortId ? `India Shopper (#${shortId})` : "India Shopper";
       }
     }
 
@@ -145,8 +145,8 @@ export async function POST(request: Request) {
       actor: resolvedActor.slice(0, 100),
       authUserId,
       anonymousSessionId: sessionId,
-      market: safeMarket,
-      currency: currency === "GBP" ? "GBP" : "INR",
+      market: "IN",
+      currency: "INR",
       resourceType: String(resourceType).slice(0, 100),
       resourceId: resourceId ? String(resourceId).slice(0, 100) : undefined,
       details: sanitizedDetails,

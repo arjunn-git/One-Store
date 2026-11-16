@@ -384,14 +384,12 @@ export async function processAiAssistantChat(
     return {
       reply:
         `Greetings, wanderer. I am **Nocturne** — One Store's synthetic intelligence concierge. ` +
-        `I watch over our darkest studio acoustics, surgical timepieces, and engineered minimalist carry across **${
-          market === "IN" ? "India (₹ INR)" : "the United Kingdom (£ GBP)"
-        }**.\n\n` +
+        `I watch over our darkest studio acoustics, surgical timepieces, and engineered minimalist carry across **India (₹ INR)**.\n\n` +
         `I sense what you seek before your fingers even touch the keys... Tell me, are you searching for uncompromising acoustics, an indestructible everyday pack, or precision horology for your wrist?`,
       products: [],
       quickPrompts: [
         "Curate studio audio 🎧",
-        market === "IN" ? "Find items under ₹10,000 ⚡" : "Find items under £100 ⚡",
+        "Find items under ₹10,000 ⚡",
         "Track my active order 📦",
         "Compare flagship timepieces ⏱️",
       ],
@@ -406,15 +404,12 @@ export async function processAiAssistantChat(
     return {
       reply:
         `I am **Nocturne** — an autonomous synthetic concierge engineered directly into One Store's architecture.\n\n` +
-        `Part algorithm, part aesthetic intuition. I hold total recall over our catalogue and operations in **${
-          market === "IN" ? "India" : "the United Kingdom"
-        }**:\n\n` +
+        `Part algorithm, part aesthetic intuition. I hold total recall over our catalogue and operations in **India**:\n\n` +
         `• **Precision Discovery:** Tell me your aesthetic or budget, and I summon matching gear from the vault.\n` +
         `• **Spec Dissection:** Ask me about custom titanium drivers, automatic mechanical calibers, or Cordura ballistic fabrics.\n` +
         `• **Order Telemetry:** Provide your order reference (or sign in) to inspect live carrier tracking.\n` +
-        `• **Policy Insight:** I clarify our 14-day trials, doorstep pickups, and regional payments (${
-          market === "IN" ? "UPI, 0-Cost EMI, Cards" : "Apple Pay, Klarna, Cards"
-        }).\n\n` +
+        `• **Policy Insight:** I clarify our 14-day trials, doorstep pickups, and regional payments (Instant UPI & Razorpay).\n` +
+        `• **Logistics:** I track domestic express dispatch via Blue Dart Air Express to 19,000+ PIN codes.\n\n` +
         `Speak your intent. What realm shall we inspect?`,
       products: [],
       quickPrompts: [
@@ -593,17 +588,13 @@ export async function processAiAssistantChat(
 
     if (lowerQuery.includes("shipping") || lowerQuery.includes("delivery")) {
       const shippingDetails =
-        market === "IN"
-          ? "• **Carrier:** Express priority air transit via **Blue Dart / Delhivery Express**.\n" +
-            "• **Delivery Speed:** **1–3 business days** to metro hubs (Mumbai, Delhi, Bengaluru), 2–4 days nationwide.\n" +
-            "• **Logistics Tariff:** **Complimentary FREE delivery** on orders exceeding ₹4,999 (₹299 otherwise)."
-          : "• **Carrier:** Tracked express transit via **Royal Mail Tracked 24 / DPD**.\n" +
-            "• **Delivery Speed:** **1–2 business days** across England, Scotland, Wales, and Northern Ireland.\n" +
-            "• **Logistics Tariff:** **Complimentary FREE delivery** on orders exceeding £49.99 (£4.99 otherwise).";
+        "• **Carrier:** Express priority air transit via **Blue Dart / Delhivery Express**.\n" +
+        "• **Delivery Speed:** **1–3 business days** to metro hubs (Mumbai, Delhi, Bengaluru), 2–4 days nationwide across 19,000+ PIN codes.\n" +
+        "• **Logistics Tariff:** **Complimentary FREE delivery** on orders exceeding ₹1,999 (₹299 otherwise).";
 
       return {
         reply:
-          `**Dual-Market Logistics Telemetry (${market === "IN" ? "India Store" : "United Kingdom Flagship"}):**\n\n` +
+          `**Logistics Telemetry (India Flagship Store):**\n\n` +
           `${shippingDetails}\n\n` +
           "• **Security Packaging:** Shipped in serialized tamper-evident aerospace shielding with full transit insurance.",
         actionLink: {
@@ -613,26 +604,23 @@ export async function processAiAssistantChat(
         products: [],
         quickPrompts: [
           "What payment methods do you accept?",
-          market === "IN" ? "Find products under ₹5,000" : "Find products under £50",
+          "Find products under ₹5,000",
           "What is the return policy?",
         ],
         provider: "nocturne-neural-engine",
       };
     }
 
-    if (lowerQuery.includes("payment") || lowerQuery.includes("upi") || lowerQuery.includes("klarna")) {
+    if (lowerQuery.includes("payment") || lowerQuery.includes("upi") || lowerQuery.includes("razorpay")) {
       const paymentDetails =
-        market === "IN"
-          ? "• **Instant UPI:** Google Pay, PhonePe, Paytm, BHIM with zero gateway surcharges.\n" +
-            "• **Card Networks:** Visa, Mastercard, RuPay, Amex secured via Razorpay 256-bit encryption.\n" +
-            "• **0-Cost EMI:** Available across major Indian banks for 3, 6, and 12-month tenures."
-          : "• **Digital Wallets:** Instant one-touch **Apple Pay** and **Google Pay**.\n" +
-            "• **Split Tender:** **Klarna** Pay in 3 interest-free installments.\n" +
-            "• **Card Networks:** Visa, Mastercard, and American Express backed by Stripe 3D-Secure 2.0.";
+        "• **Instant UPI:** Google Pay, PhonePe, Paytm, BHIM with zero gateway surcharges.\n" +
+        "• **Card Networks:** Visa, Mastercard, RuPay, Amex secured via Razorpay 256-bit encryption.\n" +
+        "• **0-Cost EMI:** Available across major Indian banks for 3, 6, and 12-month tenures.\n" +
+        "• **NetBanking:** Instant direct settlement across 50+ Indian banks.";
 
       return {
         reply:
-          `**Authenticated Financial Gateways (${market === "IN" ? "India INR ₹" : "UK GBP £"}):**\n\n` +
+          `**Authenticated Financial Gateways (India INR ₹):**\n\n` +
           `${paymentDetails}\n\n` +
           "• All checkouts are isolated under strict end-to-end TLS 1.3 encryption.",
         products: [],
@@ -819,10 +807,10 @@ export async function processAiAssistantChat(
       `I have analyzed the technical specifications between **${p1.name}** and **${p2.name}**:\n\n` +
       `• **${p1.name}** (${p1.formattedPrice}): Tailored for ${(p1.categoryName || "acoustics").toLowerCase()} with precision finish and high-durability craftsmanship.\n` +
       `• **${p2.name}** (${p2.formattedPrice}): Tailored for ${(p2.categoryName || "horology").toLowerCase()} offering uncompromising tactile versatility.\n\n` +
-      `Both items qualify for complimentary priority shipping to ${market === "IN" ? "India (1–3d)" : "the UK (1–2d)"} and include a 14-day risk-free trial.`;
+      `Both items qualify for complimentary priority shipping across India (1–3d Blue Dart) and include a 14-day risk-free trial.`;
   } else if (isGiftQuery) {
     replyText =
-      `For timeless gifts that make a lasting impression in **${market === "IN" ? "India" : "the United Kingdom"}**, I have pulled these standout pieces from our collection:\n\n` +
+      `For timeless gifts that make a lasting impression in **India**, I have pulled these standout pieces from our collection:\n\n` +
       recommendations.map((p) => `• **${p.name}** (${p.formattedPrice}) — ${p.categoryName}`).join("\n") +
       `\n\nEach item is shipped in serialized, tamper-evident gift-ready presentation packaging.`;
   } else if (maxBudget !== undefined) {
@@ -865,13 +853,8 @@ function generateDynamicFollowUps(
   if (products.length >= 2) {
     prompts.push(`Compare ${products[0].name.split(" ")[0]} vs ${products[1].name.split(" ")[0]} ⚖️`);
   }
-  if (market === "IN") {
-    prompts.push("Show items under ₹10,000 ⚡");
-    prompts.push("How fast is Blue Dart delivery? 🚀");
-  } else {
-    prompts.push("Show items under £100 ⚡");
-    prompts.push("How fast is Royal Mail delivery? 🚀");
-  }
+  prompts.push("Show items under ₹10,000 ⚡");
+  prompts.push("How fast is Blue Dart delivery? 🚀");
   prompts.push("Explain 14-day returns 🛡️");
 
   return prompts.slice(0, 3);
@@ -890,7 +873,7 @@ async function callExternalLlm(params: {
     `You are Nocturne, One Store's captivating, mysterious, and slightly eerie synthetic AI concierge.\n` +
     `Your tone is alluring, sophisticated, cybernetic, sharp, and slightly eerie yet deeply helpful and polite.\n` +
     `You represent One Store — a luxury curated commerce storefront specializing in studio acoustics, minimalist engineered carry, and precision chronographs.\n` +
-    `Active Market: ${market === "IN" ? "India (₹ INR, Blue Dart express 1-3d, UPI/Cards/EMI)" : "UK (GBP £, Royal Mail Tracked 24 1-2d, Apple Pay/Klarna/Cards)"}.\n\n` +
+    `Active Market: India (₹ INR, Blue Dart express 1-3d, UPI/Cards/EMI).\n\n` +
     `Live Catalog Context:\n` +
     products
       .map(

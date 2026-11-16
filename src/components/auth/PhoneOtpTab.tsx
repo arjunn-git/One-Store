@@ -37,18 +37,13 @@ export function PhoneOtpTab() {
     <form onSubmit={handleSendPhoneCode} className="space-y-4 pt-2">
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-[#FFFFFF] uppercase tracking-wider">
-          Mobile Number (India &amp; UK)
+          Mobile Number (India +91)
         </label>
         <div className="flex gap-2">
           {/* Country Calling Code Selector */}
-          <select
-            value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value as "+91" | "+44")}
-            className="h-12 px-3 rounded-xl bg-[#080B10] border border-[#243447] text-xs font-mono text-[#FFFFFF] focus:outline-none focus:border-[#7DD3FC]"
-          >
-            <option value="+91">🇮🇳 India (+91)</option>
-            <option value="+44">🇬🇧 UK (+44)</option>
-          </select>
+          <div className="h-12 px-3 rounded-xl bg-[#080B10] border border-[#243447] text-xs font-mono text-[#7DD3FC] flex items-center gap-1.5 shrink-0">
+            <span>🇮🇳 +91</span>
+          </div>
 
           {/* Number Input */}
           <div className="relative flex-1">

@@ -50,7 +50,7 @@ export default async function OrdersPage() {
             <div>
               <div className="flex items-center gap-2 text-xs text-[#7DD3FC] mb-1 font-semibold uppercase tracking-wider">
                 <Package className="h-3.5 w-3.5" />
-                <span>Dual-Market Order Tracking</span>
+                <span>India Flagship Order Tracking</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                 Order History &amp; Status

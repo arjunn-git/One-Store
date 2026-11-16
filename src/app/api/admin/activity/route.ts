@@ -42,12 +42,15 @@ export async function GET(request: Request) {
       cart: activities.filter((a) =>
         ["CART_ADD", "CART_REMOVE", "CART_UPDATED", "CART_CLEARED"].includes(a.type)
       ).length,
-      marketSwitches: activities.filter((a) => a.type === "MARKET_SWITCH").length,
+      checkout: activities.filter((a) => a.type === "CHECKOUT_INITIATED").length,
       auth: activities.filter((a) =>
         ["CUSTOMER_LOGIN", "CUSTOMER_SIGNUP", "CUSTOMER_LOGOUT"].includes(a.type)
       ).length,
       support: activities.filter((a) => a.type === "SUPPORT_INQUIRY").length,
       product: activities.filter((a) => a.type === "PRODUCT_VIEW" || a.type === "SEARCH_QUERY").length,
+      ai: activities.filter((a) =>
+        ["AI_ASSISTANT_QUERY", "AI_RECOMMENDATION_CLICK", "AI_ADD_TO_CART"].includes(a.type)
+      ).length,
     };
 
     return NextResponse.json({

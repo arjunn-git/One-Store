@@ -199,7 +199,7 @@ export async function sendOtpEmail(
 
         <!-- Footer -->
         <div style="padding: 16px 24px; background: #080B10; border-top: 1px solid #243447; text-align: center; font-size: 11px; color: #64748B;">
-          One Store Curated Commerce • India (₹ INR) &amp; United Kingdom (£ GBP)
+          One Store Curated Commerce • India Flagship (₹ INR)
         </div>
       </div>
     </div>

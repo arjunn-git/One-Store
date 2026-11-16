@@ -45,7 +45,7 @@ const FILTER_LABELS: Record<string, string> = {
   PAYMENTS: "Payments",
   SUPPORT: "Support Inquiries",
   CART: "Cart Changes",
-  MARKET: "Market Switches",
+  CHECKOUT: "Checkout Sessions",
   AUTH: "Logins / Signups",
   BROWSING: "Browsing & Searches",
   AI: "Nocturne AI Assistant",
@@ -189,8 +189,8 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
     if (selectedFilter === "CART") {
       return ["CART_ADD", "CART_REMOVE", "CART_UPDATED", "CART_CLEARED"].includes(act.type);
     }
-    if (selectedFilter === "MARKET") {
-      return act.type === "MARKET_SWITCH";
+    if (selectedFilter === "CHECKOUT") {
+      return act.type === "CHECKOUT_INITIATED";
     }
     if (selectedFilter === "AUTH") {
       return ["CUSTOMER_LOGIN", "CUSTOMER_SIGNUP", "CUSTOMER_LOGOUT"].includes(act.type);
@@ -225,8 +225,8 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
       case "CART_UPDATED":
       case "CART_CLEARED":
         return <ShoppingCart className="h-4 w-4 text-amber-400" />;
-      case "MARKET_SWITCH":
-        return <Globe className="h-4 w-4 text-sky-400" />;
+      case "CHECKOUT_INITIATED":
+        return <CreditCard className="h-4 w-4 text-emerald-400" />;
       case "CUSTOMER_LOGIN":
       case "CUSTOMER_SIGNUP":
       case "CUSTOMER_LOGOUT":
@@ -292,7 +292,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
             </h3>
           </div>
           <p className="text-xs text-[#9CAFC3]">
-            Streaming live storefront checkouts, cart interactions, and dual-market sessions across India &amp; United Kingdom.
+            Streaming live storefront checkouts, cart interactions, and customer sessions across India Flagship.
           </p>
         </div>
 
@@ -380,8 +380,8 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
             label: `Cart Changes (${counts?.cart ?? activities.filter((a) => ["CART_ADD", "CART_REMOVE", "CART_UPDATED", "CART_CLEARED"].includes(a.type)).length})`,
           },
           {
-            id: "MARKET",
-            label: `Market Switches (${counts?.marketSwitches ?? activities.filter((a) => a.type === "MARKET_SWITCH").length})`,
+            id: "CHECKOUT",
+            label: `Checkout Sessions (${activities.filter((a) => a.type === "CHECKOUT_INITIATED").length})`,
           },
           {
             id: "AUTH",
@@ -441,7 +441,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
             </div>
             <p className="text-xs text-[#9CAFC3] max-w-md mx-auto">
               {selectedFilter === "ALL"
-                ? "Genuine live events will stream here automatically as shoppers browse, add items to cart, switch currencies between India (₹) and the UK (£), or complete checkouts."
+                ? "Genuine live storefront events will stream here automatically as shoppers browse, add items to cart, request AI recommendations, or complete UPI checkouts."
                 : `Genuine ${FILTER_LABELS[selectedFilter] || selectedFilter} events will stream here automatically when shoppers perform this action on the store.`}
             </p>
             <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
@@ -454,37 +454,39 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                   View All Store Events ({activities.length})
                 </button>
               )}
-              {selectedFilter === "MARKET" && (
-                <button
-                  type="button"
-                  disabled={testingEvent}
-                  onClick={async () => {
-                    setTestingEvent(true);
-                    try {
-                      await fetch("/api/activity", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          type: "MARKET_SWITCH",
-                          action: "Market Switched to United Kingdom (£ GBP)",
-                          actor: "Admin Operator (onestore.auth@gmail.com)",
-                          market: "GB",
-                          currency: "GBP",
-                          resourceType: "storefront",
-                          details: { previousMarket: "IN", newMarket: "GB", currency: "GBP (£)" },
-                        }),
-                      });
-                      await fetchActivities(true);
-                    } finally {
-                      setTestingEvent(false);
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm"
-                >
-                  <Globe className="h-3.5 w-3.5" />
-                  <span>{testingEvent ? "Emitting..." : "Test Market Switch Event (IN ⇄ GB)"}</span>
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={testingEvent}
+                onClick={async () => {
+                  setTestingEvent(true);
+                  try {
+                    await fetch("/api/activity", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        type: "CHECKOUT_INITIATED",
+                        action: "Express Checkout Initiated • Instant UPI Selected",
+                        actor: "Arjun Taneja (onestore.auth@gmail.com)",
+                        market: "IN",
+                        currency: "INR",
+                        resourceType: "checkout",
+                        details: {
+                          paymentGateway: "Razorpay (UPI / RuPay / NetBanking)",
+                          productName: "Nocturne Quantum-X Pro",
+                          totalAmount: 34999,
+                        },
+                      }),
+                    });
+                    await fetchActivities(true);
+                  } finally {
+                    setTestingEvent(false);
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-lg bg-[#7DD3FC] text-[#080B10] hover:bg-[#FFFFFF] text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm"
+              >
+                <Activity className="h-3.5 w-3.5" />
+                <span>{testingEvent ? "Emitting..." : "Simulate Live Shopper Session"}</span>
+              </button>
             </div>
           </div>
         ) : (
@@ -515,13 +517,9 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-semibold text-[#FFFFFF]">{act.action}</span>
                       <span
-                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                          act.market === "GB"
-                            ? "bg-sky-950/40 text-sky-300 border-sky-800/50"
-                            : "bg-emerald-950/40 text-emerald-300 border-emerald-800/50"
-                        }`}
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-emerald-950/40 text-emerald-300 border-emerald-800/50"
                       >
-                        {act.market === "GB" ? "UK (£ GBP)" : "India (₹ INR)"}
+                        🇮🇳 India (₹ INR)
                       </span>
                     </div>
 
@@ -534,9 +532,7 @@ export function LiveActivityMonitor({ onOrderClick, className = "" }: LiveActivi
                       )}
                       {Boolean(act.details?.totalAmount) && (
                         <span className="font-medium text-emerald-400">
-                          {act.currency === "INR"
-                            ? `₹${Number(act.details?.totalAmount).toLocaleString("en-IN")}`
-                            : `£${Number(act.details?.totalAmount).toFixed(2)}`}
+                          ₹{Number(act.details?.totalAmount).toLocaleString("en-IN")}
                         </span>
                       )}
                       {Boolean(act.details?.productName) && (

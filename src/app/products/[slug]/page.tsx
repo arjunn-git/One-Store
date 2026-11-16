@@ -25,11 +25,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const primaryImage = product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=630&q=80";
-  const title = `${product.seo_title || product.name} — Dual Market (INR ₹ & GBP £)`;
+  const title = `${product.seo_title || product.name} — One Store India Flagship (₹ INR)`;
   const description =
     product.seo_description ||
     product.description ||
-    `Order ${product.name} at One Store. Available in India (₹${product.price_inr.toLocaleString("en-IN")}) and the UK (£${product.price_gbp.toFixed(2)}) with express tracked delivery.`;
+    `Order ${product.name} at One Store. Available in India (₹${product.price_inr.toLocaleString("en-IN")}) with express Blue Dart tracked delivery, instant UPI, and 0-cost EMI.`;
 
   return {
     title,

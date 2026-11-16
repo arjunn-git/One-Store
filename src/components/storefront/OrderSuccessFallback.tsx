@@ -124,9 +124,7 @@ export function OrderSuccessFallback({ orderNumber }: OrderSuccessFallbackProps)
               <span>Logistics &amp; Courier</span>
             </div>
             <p className="text-[#9CAFC3] leading-relaxed">
-              {isIndia
-                ? "Dispatched via Blue Dart / Delhivery Express. Real-time SMS tracking updates will be transmitted to your registered mobile."
-                : "Dispatched via Royal Mail Tracked 24/48. Full end-to-end GPS delivery confirmation included."}
+              Dispatched via Blue Dart / Delhivery Air Express. Real-time SMS tracking updates will be transmitted to your registered mobile.
             </p>
             <div className="pt-2 flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
@@ -146,7 +144,7 @@ export function OrderSuccessFallback({ orderNumber }: OrderSuccessFallbackProps)
                 <div>
                   {localOrder.shipping_address.city}, {localOrder.shipping_address.stateOrProvince} {localOrder.shipping_address.postalCode}
                 </div>
-                <div>Country: {localOrder.shipping_address.countryCode === "GB" ? "United Kingdom" : "India"}</div>
+                <div>Country: India</div>
               </div>
             ) : (
               <p className="text-[#9CAFC3]">Verified delivery destination recorded on file.</p>

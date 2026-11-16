@@ -80,7 +80,7 @@ export function AdminPortalHeader() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
             </span>
             <span className="text-[11px] font-medium text-[#9CAFC3]">
-              Systems Operational • Dual Market Telemetry (INR &amp; GBP)
+              Systems Operational • India Flagship Telemetry (₹ INR)
             </span>
           </div>
         </div>

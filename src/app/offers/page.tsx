@@ -33,11 +33,11 @@ export default function OffersPage() {
               <span>Active Seasonal Campaigns</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#FFFFFF] tracking-tight">
-              Exclusive Offers &amp; Dual-Market Perks
+              Exclusive Offers &amp; Flagship Perks
             </h1>
             <p className="text-sm text-[#9CAFC3] leading-relaxed">
               Curated savings, introductory promotional codes, and complimentary express delivery
-              across India (₹ INR) and the United Kingdom (£ GBP).
+              across India (₹ INR).
             </p>
           </div>
 
@@ -94,15 +94,14 @@ export default function OffersPage() {
                   <h3 className="text-xl font-bold text-[#FFFFFF]">Complimentary Express Shipping</h3>
                   <p className="text-xs text-[#9CAFC3] mt-2 leading-relaxed">
                     Free standard express dispatch on domestic India orders over{" "}
-                    <strong className="text-[#FFFFFF]">₹4,999</strong> and UK mainland orders over{" "}
-                    <strong className="text-[#FFFFFF]">£50.00</strong>.
+                    <strong className="text-[#FFFFFF]">₹1,999</strong>.
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-[#243447] space-y-3">
                 <div className="p-3 rounded-xl bg-[#080B10] border border-[#243447] text-xs text-[#9CAFC3]">
-                  Blue Dart &amp; Delhivery in India • Royal Mail Tracked 24 in the UK.
+                  Blue Dart Air Express &amp; Delhivery across India.
                 </div>
                 <Link
                   href="/products"

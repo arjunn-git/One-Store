@@ -77,10 +77,7 @@ export function PostalCodeLookupInput({
           const locList = data.localities || [];
           setLocalities(locList);
 
-          const feedback =
-            country === "IN"
-              ? `✓ Resolved ${data.city || ""}, ${data.state || ""} via India Post Directory`
-              : `✓ Resolved ${data.city || ""}, ${data.state || ""} via Royal Mail Database`;
+          const feedback = `✓ Resolved ${data.city || ""}, ${data.state || ""} via India Post Directory`;
           setStatusMessage(feedback);
 
           onResolved({

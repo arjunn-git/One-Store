@@ -53,9 +53,9 @@ export interface OrderNotificationData {
 }
 
 export async function notifyAdminOrderPlaced(data: OrderNotificationData): Promise<boolean> {
-  const symbol = data.currency === "GBP" ? "£" : "₹";
-  const formattedTotal = `${symbol}${Number(data.totalAmount).toLocaleString()}`;
-  const marketName = data.market === "GB" ? "United Kingdom (£)" : "India (₹)";
+  const symbol = "₹";
+  const formattedTotal = `₹${Number(data.totalAmount).toLocaleString("en-IN")}`;
+  const marketName = "India (₹ INR)";
 
   const itemsHtml = (data.items || [])
     .map(
@@ -116,7 +116,7 @@ export async function notifyAdminOrderPlaced(data: OrderNotificationData): Promi
                 <td style="padding: 6px 0; color: #FFFFFF; line-height: 1.5;">
                   ${data.shippingAddress.line1 || ""}<br />
                   ${data.shippingAddress.city ? `${data.shippingAddress.city}, ` : ""}${data.shippingAddress.stateOrProvince || ""} ${data.shippingAddress.postalCode || ""}<br />
-                  <strong>${data.shippingAddress.countryCode === "GB" ? "United Kingdom" : "India"}</strong>
+                  <strong>India</strong>
                 </td>
               </tr>
             </table>
@@ -296,7 +296,7 @@ export async function notifyAdminPaymentCaptured(data: PaymentNotificationData):
         </p>
         <div style="background: #080B10; border: 1px solid #243447; border-radius: 12px; padding: 16px; text-align: left; font-size: 13px; font-family: monospace; color: #7DD3FC; margin-bottom: 24px;">
           Payment ID: ${data.paymentId}<br />
-          Market: ${data.market === "GB" ? "United Kingdom (£)" : "India (₹)"}<br />
+          Market: India (₹ INR)<br />
           ${data.customerEmail ? `Customer: ${data.customerEmail}` : ""}
         </div>
         <a href="https://one-store-gray.vercel.app/admin/orders" style="display: inline-block; background-color: #7DD3FC; color: #080B10; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 10px; text-decoration: none;">

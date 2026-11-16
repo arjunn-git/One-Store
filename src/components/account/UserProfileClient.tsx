@@ -163,15 +163,11 @@ export function UserProfileClient({
       setManuallyEditedCity(false);
       setManuallyEditedState(false);
       setMarketSwitchNotice(
-        newCountry === "GB"
-          ? "Market switched to United Kingdom (£ GBP). Incompatible Indian address details reset. Please enter your UK postcode."
-          : "Market switched to India (₹ INR). Incompatible UK address details reset. Please enter your 6-digit Indian PIN code."
+        "India Flagship active (₹ INR). Please verify your 6-digit Indian PIN code."
       );
     } else {
       setMarketSwitchNotice(
-        newCountry === "GB"
-          ? "Market switched to United Kingdom (£ GBP). Please verify your address and mobile phone for Royal Mail dispatch."
-          : "Market switched to India (₹ INR). Please verify your address and mobile phone for domestic express dispatch."
+        "India Flagship active (₹ INR). Domestic express Blue Dart dispatch enabled."
       );
     }
 
@@ -710,7 +706,7 @@ export function UserProfileClient({
                   <Mail className="h-3.5 w-3.5 text-[#7DD3FC]" /> {profile.email}
                 </span>
                 <span>•</span>
-                <span>Dual-Market Member: India (₹) &amp; UK (£)</span>
+                <span>🇮🇳 India Flagship Member (₹ INR)</span>
               </p>
             </div>
           </div>
@@ -772,7 +768,7 @@ export function UserProfileClient({
             </div>
             <p className="text-xs text-[#9CAFC3]">
               {completion.isComplete
-                ? "Your customer profile is 100% verified. You have full access to express checkout, dual-market shipping, and saved orders."
+                ? "Your customer profile is 100% verified. You have full access to express checkout, instant UPI payments, and saved orders."
                 : `100% complete profile is mandatory before placing orders or initiating payments. Missing: ${completion.missingFields.join(", ")}.`}
             </p>
           </div>
@@ -847,7 +843,7 @@ export function UserProfileClient({
           <div>
             <div className="text-xs text-[#9CAFC3]">Preferred Market</div>
             <div className="text-sm font-bold text-[#7DD3FC] mt-1">
-              {country === "GB" ? "United Kingdom (£ GBP)" : "India (₹ INR)"}
+              🇮🇳 India (₹ INR)
             </div>
           </div>
           <div className="h-10 w-10 rounded-xl bg-[#102A43] text-[#7DD3FC] flex items-center justify-center">
@@ -1072,15 +1068,8 @@ export function UserProfileClient({
                     {
                       value: "IN",
                       label: "India",
-                      subtitle: "₹ INR • Express domestic delivery",
+                      subtitle: "₹ INR • Express domestic delivery (Blue Dart)",
                       badge: "₹ INR",
-                      icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
-                    },
-                    {
-                      value: "GB",
-                      label: "United Kingdom",
-                      subtitle: "£ GBP • Royal Mail Tracked dispatch",
-                      badge: "£ GBP",
                       icon: <Globe className="h-3.5 w-3.5 text-[#7DD3FC]" />,
                     },
                   ]}
@@ -1309,7 +1298,7 @@ export function UserProfileClient({
                     </div>
                     <div className="text-[#FFFFFF] mt-1 font-mono">{addr.phone}</div>
                     <div className="text-[10px] text-[#7DD3FC]">
-                      {addr.country_code === "GB" ? "United Kingdom (£)" : "India (₹)"}
+                      India (₹ INR)
                     </div>
                   </div>
 
@@ -1430,16 +1419,9 @@ export function UserProfileClient({
               options={[
                 {
                   value: "IN",
-                  label: "India",
-                  subtitle: "₹ INR • Razorpay & Express Domestic Dispatch",
+                  label: "India (Flagship Market)",
+                  subtitle: "₹ INR • Razorpay UPI & Express Blue Dart Dispatch",
                   badge: "₹ INR",
-                  icon: <Globe className="h-4 w-4 text-[#7DD3FC]" />,
-                },
-                {
-                  value: "GB",
-                  label: "United Kingdom",
-                  subtitle: "£ GBP • Stripe & Royal Mail Tracked",
-                  badge: "£ GBP",
                   icon: <Globe className="h-4 w-4 text-[#7DD3FC]" />,
                 },
               ]}
@@ -1619,7 +1601,7 @@ export function UserProfileClient({
                 className="mt-0.5 h-4 w-4 rounded border-[#243447] bg-[#080B10] text-[#7DD3FC] focus:ring-0"
               />
               <span>
-                Receive notifications regarding exclusive flagship releases and dual-market promotions.
+                Receive notifications regarding exclusive flagship releases and promotional events.
               </span>
             </label>
           </div>

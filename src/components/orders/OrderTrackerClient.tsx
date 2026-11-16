@@ -285,7 +285,7 @@ export function OrderTrackerClient({ initialOrders }: OrderTrackerClientProps) {
                   <span>Logistics Courier</span>
                 </div>
                 <div className="text-[#9CAFC3]">
-                  {searchedOrder.carrier || (searchedOrder.currency === "INR" ? "Blue Dart Air Express" : "Royal Mail Tracked 24")}
+                  {searchedOrder.carrier || "Blue Dart Air Express"}
                 </div>
                 {searchedOrder.tracking_number && (
                   <div className="text-[11px] font-mono text-[#7DD3FC]">
@@ -308,7 +308,7 @@ export function OrderTrackerClient({ initialOrders }: OrderTrackerClientProps) {
                   {searchedOrder.shipping_address?.city && (
                     <span>{searchedOrder.shipping_address.city}, </span>
                   )}
-                  {searchedOrder.shipping_address?.countryCode === "GB" ? "United Kingdom" : "India"}
+                  <span>{searchedOrder.shipping_address?.city || "New Delhi"}, India</span>
                 </div>
               </div>
             </div>
@@ -323,7 +323,7 @@ export function OrderTrackerClient({ initialOrders }: OrderTrackerClientProps) {
             Your Recent Orders ({allOrdersList.length})
           </h2>
           <span className="text-xs text-[#9CAFC3]">
-            Dual-Market Logistics (India &amp; UK)
+            India Flagship Logistics (Blue Dart &amp; Delhivery)
           </span>
         </div>
 

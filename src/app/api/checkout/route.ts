@@ -148,7 +148,7 @@ export async function POST(request: Request) {
           paymentProvider: result.paymentProvider,
           itemsCount: body.items?.length || 1,
           city: body.city,
-          country: body.market === "GB" ? "United Kingdom" : "India",
+          country: "India",
         },
       });
 
@@ -156,8 +156,8 @@ export async function POST(request: Request) {
       notifyAdminOrderPlaced({
         orderNumber: result.orderNumber,
         totalAmount: result.totalAmount || 0,
-        currency: result.currency || (body.market === "GB" ? "GBP" : "INR"),
-        market: body.market,
+        currency: "INR",
+        market: "IN",
         paymentProvider: result.paymentProvider || body.paymentProvider,
         customerName: body.recipientName || "Customer",
         customerEmail: body.customerEmail || authUser?.email || "",

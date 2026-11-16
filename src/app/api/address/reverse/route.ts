@@ -162,7 +162,7 @@ export async function GET(request: Request) {
           state: state || undefined,
           postalCode: postalCode || undefined,
           country,
-          countryName: addr.country || (country === "GB" ? "United Kingdom" : "India"),
+          countryName: "India",
           boundingbox: bbox,
           attribution: "© OpenStreetMap contributors, ODbL 1.0",
         };

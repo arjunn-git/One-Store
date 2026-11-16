@@ -37,8 +37,7 @@ export async function GET(request: Request) {
       currentStock: p.variants.reduce((s, v) => s + v.inventory_count, 0),
     })),
     salesByMarket: [
-      { market: "India", currency: "INR", sharePercent: 62.5 },
-      { market: "United Kingdom", currency: "GBP", sharePercent: 37.5 },
+      { market: "India Flagship", currency: "INR", sharePercent: 100 },
     ],
   };
 

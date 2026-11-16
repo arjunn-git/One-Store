@@ -303,12 +303,10 @@ async function SuccessDetails({ searchParams }: SuccessPageProps) {
         <Truck className="h-5 w-5 text-[#7DD3FC] shrink-0 mt-0.5" />
         <div className="space-y-0.5">
           <div className="font-semibold text-[#FFFFFF]">
-            {isIndia ? "India Express Air Dispatch" : "UK Domestic Tracked Fulfillment"}
+            India Express Air Dispatch (Blue Dart)
           </div>
           <div className="text-[11px] text-[#9CAFC3]">
-            {isIndia
-              ? "Estimated delivery to your address: 3-5 business days (+91 SMS tracking link upon dispatch)."
-              : "Estimated delivery: 2-4 business days (Royal Mail / DPD Tracked)."}
+            Estimated delivery to your address: 2-4 business days (+91 SMS tracking link upon dispatch).
           </div>
         </div>
       </div>

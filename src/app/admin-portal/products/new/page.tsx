@@ -469,18 +469,18 @@ export default function AdminPortalNewProductPage() {
           </div>
         </div>
 
-        {/* 3. Dual-Market Pricing & Economics */}
+        {/* 3. Pricing & Economics */}
         <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-4">
           <h2 className="text-sm font-bold text-[#FFFFFF] uppercase tracking-wider flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-[#7DD3FC]" />
-            <span>Dual-Market Pricing &amp; Profit Margins</span>
+            <span>Pricing &amp; Profit Margins (₹ INR Flagship)</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* India INR */}
             <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] space-y-3">
               <div className="text-xs font-bold text-[#7DD3FC] uppercase tracking-wider">
-                India Market (₹ INR)
+                India Flagship Market (₹ INR)
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-[#FFFFFF]">Selling Price (₹) *</label>
@@ -527,8 +527,8 @@ export default function AdminPortalNewProductPage() {
 
             {/* UK GBP */}
             <div className="p-4 rounded-xl bg-[#080B10] border border-[#243447] space-y-3">
-              <div className="text-xs font-bold text-[#7DD3FC] uppercase tracking-wider">
-                United Kingdom Market (£ GBP)
+              <div className="text-xs font-bold text-[#9CAFC3] uppercase tracking-wider">
+                Secondary Export Benchmark (£ GBP)
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-[#FFFFFF]">Selling Price (£) *</label>

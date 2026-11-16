@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Active Customer Support & Concierge Desk — onestore.auth@gmail.com",
   description:
-    "Get assistance with dual-market orders, tracking, 14-day returns, and 1-year hardware warranty. Direct desk routed to onestore.auth@gmail.com with <12h SLA.",
+    "Get assistance with orders, tracking, 14-day returns, and 1-year hardware warranty. Direct desk routed to onestore.auth@gmail.com with <12h SLA.",
   alternates: {
     canonical: "https://one-store-gray.vercel.app/support",
   },
   openGraph: {
     title: "Customer Support & Inquiries — One Store",
-    description: "Dedicated assistance for our India & UK customers.",
+    description: "Dedicated assistance for our India Flagship customers.",
     url: "https://one-store-gray.vercel.app/support",
     type: "website",
   },
@@ -21,10 +21,10 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "How do I track my delivery in India or the UK?",
+      name: "How do I track my delivery across India?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Once dispatched, you will receive an SMS and email notification with your tracking number (Blue Dart / Delhivery in India, Royal Mail / DPD in the UK). You can also track your shipment live on our Order Tracking portal with your OS-2026 reference.",
+        text: "Once dispatched, you will receive an SMS and email notification with your tracking number (Blue Dart / Delhivery Air Express). You can also track your shipment live on our Order Tracking portal with your OS-2026 reference.",
       },
     },
     {
