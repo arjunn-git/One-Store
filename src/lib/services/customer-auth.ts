@@ -235,7 +235,7 @@ export async function sendOtpEmail(
                 SECURITY AUTHENTICATION
               </div>
 
-              <h1 class="title-text" style="margin: 0; font-size: 22px; font-weight: 800; color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+              <h1 class="title-text" style="margin: 0; font-size: 22px; font-weight: 800; color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; text-shadow: 0 0 0.1px #FFFFFF; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
                 ${title}
               </h1>
             </td>
