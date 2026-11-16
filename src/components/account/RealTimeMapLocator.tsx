@@ -287,11 +287,11 @@ export function RealTimeMapLocator({
 
           {/* Interactive Live Map Frame with Fallback Canvas */}
           <div className="relative w-full h-44 sm:h-52 bg-[#080B10] overflow-hidden group">
-            {/* Embedded OpenStreetMap Preview */}
+            {/* Embedded Live Map Preview with Zero-503 High-Availability Backend */}
             <iframe
-              title="Real-Time OpenStreetMap Preview"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentCoords.lon - 0.008}%2C${currentCoords.lat - 0.005}%2C${currentCoords.lon + 0.008}%2C${currentCoords.lat + 0.005}&layer=mapnik&marker=${currentCoords.lat}%2C${currentCoords.lon}`}
-              className="w-full h-full border-0 pointer-events-auto filter saturate-[0.85] contrast-[1.1]"
+              title="Real-Time Map Preview"
+              src={`https://maps.google.com/maps?q=${currentCoords.lat},${currentCoords.lon}&hl=en&z=15&output=embed`}
+              className="w-full h-full border-0 pointer-events-auto filter saturate-[0.95]"
               loading="lazy"
             />
 

@@ -3,9 +3,10 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles, Heart } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, AlertCircle, XCircle, Sparkles, Heart, ShoppingBag } from "lucide-react";
 import { PriceDisplay } from "./PriceDisplay";
 import { useWishlist } from "@/lib/context/WishlistContext";
+import { useCart } from "@/lib/context/CartContext";
 import type { Product, ProductVariant, Category } from "@/lib/types/database";
 
 interface ProductCardProps {
@@ -20,6 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const rafId = useRef<number | null>(null);
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addItem, setIsOpen } = useCart();
   const isFav = isInWishlist(product.id);
   const productUrl = `/products/${product.slug}`;
 
@@ -27,6 +29,16 @@ export function ProductCard({ product }: ProductCardProps) {
   const totalStock = product.variants?.reduce((sum, v) => sum + v.inventory_count, 0) ?? 10;
   const isOutOfStock = totalStock <= 0;
   const isLowStock = totalStock > 0 && totalStock <= 5;
+
+  const handleQuickBuy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOutOfStock) return;
+    const variant = product.variants?.[0] || null;
+    addItem(product, variant, 1);
+    setIsOpen(false);
+    router.push("/checkout");
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -203,7 +215,19 @@ export function ProductCard({ product }: ProductCardProps) {
             size="md"
           />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleQuickBuy}
+              disabled={isOutOfStock}
+              data-no-card-redirect="true"
+              aria-label={`Buy ${product.name} now`}
+              className="h-9 px-3 rounded-xl bg-[#7DD3FC] hover:bg-[#FFFFFF] text-[#080B10] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              <span>Buy</span>
+            </button>
+
             <button
               type="button"
               onClick={(e) => {

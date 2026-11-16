@@ -51,19 +51,37 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Mandatory 100% Profile Completion Check
+    // 4. Mandatory Profile & Delivery Information Check
+    const orderAddress: AddressInput = {
+      recipient_name: body.recipientName,
+      phone: body.phone,
+      line1: body.line1,
+      line2: body.line2,
+      city: body.city,
+      state_or_province: body.stateOrProvince,
+      postal_code: body.postalCode,
+      country_code: "IN",
+      is_default: true,
+    };
+    const effectiveAddresses = addresses && addresses.length > 0 ? addresses : [orderAddress];
     const effectiveProfile = {
       ...customerProfile,
+      full_name: customerProfile?.full_name || body.recipientName,
+      phone: customerProfile?.phone || body.phone,
+      street_address: customerProfile?.street_address || body.line1,
+      city: customerProfile?.city || body.city,
+      state_or_province: customerProfile?.state_or_province || body.stateOrProvince,
+      postal_code: customerProfile?.postal_code || body.postalCode,
       email: session.email,
       is_email_verified: isEmailVerified,
     };
 
-    const completion = calculateProfileCompletion(effectiveProfile, addresses);
+    const completion = calculateProfileCompletion(effectiveProfile, effectiveAddresses);
 
     if (!completion.isComplete) {
       return NextResponse.json(
         {
-          error: `Profile incomplete (${completion.percentage}% complete). 100% complete profile is mandatory before checkout. Missing: ${completion.missingFields.join(", ")}.`,
+          error: `Delivery details incomplete. Missing required fields: ${completion.missingFields.join(", ")}.`,
           profileIncomplete: true,
           percentage: completion.percentage,
           missingFields: completion.missingFields,

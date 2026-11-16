@@ -92,6 +92,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const handleBuyNow = () => {
     if (isOutOfStock || !isAvailableInCurrentMarket) return;
     addItem(product, selectedVariant, quantity);
+    setIsOpen(false);
     router.push("/checkout");
   };
 

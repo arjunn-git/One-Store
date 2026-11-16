@@ -309,17 +309,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    // 1. Mandatory Profile 100% check
-    if (profileCompletion && !profileCompletion.isComplete) {
-      setErrorMessage(
-        `Profile is ${profileCompletion.percentage}% complete. 100% profile completion is mandatory before checkout. Missing: ${profileCompletion.missingFields.join(", ")}.`
-      );
-      return;
-    }
-
-    // 2. Validate Address Fields
+    // 1. Validate Address Fields
     if (!formData.recipientName?.trim()) {
-      setErrorMessage("Recipient name is required.");
+      setErrorMessage("Recipient full name is required.");
       return;
     }
     if (!formData.line1?.trim()) {
@@ -330,12 +322,8 @@ export default function CheckoutPage() {
       setErrorMessage("City or town is required.");
       return;
     }
-    if (!validatePhoneNumber(formData.phone, market)) {
-      setErrorMessage(
-        market === "IN"
-          ? "Please provide a valid 10-digit Indian mobile number."
-          : "Please provide a valid UK mobile number."
-      );
+    if (!validatePhoneNumber(formData.phone, "IN")) {
+      setErrorMessage("Please provide a valid 10-digit Indian mobile number.");
       return;
     }
     if (!validatePostalCode(formData.postalCode, "IN")) {
@@ -634,28 +622,27 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Form inputs (2 cols) */}
               <div className="lg:col-span-2 space-y-8">
-                {/* 100% Profile Completion Requirement Card */}
-                {profileCompletion && !profileCompletion.isComplete && (
-                  <div className="p-6 rounded-2xl bg-amber-950/20 border border-amber-800/80 space-y-3">
+                {/* Profile Completion Guidance */}
+                {!formData.line1 && profileCompletion && !profileCompletion.isComplete && (
+                  <div className="p-6 rounded-2xl bg-[#102A43]/40 border border-[#243447] space-y-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+                        <AlertCircle className="h-5 w-5 text-[#7DD3FC] shrink-0" />
                         <div>
-                          <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                            100% Profile Completion Mandatory Before Order Placement
+                          <div className="text-xs font-bold uppercase tracking-wider text-[#FFFFFF]">
+                            Express Delivery Address
                           </div>
                           <div className="text-xs text-[#9CAFC3]">
-                            Current profile progress:{" "}
-                            <strong className="text-[#FFFFFF]">{profileCompletion.percentage}%</strong>. Checkout is paused until all mandatory dispatch fields are verified.
+                            Enter your Indian delivery address below to complete checkout.
                           </div>
                         </div>
                       </div>
 
                       <Link
                         href="/account?complete=1"
-                        className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#080B10] font-bold text-xs flex items-center gap-1.5 transition-all shrink-0"
+                        className="px-4 py-2 rounded-xl bg-[#102A43] hover:bg-[#7DD3FC] text-[#7DD3FC] hover:text-[#080B10] border border-[#243447] font-bold text-xs flex items-center gap-1.5 transition-all shrink-0"
                       >
-                        <span>Complete Profile Now</span>
+                        <span>Manage Account</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
@@ -663,16 +650,9 @@ export default function CheckoutPage() {
                     {/* Progress Bar */}
                     <div className="w-full h-2 rounded-full bg-[#080B10] border border-[#243447] overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-[#7DD3FC] transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-[#7DD3FC] to-emerald-400 transition-all duration-500"
                         style={{ width: `${profileCompletion.percentage}%` }}
                       />
-                    </div>
-
-                    <div className="text-[11px] text-[#9CAFC3]">
-                      Missing fields:{" "}
-                      <span className="text-amber-300 font-semibold">
-                        {profileCompletion.missingFields.join(", ")}
-                      </span>
                     </div>
                   </div>
                 )}
@@ -1121,16 +1101,14 @@ export default function CheckoutPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading || (profileCompletion ? !profileCompletion.isComplete : false)}
-                    className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-semibold text-xs hover:bg-[#FFFFFF] flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={isLoading || items.length === 0}
+                    className="w-full h-12 rounded-xl bg-[#7DD3FC] text-[#080B10] font-bold text-xs hover:bg-[#FFFFFF] flex items-center justify-center gap-2 shadow-lg shadow-[#7DD3FC]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {isLoading ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : profileCompletion && !profileCompletion.isComplete ? (
-                      <span>Complete Profile (100%) to Enable Checkout</span>
                     ) : (
                       <>
-                        <span>Place Order &amp; Pay</span>
+                        <span>Place Order &amp; Pay {formatCurrency(checkoutGrandTotal)}</span>
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}
