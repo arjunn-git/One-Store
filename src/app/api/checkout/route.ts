@@ -11,6 +11,7 @@ import {
   calculateProfileCompletion,
   validatePostalCode,
   validatePhoneNumber,
+  type AddressInput,
 } from "@/lib/services/profile-validation";
 
 export async function POST(request: Request) {
