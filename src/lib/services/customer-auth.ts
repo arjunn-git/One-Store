@@ -160,49 +160,130 @@ export async function sendOtpEmail(
     : "complete your secure sign-in to One Store";
 
   const emailHtml = `
-    <div style="background-color: #080B10; padding: 36px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #FFFFFF; min-height: 100%;">
-      <div style="max-width: 500px; margin: 0 auto; background-color: #102A43; border: 1px solid #243447; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
-        
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #102A43 0%, #080B10 100%); padding: 28px 24px; border-bottom: 1px solid #243447; text-align: center;">
-          <div style="display: inline-block; padding: 6px 14px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00F0FF; border-radius: 999px; color: #00F0FF; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;">
-            ONE STORE AUTHENTICATION
-          </div>
-          <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">
-            ${title}
-          </h1>
-        </div>
+<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>${title}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    :root {
+      color-scheme: light dark;
+      supported-color-schemes: light dark;
+    }
+    body, table, td, div, p, a {
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    @media (prefers-color-scheme: dark) {
+      .email-bg {
+        background: #080B10 !important;
+        background-color: #080B10 !important;
+      }
+      .card-bg {
+        background: #0C141E !important;
+        background-color: #0C141E !important;
+        border-color: #243447 !important;
+      }
+      .title-text {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+      }
+      .desc-text {
+        color: #94A3B8 !important;
+        -webkit-text-fill-color: #94A3B8 !important;
+      }
+      .code-box {
+        background: #030712 !important;
+        background-color: #030712 !important;
+        border-color: #38BDF8 !important;
+      }
+      .code-text {
+        color: #38BDF8 !important;
+        -webkit-text-fill-color: #38BDF8 !important;
+      }
+    }
+  </style>
+</head>
+<body class="email-bg" style="margin: 0; padding: 0; width: 100% !important; background: #080B10; background-color: #080B10; background-image: linear-gradient(#080B10, #080B10);">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0" class="email-bg" style="width: 100% !important; margin: 0; padding: 36px 12px; background: #080B10; background-color: #080B10; background-image: linear-gradient(#080B10, #080B10);">
+    <tr>
+      <td align="center">
+        <!-- Main Card -->
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0" class="card-bg" style="max-width: 480px; margin: 0 auto; background: #0C141E; background-color: #0C141E; background-image: linear-gradient(#0C141E, #0C141E); border: 1px solid #243447; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+          
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 24px 20px; text-align: center; border-bottom: 1px solid #243447;">
+              <div style="font-size: 22px; font-weight: 900; letter-spacing: 3px; color: #FFFFFF; -webkit-text-fill-color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin-bottom: 16px;">
+                ONE<span style="color: #38BDF8; -webkit-text-fill-color: #38BDF8;"> STORE</span>
+              </div>
+              
+              <div style="display: inline-block; padding: 6px 14px; background: #102A43; background-image: linear-gradient(#102A43, #102A43); border: 1px solid #0284C7; border-radius: 9999px; color: #38BDF8; -webkit-text-fill-color: #38BDF8; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin-bottom: 14px;">
+                SECURITY AUTHENTICATION
+              </div>
 
-        <!-- Body -->
-        <div style="padding: 28px 24px; text-align: center;">
-          <p style="font-size: 15px; color: #FFFFFF; margin: 0 0 16px;">
-            ${greeting}
-          </p>
-          <p style="font-size: 13px; color: #9CAFC3; line-height: 1.6; margin: 0 0 26px;">
-            Please enter the 6-digit verification code below to ${actionText}. This security code expires in <strong>10 minutes</strong>.
-          </p>
+              <h1 class="title-text" style="margin: 0; font-size: 22px; font-weight: 800; color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                ${title}
+              </h1>
+            </td>
+          </tr>
 
-          <!-- 6-Digit OTP Highlight Box -->
-          <div style="background: #080B10; border: 2px solid #7DD3FC; border-radius: 14px; padding: 18px 28px; display: inline-block; margin-bottom: 24px; box-shadow: 0 0 25px rgba(125,211,252,0.15);">
-            <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #7DD3FC; padding-left: 10px;">
-              ${otp}
-            </span>
-          </div>
+          <!-- Body -->
+          <tr>
+            <td align="center" style="padding: 28px 24px; text-align: center;">
+              <p style="font-size: 15px; color: #F1F5F9; -webkit-text-fill-color: #F1F5F9; margin: 0 0 14px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                ${greeting}
+              </p>
+              <p class="desc-text" style="font-size: 13px; color: #94A3B8; -webkit-text-fill-color: #94A3B8; line-height: 1.6; margin: 0 0 26px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                Please enter the 6-digit verification code below to ${actionText}. This security code expires in <strong style="color: #FFFFFF; -webkit-text-fill-color: #FFFFFF;">10 minutes</strong>.
+              </p>
 
-          <p style="font-size: 12px; color: #9CAFC3; line-height: 1.5; margin: 0 0 8px;">
-            If you did not request this verification code, please ignore this email. Your account remains protected.
-          </p>
-          <p style="font-size: 11px; color: #64748B; margin: 0;">
-            Never share this OTP with anyone, including One Store staff.
-          </p>
-        </div>
+              <!-- 6-Digit OTP Highlight Box -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="code-box" style="margin: 0 auto 24px; background: #030712; background-color: #030712; background-image: linear-gradient(#030712, #030712); border: 2px solid #38BDF8; border-radius: 14px; padding: 18px 24px; box-shadow: 0 0 25px rgba(56,189,248,0.2);">
+                <tr>
+                  <td align="center">
+                    <span class="code-text" style="font-family: Consolas, 'Courier New', Courier, monospace; font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #38BDF8 !important; -webkit-text-fill-color: #38BDF8 !important; line-height: 1.2; padding-left: 10px; display: block;">
+                      ${otp}
+                    </span>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- Footer -->
-        <div style="padding: 16px 24px; background: #080B10; border-top: 1px solid #243447; text-align: center; font-size: 11px; color: #64748B;">
-          One Store Curated Commerce • India Flagship (₹ INR)
-        </div>
-      </div>
-    </div>
+              <p class="desc-text" style="font-size: 12px; color: #94A3B8; -webkit-text-fill-color: #94A3B8; line-height: 1.5; margin: 0 0 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                If you did not request this verification code, please ignore this email. Your account remains protected.
+              </p>
+              <p style="font-size: 11px; color: #64748B; -webkit-text-fill-color: #64748B; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                Never share this OTP with anyone, including One Store staff.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 16px 24px; background: #080B10; background-color: #080B10; background-image: linear-gradient(#080B10, #080B10); border-top: 1px solid #243447; text-align: center; font-size: 11px; color: #64748B; -webkit-text-fill-color: #64748B; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+              One Store Curated Commerce • India Flagship (₹ INR)
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `;
 
   try {
